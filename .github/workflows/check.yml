@@ -7,7 +7,7 @@ jobs:
   check:
     name: Neqo Build and Test
     strategy:
-      # fail-fast: false
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest] # windows-latest,
         rust-toolchain: [stable] # , 1.65.0
@@ -61,6 +61,7 @@ jobs:
       - name: Run Tests
         run: cargo +${{ matrix.rust-toolchain }} test -v
         env:
+           DYLD_LIBRARY_PATH: ${{ github.workspace }}/dist/Debug/lib
            LD_LIBRARY_PATH: ${{ github.workspace }}/dist/Debug/lib
            RUST_BACKTRACE: 1
            RUST_LOG: neqo=debug
