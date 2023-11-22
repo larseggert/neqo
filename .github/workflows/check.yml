@@ -2,6 +2,7 @@ name: CI
 on: [push, pull_request]
 env:
   CARGO_TERM_COLOR: always
+  MOZBUILD_STATE_PATH: ${{ github.workspace }}/mozbuild
 
 jobs:
   check:
@@ -34,9 +35,7 @@ jobs:
         shell: bash
         run: |
           choco install --no-progress MozillaBuild
-          ls -l
-          cat "C:\ProgramData\chocolatey\logs\chocolatey.log" || true
-          cat /ProgramData/chocolatey/logs/chocolatey.log || true
+          find "C:\ProgramData\chocolatey"
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
