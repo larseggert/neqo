@@ -6,15 +6,17 @@ env:
 jobs:
   check:
     name: Neqo Build and Test
-    runs-on: ubuntu-22.04
     env:
       RUSTFLAGS: -C link-arg=-fuse-ld=lld
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
         rust-toolchain: [stable, 1.65.0]
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Install Packages
+      - name: Install Packages (Linux)
+        if: runner.os == 'Linux'
         env:
           DEBIAN_FRONTEND: noninteractive
           llvm_version: 14
@@ -41,9 +43,16 @@ jobs:
             --no-install-recommends
           [ -d "/usr/lib/llvm-$llvm_version/lib" ]
           echo "LIBCLANG_DIR=/usr/lib/llvm-$llvm_version/lib" >> "$GITHUB_ENV"
+      - name: Install Packages (Windows)
+        if: runner.os == 'Windows'
+        run:
+      - name: Install Packages (MacOS)
+        if: runner.os == 'MacOS'
+        run:
 
       # Rust installation cribbed from Dockerfiles at https://github.com/rust-lang/docker-rust
-      - name: Install Rust
+      - name: Install Rust (Linux)
+        if: runner.os == 'Linux'
         run: |
           export RUSTUP_HOME=~/.rustup
           export CARGO_HOME=~/.cargo
@@ -68,6 +77,12 @@ jobs:
           rustup_version: 1.26.0
           rustup_host: x86_64-unknown-linux-gnu
           rustup_hash: 0b2f6c8f85a3d02fde2efc0ced4657869d73fccfce59defb4e8d29233116e6db
+      - name: Install Rust (Windows)
+        if: runner.os == 'Windows'
+        run:
+      - name: Install Rust (MacOS)
+        if: runner.os == 'MacOS'
+        run:
 
       - name: Checkout
         uses: actions/checkout@v3
