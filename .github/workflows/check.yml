@@ -21,18 +21,18 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends git gyp mercurial ninja-build
-      - name: Install Dependencies (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          echo TBD
+      # - name: Install Dependencies (Windows)
+      #   if: runner.os == 'Windows'
+      #   run: |
+      #     echo TBD
       - name: Install Dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
-          brew update
+          brew list
+          brew list|wc -l
           brew install mercurial git ninja
-          python3 -m pip install gyp-next
+          python3 -m pip install gyp-next distutils
           export PATH="$(python3 -m site --user-base)/bin:$PATH"
-          echo $PATH
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -48,7 +48,7 @@ jobs:
       - name: Run Tests
         run: cargo +${{ matrix.rust-toolchain }} test -v
         env:
-           LD_LIBRARY_PATH: ${{ github.workspace }}/dist/Debug/lib
+          #  LD_LIBRARY_PATH: ${{ github.workspace }}/dist/Debug/lib
            RUST_BACKTRACE: 1
            RUST_LOG: neqo=debug
 
