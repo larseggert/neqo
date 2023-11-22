@@ -3,7 +3,6 @@ on: [push, pull_request]
 env:
   CARGO_TERM_COLOR: always
   MOZBUILD_STATE_PATH: ${{ github.workspace }}\mozbuild
-  CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG: true
 
 jobs:
   check:
@@ -36,7 +35,9 @@ jobs:
         shell: bash
         run: |
           choco install --no-progress MozillaBuild
-          mach bootstrap
+          ls -l "C:\mozilla-build"
+          ls -l "C:"
+          C:\mozilla-build\start-shell.bat
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
