@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Install Dependencies (Linux)
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' || runner.os == 'Windows'
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -31,7 +31,7 @@ jobs:
           brew list
           brew list|wc -l
           brew install mercurial git ninja
-          python3 -m pip install gyp-next distutils
+          python3 -m pip install gyp-next
           export PATH="$(python3 -m site --user-base)/bin:$PATH"
 
       - name: Install Rust
