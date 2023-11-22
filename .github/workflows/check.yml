@@ -10,6 +10,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         rust-toolchain: [stable, 1.65.0]
+        fail-fast: false
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -17,28 +18,14 @@ jobs:
         if: runner.os == 'Linux'
         env:
           DEBIAN_FRONTEND: noninteractive
-          llvm_version: 14
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential \
-            clang \
             git \
             gyp \
-            libclang-dev \
-            libssl-dev \
-            lld \
-            llvm-"$llvm_version" \
-            llvm-"$llvm_version"-runtime \
-            make \
             mercurial \
             ninja-build \
-            pkg-config \
-            ssh \
-            zlib1g-dev \
             --no-install-recommends
-          [ -d "/usr/lib/llvm-$llvm_version/lib" ]
-          echo "LIBCLANG_DIR=/usr/lib/llvm-$llvm_version/lib" >> "$GITHUB_ENV"
       - name: Install Dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
