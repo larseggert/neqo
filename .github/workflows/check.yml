@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Install Packages (Linux)
+      - name: Install Dependencies (Linux)
         if: runner.os == 'Linux'
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -43,27 +43,49 @@ jobs:
             --no-install-recommends
           [ -d "/usr/lib/llvm-$llvm_version/lib" ]
           echo "LIBCLANG_DIR=/usr/lib/llvm-$llvm_version/lib" >> "$GITHUB_ENV"
-      - name: Install Packages (Windows)
+      - name: Install Dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
           echo TBD
-      - name: Install Packages (MacOS)
+      - name: Install Dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
-          echo TBD
+          brew install coreutils
 
-      # Rust installation cribbed from Dockerfiles at https://github.com/rust-lang/docker-rust
-      - name: Install Rust (Linux)
+      - name: Install Rustup (Linux)
+        if: runner.os == 'Linux'
         run: |
           export RUSTUP_HOME=~/.rustup
           export CARGO_HOME=~/.cargo
           rustup_dir=`mktemp -d /tmp/rustup-XXXXX`
           mkdir -p "$rustup_dir"
           rustup_init="$rustup_dir/rustup-init"
-          rustup_url="https://static.rust-lang.org/rustup/archive/$rustup_version/$rustup_host/rustup-init"
+          rustup_url="https://static.rust-lang.org/rustup/dist/$rustup_host/rustup-init"
           curl -SsLf "$rustup_url" -o "$rustup_init"
           echo "${rustup_hash} $rustup_init" | sha256sum -c -
           chmod +x "$rustup_init"
+        env:
+          rustup_host: x86_64-unknown-linux-gnu
+          rustup_hash: 0b2f6c8f85a3d02fde2efc0ced4657869d73fccfce59defb4e8d29233116e6db
+      - name: Install Rustup (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          export RUSTUP_HOME=~/.rustup
+          export CARGO_HOME=~/.cargo
+          rustup_dir=`mktemp -d /tmp/rustup-XXXXX`
+          mkdir -p "$rustup_dir"
+          rustup_init="$rustup_dir/rustup-init.exe"
+          rustup_url="https://static.rust-lang.org/rustup/dist/$rustup_host/rustup-init"
+          curl -SsLf "$rustup_url" -o "$rustup_init"
+          echo "${rustup_hash} $rustup_init" | sha256sum -c -
+          chmod +x "$rustup_init"
+        env:
+          rustup_host: 686-pc-windows-gnu
+          rustup_hash: 0b2f6c8f85a3d02fde2efc0ced4657869d73fccfce59defb4e8d29233116e6db
+
+      # Rust installation cribbed from Dockerfiles at https://github.com/rust-lang/docker-rust
+      - name: Install Rust (Linux)
+        run: |
           "$rustup_init" -y -q --no-modify-path --profile minimal \
             --default-toolchain ${{ matrix.rust-toolchain }} \
             --default-host "$rustup_host" \
@@ -74,10 +96,6 @@ jobs:
           echo "RUSTUP_HOME=$RUSTUP_HOME" >> "$GITHUB_ENV"
           echo "CARGO_HOME=$CARGO_HOME" >> "$GITHUB_ENV"
           echo "$CARGO_HOME/bin" >> "$GITHUB_PATH"
-        env:
-          rustup_version: 1.26.0
-          rustup_host: x86_64-unknown-linux-gnu
-          rustup_hash: 0b2f6c8f85a3d02fde2efc0ced4657869d73fccfce59defb4e8d29233116e6db
 
       - name: Checkout
         uses: actions/checkout@v3
