@@ -54,7 +54,6 @@ jobs:
 
       # Rust installation cribbed from Dockerfiles at https://github.com/rust-lang/docker-rust
       - name: Install Rust (Linux)
-        if: runner.os == 'Linux'
         run: |
           export RUSTUP_HOME=~/.rustup
           export CARGO_HOME=~/.cargo
@@ -79,14 +78,6 @@ jobs:
           rustup_version: 1.26.0
           rustup_host: x86_64-unknown-linux-gnu
           rustup_hash: 0b2f6c8f85a3d02fde2efc0ced4657869d73fccfce59defb4e8d29233116e6db
-      - name: Install Rust (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          echo TBD
-      - name: Install Rust (MacOS)
-        if: runner.os == 'MacOS'
-        run: |
-          echo TBD
 
       - name: Checkout
         uses: actions/checkout@v3
