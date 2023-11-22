@@ -4,36 +4,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  setup:
-    name: Setup
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Install Dependencies (Linux)
-        if: runner.os == 'Linux'
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends git gyp mercurial ninja-build
-      # - name: Install Dependencies (Windows)
-      #   if: runner.os == 'Windows'
-      #   run: |
-      #     echo TBD
-      - name: Install Dependencies (MacOS)
-        if: runner.os == 'MacOS'
-        run: |
-          brew list|wc -l
-          brew install mercurial git ninja
-          brew list|wc -l
-          python3 -m pip install gyp-next
-          export PATH="$(python3 -m site --user-base)/bin:$PATH"
   check:
-    needs:
-      - setup
     name: Neqo Build and Test
     strategy:
       fail-fast: false
@@ -41,12 +12,30 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         rust-toolchain: [stable, 1.65.0]
     runs-on: ${{ matrix.os }}
+
     steps:
+      - name: Install Dependencies (Linux)
+        if: runner.os == 'Linux'
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          # sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gyp # git gyp mercurial ninja-build
+      # - name: Install Dependencies (Windows)
+      #   if: runner.os == 'Windows'
+      #   run: |
+      #     echo TBD
+      - name: Install Dependencies (MacOS)
+        if: runner.os == 'MacOS'
+        run: |
+          # brew install mercurial git ninja
+          python3 -m pip install gyp-next
+          export PATH="$(python3 -m site --user-base)/bin:$PATH"
+
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: ${{ matrix.rust-toolchain }}
-          components: rustfmt, clippy
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,7 +46,7 @@ jobs:
       - name: Run Tests
         run: cargo +${{ matrix.rust-toolchain }} test -v
         env:
-          #  LD_LIBRARY_PATH: ${{ github.workspace }}/dist/Debug/lib
+           LD_LIBRARY_PATH: ${{ github.workspace }}/dist/Debug/lib
            RUST_BACKTRACE: 1
            RUST_LOG: neqo=debug
 
