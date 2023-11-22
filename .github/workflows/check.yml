@@ -2,8 +2,8 @@ name: CI
 on: [push, pull_request]
 env:
   CARGO_TERM_COLOR: always
-  MOZBUILD_STATE_PATH: ${{ github.workspace }}/mozbuild
-
+  MOZBUILD_STATE_PATH: ${{ github.workspace }}\mozbuild
+  CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG=true
 jobs:
   check:
     name: Neqo Build and Test
@@ -35,7 +35,8 @@ jobs:
         shell: bash
         run: |
           choco install --no-progress MozillaBuild
-          find "C:\ProgramData\chocolatey"
+          ls -l "C:\ProgramData"
+          # find "C:\ProgramData\chocolatey"
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
