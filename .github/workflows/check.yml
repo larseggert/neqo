@@ -7,10 +7,10 @@ jobs:
   check:
     name: Neqo Build and Test
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         rust-toolchain: [stable, 1.65.0]
-        fail-fast: false
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -20,12 +20,7 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            git \
-            gyp \
-            mercurial \
-            ninja-build \
-            --no-install-recommends
+          sudo apt-get install -y --no-install-recommends git gyp mercurial ninja-build
       - name: Install Dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
