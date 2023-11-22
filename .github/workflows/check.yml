@@ -30,6 +30,7 @@ jobs:
       - name: Install Dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
+          echo "::add-path::$GITHUB_WORKSPACE"
           curl "https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe" --output "mb.exe"
           mb.exe
 
