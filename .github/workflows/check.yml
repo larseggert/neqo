@@ -31,6 +31,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           curl "https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe" --output "mb.exe"
+          ls -l
           ./mb.exe
 
       - name: Install Rust
