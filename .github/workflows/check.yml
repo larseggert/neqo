@@ -3,7 +3,8 @@ on: [push, pull_request]
 env:
   CARGO_TERM_COLOR: always
   MOZBUILD_STATE_PATH: ${{ github.workspace }}\mozbuild
-  CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG=true
+  CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG: true
+
 jobs:
   check:
     name: Neqo Build and Test
