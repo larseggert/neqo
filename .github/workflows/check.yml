@@ -20,7 +20,7 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           # sudo apt-get update
-          sudo apt-get install -y --no-install-recommends gyp ninja-build # git gyp mercurial ninja-build
+          sudo apt-get install -y --no-install-recommends gyp mercurial ninja-build
       # - name: Install Dependencies (Windows)
       #   if: runner.os == 'Windows'
       #   run: |
@@ -28,7 +28,7 @@ jobs:
       - name: Install Dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
-          brew install ninja # mercurial git
+          brew install ninja mercurial
           python3 -m pip install gyp-next
           export PATH="$(python3 -m site --user-base)/bin:$PATH"
 
