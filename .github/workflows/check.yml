@@ -37,7 +37,7 @@ jobs:
         run: |
           choco install --no-progress MozillaBuild
           ls -l "C:\ProgramData"
-          # find "C:\ProgramData\chocolatey"
+          find "C:\ProgramData\Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38"
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
