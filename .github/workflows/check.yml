@@ -36,6 +36,7 @@ jobs:
         shell: bash
         run: |
           choco install --no-progress MozillaBuild
+          mach bootstrap
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
