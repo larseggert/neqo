@@ -37,7 +37,8 @@ jobs:
           choco install --no-progress MozillaBuild
           ls -l "C:\mozilla-build"
           ls -l "C:\mozilla-build\bin"
-          "C:\mozilla-build\start-shell.bat"
+          ls -l "C:\mozilla-build\python3"
+          ls -l "C:\mozilla-build\python3\bin"
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
