@@ -23,8 +23,6 @@ jobs:
           sudo apt-get install -y \
             build-essential \
             clang \
-            coreutils \
-            curl \
             git \
             gyp \
             libclang-dev \
@@ -48,8 +46,10 @@ jobs:
       - name: Install Dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
-          brew install coreutils mercurial git ninja
+          brew install mercurial git ninja
           python3 -m pip install gyp-next
+          export PATH="$(python3 -m site --user-base)/bin:$PATH"
+          echo $PATH
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
