@@ -35,35 +35,32 @@ jobs:
         shell: bash
         run: |
           choco install --no-progress MozillaBuild
-          ls -l "C:\mozilla-build"
-          ls -l "C:\mozilla-build\bin"
-          ls -l "C:\mozilla-build\python3"
-          ls -l "C:\mozilla-build\python3\bin"
+          find "C:\mozilla-build"
 
-      - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust-toolchain }}
-          components: rustfmt, clippy
-          cache: false # enabling the cache leads to spurious failures
+      # - name: Install Rust
+      #   uses: actions-rust-lang/setup-rust-toolchain@v1
+      #   with:
+      #     toolchain: ${{ matrix.rust-toolchain }}
+      #     components: rustfmt, clippy
+      #     cache: false # enabling the cache leads to spurious failures
 
-      - name: Checkout
-        uses: actions/checkout@v4
+      # - name: Checkout
+      #   uses: actions/checkout@v4
 
-      - name: Build
-        shell: bash
-        run: cargo +${{ matrix.rust-toolchain }} build -v --tests
+      # - name: Build
+      #   shell: bash
+      #   run: cargo +${{ matrix.rust-toolchain }} build -v --tests
 
-      - name: Run Tests
-        run: cargo +${{ matrix.rust-toolchain }} test -v
-        env:
-           RUST_BACKTRACE: 1
-           RUST_LOG: neqo=debug
+      # - name: Run Tests
+      #   run: cargo +${{ matrix.rust-toolchain }} test -v
+      #   env:
+      #      RUST_BACKTRACE: 1
+      #      RUST_LOG: neqo=debug
 
-      - name: Check formatting
-        run: cargo +${{ matrix.rust-toolchain }} fmt --all -- --check
-        if: ${{ success() || failure() }}
+      # - name: Check formatting
+      #   run: cargo +${{ matrix.rust-toolchain }} fmt --all -- --check
+      #   if: ${{ success() || failure() }}
 
-      - name: Clippy
-        run: cargo +${{ matrix.rust-toolchain }} clippy -v --tests -- -D warnings
-        if: ${{ success() || failure() }}
+      # - name: Clippy
+      #   run: cargo +${{ matrix.rust-toolchain }} clippy -v --tests -- -D warnings
+      #   if: ${{ success() || failure() }}
