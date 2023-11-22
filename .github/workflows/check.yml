@@ -29,6 +29,7 @@ jobs:
           export PATH="$(python3 -m site --user-base)/bin:$PATH"
       - name: Install Dependencies (Windows)
         if: runner.os == 'Windows'
+        shell: bash
         run: |
           curl "https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe" --output "mb.exe"
           ls -l
