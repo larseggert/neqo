@@ -31,9 +31,12 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          curl "https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe" --output "mb.exe"
-          ls -l
-          ./mb.exe
+          curl "https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe" --output "mozbuild.exe"
+          ./mozbuild.exe -h
+          ./mozbuild.exe -?
+          ./mozbuild.exe -help
+          ./mozbuild.exe --help
+          ./mozbuild.exe
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
