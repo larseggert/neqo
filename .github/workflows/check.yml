@@ -52,53 +52,13 @@ jobs:
         run: |
           brew install coreutils
 
-      - name: Install Rustup (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          export RUSTUP_HOME=~/.rustup
-          export CARGO_HOME=~/.cargo
-          rustup_dir=`mktemp -d /tmp/rustup-XXXXX`
-          mkdir -p "$rustup_dir"
-          rustup_init="$rustup_dir/rustup-init"
-          rustup_url="https://static.rust-lang.org/rustup/dist/$rustup_host/rustup-init"
-          curl -SsLf "$rustup_url" -o "$rustup_init"
-          echo "${rustup_hash} $rustup_init" | sha256sum -c -
-          chmod +x "$rustup_init"
-        env:
-          rustup_host: x86_64-unknown-linux-gnu
-          rustup_hash: 0b2f6c8f85a3d02fde2efc0ced4657869d73fccfce59defb4e8d29233116e6db
-      - name: Install Rustup (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          export RUSTUP_HOME=~/.rustup
-          export CARGO_HOME=~/.cargo
-          rustup_dir=`mktemp -d /tmp/rustup-XXXXX`
-          mkdir -p "$rustup_dir"
-          rustup_init="$rustup_dir/rustup-init.exe"
-          rustup_url="https://static.rust-lang.org/rustup/dist/$rustup_host/rustup-init"
-          curl -SsLf "$rustup_url" -o "$rustup_init"
-          echo "${rustup_hash} $rustup_init" | sha256sum -c -
-          chmod +x "$rustup_init"
-        env:
-          rustup_host: 686-pc-windows-gnu
-          rustup_hash: 0b2f6c8f85a3d02fde2efc0ced4657869d73fccfce59defb4e8d29233116e6db
-
-      # Rust installation cribbed from Dockerfiles at https://github.com/rust-lang/docker-rust
-      - name: Install Rust (Linux)
-        run: |
-          "$rustup_init" -y -q --no-modify-path --profile minimal \
-            --default-toolchain ${{ matrix.rust-toolchain }} \
-            --default-host "$rustup_host" \
-            --component clippy --component rustfmt
-          rm -rf "$rustup_dir"
-          chmod -R a+w "$RUSTUP_HOME" "$CARGO_HOME"
-          "$CARGO_HOME/bin/rustup" default ${{ matrix.rust-toolchain }}
-          echo "RUSTUP_HOME=$RUSTUP_HOME" >> "$GITHUB_ENV"
-          echo "CARGO_HOME=$CARGO_HOME" >> "$GITHUB_ENV"
-          echo "$CARGO_HOME/bin" >> "$GITHUB_PATH"
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust-toolchain }}
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # This step might be removed if the distro included a recent enough
       # version of NSS.  Ubuntu 20.04 only has 3.49, which is far too old.
