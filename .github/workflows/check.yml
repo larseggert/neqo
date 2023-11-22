@@ -50,7 +50,7 @@ jobs:
       - name: Install Dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
-          brew install coreutils mercurial git ninja python3-pip
+          brew install coreutils mercurial git ninja python
           python3 -m pip install gyp-next
 
       - name: Install Rust
