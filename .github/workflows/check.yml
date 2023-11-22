@@ -33,9 +33,10 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          choco install -r MozillaBuild
+          choco install --no-progress MozillaBuild
           ls -l
-          cat C:\ProgramData\chocolatey\logs\chocolatey.log
+          cat "C:\ProgramData\chocolatey\logs\chocolatey.log" || true
+          cat /ProgramData/chocolatey/logs/chocolatey.log || true
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
