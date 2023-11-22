@@ -2,8 +2,6 @@ name: CI
 on: [push, pull_request]
 env:
   CARGO_TERM_COLOR: always
-  MOZBUILD_STATE_PATH: ${{ github.workspace }}\mozbuild
-  MOZILLABUILD: true
 
 jobs:
   check:
@@ -12,11 +10,11 @@ jobs:
       # fail-fast: false
       matrix:
         os: [windows-latest] # ubuntu-latest, macos-latest] #
-        rust-toolchain: [stable] # , 1.65.0
+        rust-toolchain: [stable] # , 1.65.0, beta]
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Install Dependencies (Linux)
+      - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -24,14 +22,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends gyp mercurial ninja-build
 
-      - name: Install Dependencies (MacOS)
+      - name: Install dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
           brew install ninja mercurial
           python3 -m pip install gyp-next
           export PATH="$(python3 -m site --user-base)/bin:$PATH"
 
-      - name: Install Dependencies (Windows)
+      - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         # shell: bash
         run: |
@@ -51,6 +49,10 @@ jobs:
       - name: Build
         shell: bash
         run: cargo +${{ matrix.rust-toolchain }} build -v --tests
+        env:
+          MOZILLABUILD: "C:\mozilla-build"
+          MOZBUILD_STATE_PATH: ${{ github.workspace }}/.mozbuild
+          CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG: true
 
       - name: Run Tests
         run: cargo +${{ matrix.rust-toolchain }} test -v
