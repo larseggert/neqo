@@ -29,13 +29,14 @@ jobs:
           export PATH="$(python3 -m site --user-base)/bin:$PATH"
       - name: Install Dependencies (Windows)
         if: runner.os == 'Windows'
+        # shell: bash
+        run: |
+          powershell -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
+      - name: Install Dependencies (Windows)
+        if: runner.os == 'Windows'
         shell: bash
         run: |
-          curl "https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe" --output "mozbuild.exe"
-          ls -l
-          ./mozbuild.exe /s /D=mozilla-build
-          ls -l
-
+          choco install MozillaBuild
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
