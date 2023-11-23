@@ -40,7 +40,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          choco install --no-progress MozillaBuild visualstudio2022professional
+          choco install --no-progress MozillaBuild visualstudio2022community
           echo "C:\mozilla-build\bin" >> $GITHUB_PATH
           echo "C:\mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
 
@@ -52,7 +52,7 @@ jobs:
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
           ls -l "$NSS_DIR"
-          "$NSS_DIR"/build.sh
+          "$NSS_DIR"/build.sh -v --msvc
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
