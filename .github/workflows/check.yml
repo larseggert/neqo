@@ -41,9 +41,19 @@ jobs:
         shell: bash
         run: |
           choco install --no-progress MozillaBuild
-          "C:\mozilla-build\start-shell.bat"
           echo "C:\mozilla-build\bin" >> $GITHUB_PATH
           echo "C:\mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
+
+      - name: Fetch NSS and NSPR
+        run: |
+          hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
+          git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
+          echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
+          echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
+          bash -x "$NSS_DIR"/build.sh
+        env:
+          NSS_DIR: ${{ github.workspace }}/nss
+          NSPR_DIR: ${{ github.workspace }}/nspr
 
       - name: Checkout
         uses: actions/checkout@v4
