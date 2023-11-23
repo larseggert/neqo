@@ -45,14 +45,14 @@ jobs:
           echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
           echo "MOZILLABUILD=C:/mozilla-build" >> $GITHUB_ENV
           echo "MOZBUILD_STATE_PATH=C:/mozbuild-state" >> $GITHUB_ENV
-          # echo "OS_TARGET=WIN95" >> $GITHUB_ENV
+          echo "OS_TARGET=WIN95" >> $GITHUB_ENV
 
       - name: Fetch NSS and NSPR
         shell: bash
         run: |
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
-          "$NSS_DIR"/build.sh -v –enable-win32-target=WIN95 || true
+          "$NSS_DIR"/build.sh -v || true
           find "$NSPR_DIR"
           find "$NSS_DIR"
         env:
