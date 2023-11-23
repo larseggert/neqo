@@ -42,13 +42,15 @@ jobs:
         uses: actions/cache@v3
         with:
           path: "C:\\mozilla-build"
+          key: ${{ runner.os }}-mozbuild
 
       - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
-        if: steps.cache-mozbuild.outputs.cache-hit != 'true'
+        if: runner.os == 'Windows' && steps.cache-mozbuild.outputs.cache-hit != 'true'
         shell: bash
         run: |
+          choco config set --name="'cacheLocation'" --value="'C:\tmp'"
           choco install --no-progress MozillaBuild
+          ls -l "C:\tmp"
           echo "C:\mozilla-build\bin" >> $GITHUB_PATH
           echo "C:\mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
 
