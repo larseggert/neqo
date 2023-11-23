@@ -156,6 +156,8 @@ fn build_nss(dir: PathBuf) {
         build_nss.push(String::from("-j"));
         build_nss.push(d);
     }
+    build_nss.push(String::from("--enable-win32-target=WIN95"));
+    build_nss.push(String::from("–target=x86_64-pc-mingw32"));
     let target = env::var("TARGET").unwrap();
     if target.strip_prefix("aarch64-").is_some() {
         build_nss.push(String::from("--target=arm64"));
