@@ -48,9 +48,8 @@ jobs:
         if: runner.os == 'Windows' && steps.cache-mozbuild.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          choco config set --name="'cacheLocation'" --value="'C:\tmp'"
           choco install --no-progress MozillaBuild
-          ls -l "C:\tmp"
+          cat "C:\ProgramData\chocolatey\logs\chocolatey.log"
           echo "C:\mozilla-build\bin" >> $GITHUB_PATH
           echo "C:\mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
 
