@@ -49,22 +49,22 @@ jobs:
         run: |
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
+          if [ "${{runner.os}}" == "Windows" ]; then
+            export OS_TARGET=WIN95
+          fi
           "$NSS_DIR"/build.sh -v
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
-          OS_TARGET: ${{ runner.os == 'Windows' && 'WIN95' || '' }}"
 
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Build
-        # shell: bash
-        run: cargo +${{ matrix.rust-toolchain }} build -v --tests
+        run: cargo +${{ matrix.rust-toolchain }} build -v --all-targets
         env:
           MOZILLABUILD: "C:/mozilla-build"
           MOZBUILD_STATE_PATH: ${{ github.workspace }}/.mozbuild
-          OS_TARGET: ${{ runner.os == 'Windows' && 'WIN95' || '' }}"
 
       - name: Run tests
         run: cargo +${{ matrix.rust-toolchain }} test -v
