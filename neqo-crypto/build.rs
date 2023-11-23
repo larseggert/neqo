@@ -133,7 +133,11 @@ fn get_bash() -> PathBuf {
     // When running under MOZILLABUILD, we need to make sure not to invoke
     // another instance of bash that might be sitting around (like WSL).
     match env::var("MOZILLABUILD") {
-        Ok(d) => PathBuf::from(d).join("msys").join("bin").join("bash.exe"),
+        Ok(d) => PathBuf::from(d)
+            .join("msys2")
+            .join("usr")
+            .join("bin")
+            .join("bash.exe"),
         Err(_) => PathBuf::from("bash"),
     }
 }
