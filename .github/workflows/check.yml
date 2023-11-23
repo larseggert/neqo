@@ -34,7 +34,7 @@ jobs:
         run: |
           brew install ninja mercurial
           python3 -m pip install gyp-next
-          export PATH="$(python3 -m site --user-base)/bin:$PATH"
+          echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
 
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
@@ -45,12 +45,14 @@ jobs:
           echo "C:\mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
 
       - name: Fetch NSS and NSPR
+        shell: bash
         run: |
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
-          bash -x "$NSS_DIR"/build.sh
+          ls -l "$NSS_DIR"
+          "$NSS_DIR"/build.sh
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
