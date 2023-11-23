@@ -43,12 +43,14 @@ jobs:
           choco install --no-progress MozillaBuild
           echo "C:/mozilla-build/bin" >> $GITHUB_PATH
           echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
-          ls -t "C:/mozilla-build/bin"
-          ls -t "C:/mozilla-build/msys2/usr/bin"
-          find "C:/mozilla-build/bin" | grep gyp
+          ls -l "C:/mozilla-build/bin"
+          ls -l "C:/mozilla-build/msys2/usr/bin"
           echo "MOZILLABUILD=C:/mozilla-build" >> $GITHUB_ENV
           echo "MOZBUILD_STATE_PATH=C:/mozbuild-state" >> $GITHUB_ENV
           echo "OS_TARGET=WIN95" >> $GITHUB_ENV
+          which gyp
+          python3 -m pip install gyp-next || true
+          pipx install gyp-next || true
 
       - name: Fetch NSS and NSPR
         shell: bash
