@@ -14,12 +14,12 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust-toolchain }}
-          components: rustfmt, clippy
-          # cache: false # enabling the cache leads to spurious failures
+      # - name: Install Rust
+      #   uses: actions-rust-lang/setup-rust-toolchain@v1
+      #   with:
+      #     toolchain: ${{ matrix.rust-toolchain }}
+      #     components: rustfmt, clippy
+      #     # cache: false # enabling the cache leads to spurious failures
 
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
@@ -40,7 +40,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          choco install --no-progress MozillaBuild visualstudio2022buildtools visualstudio2022-workload-vctools
+          choco install --no-progress MozillaBuild
           echo "C:\mozilla-build\bin" >> $GITHUB_PATH
           echo "C:\mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
 
