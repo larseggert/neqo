@@ -52,7 +52,7 @@ jobs:
         run: |
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
-          sed -i 's|mv -f $(DESTDIR)$(includedir)/$(MDCPUCFG_H).*|ls -l $(DESTDIR)$(includedir)/|g' "$NSPR_DIR"/pr/include/md/Makefile.in
+          sed -i 's|mv -f $(DESTDIR)$(includedir)/$(MDCPUCFG_H).*|#|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           "$NSS_DIR"/build.sh -v
         env:
           NSS_DIR: ${{ github.workspace }}/nss
