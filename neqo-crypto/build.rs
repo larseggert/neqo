@@ -134,10 +134,7 @@ fn get_bash() -> PathBuf {
     // another instance of bash that might be sitting around (like WSL).
     match env::var("MOZILLABUILD") {
         Ok(d) => PathBuf::from(d)
-            .join("msys2")
-            .join("usr")
-            .join("bin")
-            .join("bash.exe"),
+            .join("start-shell.bat"),
         Err(_) => PathBuf::from("bash"),
     }
 }
