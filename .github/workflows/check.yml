@@ -34,7 +34,7 @@ jobs:
         shell: bash
         run: |
           choco install --no-progress MozillaBuild
-          find "C:\mozilla-build\msys"
+          find "C:\mozilla-build"
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
