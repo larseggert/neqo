@@ -52,10 +52,11 @@ jobs:
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
           ls -l "$NSS_DIR"
-          "$NSS_DIR"/build.sh -v --msvc
+          "$NSS_DIR"/build.sh -v
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
+          OS_TARGET: WIN95
 
       - name: Checkout
         uses: actions/checkout@v4
