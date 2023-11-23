@@ -43,6 +43,8 @@ jobs:
           choco install --no-progress MozillaBuild
           echo "C:/mozilla-build/bin" >> $GITHUB_PATH
           echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
+          echo "MOZILLABUILD=C:/mozilla-build" >> $GITHUB_ENV
+          echo "MOZBUILD_STATE_PATH=C:/mozbuild-state" >> $GITHUB_ENV
           echo "OS_TARGET=WIN95" >> $GITHUB_ENV
 
       - name: Fetch NSS and NSPR
@@ -51,6 +53,8 @@ jobs:
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           "$NSS_DIR"/build.sh -v
+          find "$NSPR_DIR"
+          find "$NSS_DIR"
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
@@ -60,9 +64,6 @@ jobs:
 
       - name: Build
         run: cargo +${{ matrix.rust-toolchain }} build -v --all-targets
-        env:
-          MOZILLABUILD: "C:/mozilla-build"
-          MOZBUILD_STATE_PATH: ${{ github.workspace }}/.mozbuild
 
       - name: Run tests
         run: cargo +${{ matrix.rust-toolchain }} test -v
