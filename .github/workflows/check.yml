@@ -33,6 +33,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           choco install --no-progress MozillaBuild
+          find "C:\mozilla-build\msys"
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
