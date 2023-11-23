@@ -14,12 +14,12 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      # - name: Install Rust
-      #   uses: actions-rust-lang/setup-rust-toolchain@v1
-      #   with:
-      #     toolchain: ${{ matrix.rust-toolchain }}
-      #     components: rustfmt, clippy
-      #     # cache: false # enabling the cache leads to spurious failures
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust-toolchain }}
+          components: rustfmt, clippy
+          cache: false # enabling the cache leads to spurious failures
 
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
@@ -41,22 +41,19 @@ jobs:
         shell: bash
         run: |
           choco install --no-progress MozillaBuild
-          echo "C:\mozilla-build\bin" >> $GITHUB_PATH
-          echo "C:\mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
+          echo "C:/mozilla-build/bin" >> $GITHUB_PATH
+          echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
 
       - name: Fetch NSS and NSPR
         shell: bash
         run: |
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
-          echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
-          echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
-          ls -l "$NSS_DIR"
           "$NSS_DIR"/build.sh -v
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
-          OS_TARGET: WIN95
+          OS_TARGET: ${{ runner.os == 'Windows' && 'WIN95' || '' }}"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -65,9 +62,9 @@ jobs:
         # shell: bash
         run: cargo +${{ matrix.rust-toolchain }} build -v --tests
         env:
-          MOZILLABUILD: "C:\\mozilla-build"
+          MOZILLABUILD: "C:/mozilla-build"
           MOZBUILD_STATE_PATH: ${{ github.workspace }}/.mozbuild
-          CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG: true
+          OS_TARGET: ${{ runner.os == 'Windows' && 'WIN95' || '' }}"
 
       - name: Run tests
         run: cargo +${{ matrix.rust-toolchain }} test -v
