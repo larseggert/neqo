@@ -156,6 +156,7 @@ fn build_nss(dir: PathBuf) {
     if target.strip_prefix("aarch64-").is_some() {
         build_nss.push(String::from("--target=arm64"));
     }
+    println!("bash {}", get_bash().display());
     let status = Command::new(get_bash())
         .args(build_nss)
         .current_dir(dir)
