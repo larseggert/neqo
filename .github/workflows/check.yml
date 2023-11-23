@@ -34,7 +34,7 @@ jobs:
         # shell: bash
         run: |
           choco install --no-progress MozillaBuild
-          # find "C:\mozilla-build"
+          # find "C:/mozilla-build"
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -50,7 +50,7 @@ jobs:
         shell: bash
         run: cargo +${{ matrix.rust-toolchain }} build -v --tests
         env:
-          MOZILLABUILD: "C:\mozilla-build"
+          MOZILLABUILD: "C:/mozilla-build"
           MOZBUILD_STATE_PATH: ${{ github.workspace }}/.mozbuild
           CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG: true
 
