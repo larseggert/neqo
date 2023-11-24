@@ -58,9 +58,9 @@ jobs:
 
       - name: Fetch NSS and NSPR
         run: |
-          hg clone https://hg.mozilla.org/projects/nspr ${{ github.workspace }}/nspr
-          git clone --depth=1 https://github.com/nss-dev/nss ${{ github.workspace }}/nss
-          ${{ github.workspace }}/nss/build.sh -v --msvc
+          hg clone https://hg.mozilla.org/projects/nspr "${{ github.workspace }}/nspr"
+          git clone --depth=1 https://github.com/nss-dev/nss "${{ github.workspace }}/nss"
+          "${{ github.workspace }}/nss/build.sh" -v --msvc
           # grep -Ri nologo "$NSS_DIR" || true
           # grep -Ri nologo "$NSPR_DIR" || true
           # find "$NSPR_DIR" -type f -exec sed -i 's/-nologo//gi' {} +
