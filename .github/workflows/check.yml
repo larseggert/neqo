@@ -65,7 +65,7 @@ jobs:
       - name: Fetch NSS and NSPR
         shell: msys2 {0}
         run: |
-          gyp -V
+          gyp -h
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           "$NSS_DIR"/build.sh -v
