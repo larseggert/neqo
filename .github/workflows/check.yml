@@ -42,7 +42,7 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           # update: true
-          install: nsinstall python
+          install: nsinstall gyp
 
       # - name: Install dependencies (Windows)
       #   if: runner.os == 'Windows'
@@ -61,7 +61,7 @@ jobs:
       - name: Fetch NSS and NSPR
         shell: msys2 {0}
         run: |
-          python3 -m pip install gyp-next
+          # python3 -m pip install gyp-next
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           # sed -i 's|mv -f $(DESTDIR)$(includedir)/$(MDCPUCFG_H).*||g' "$NSPR_DIR"/pr/include/md/Makefile.in
