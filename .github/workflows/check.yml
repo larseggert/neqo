@@ -40,7 +40,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          choco install --no-progress MozillaBuild python3 visualstudio2022community
+          choco install --no-progress MozillaBuild python3
           python3 -m pip install gyp-next || true
           echo "C:/mozilla-build/bin" >> $GITHUB_PATH
           echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
@@ -54,7 +54,7 @@ jobs:
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           sed -i 's|mv -f $(DESTDIR)$(includedir)/$(MDCPUCFG_H).*||g' "$NSPR_DIR"/pr/include/md/Makefile.in
-          "$NSS_DIR"/build.sh -v
+          "$NSS_DIR"/build.sh -v --gcc
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
