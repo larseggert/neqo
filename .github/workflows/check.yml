@@ -80,6 +80,10 @@ jobs:
           echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
           hg clone https://hg.mozilla.org/projects/nspr
           git clone --depth=1 https://github.com/nss-dev/nss
+
+      - name: Build
+        if: runner.os == 'Windows'
+        run: |
           nss/build.sh -v --msvc
 
       # - name: Checkout
