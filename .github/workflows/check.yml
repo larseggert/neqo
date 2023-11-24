@@ -45,7 +45,8 @@ jobs:
           install: nsinstall
       - shell: msys2 {0}
         run: |
-          which nsinstall || true
+          find /usr/bin  | grep nsinstall || true
+          ls -l /usr/bin
           echo $PATH
 
       # - name: Install dependencies (Windows)
