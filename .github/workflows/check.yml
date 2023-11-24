@@ -52,8 +52,8 @@ jobs:
         run: |
           python3 -m pip install gyp-next
           echo "OS_TARGET=WIN95" >> $GITHUB_ENV
-          find "C:/Program Files (x86)/Microsoft Visual Studio/" || true
-          # echo "GYP_MSVS_OVERRIDE_PATH=C:/Program Files (x86)/Microsoft Visual Studio/2022/Community" >> $GITHUB_ENV
+          find "C:\Program Files\Microsoft Visual Studio\2022\Enterprise" || true
+          echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise" >> $GITHUB_ENV
           echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
 
       # - name: Install dependencies (Windows)
