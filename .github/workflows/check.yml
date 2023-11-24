@@ -36,23 +36,31 @@ jobs:
       #     python3 -m pip install gyp-next
       #     echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
 
+
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          # choco install --no-progress MozillaBuild # python3
-          python3 -m pip install gyp-next || true
-          pacman -S make
-          # echo "C:/mozilla-build/bin" >> $GITHUB_PATH
-          # echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
-          # echo "MOZILLABUILD=C:/mozilla-build" >> $GITHUB_ENV
-          # echo "MOZBUILD_STATE_PATH=C:/mozbuild-state" >> $GITHUB_ENV
-          echo "OS_TARGET=WIN95" >> $GITHUB_ENV
-          # echo "GYP_MSVS_OVERRIDE_PATH=C:/Program Files (x86)/Microsoft Visual Studio/2022/Community" >> $GITHUB_ENV
+        uses: msys2/setup-msys2@v2
+        with:
+          install: make
+
+      # - name: Install dependencies (Windows)
+      #   if: runner.os == 'Windows'
+      #   shell: bash
+      #   run: |
+      #     # choco install --no-progress MozillaBuild # python3
+      #     python3 -m pip install gyp-next
+      #     pacman -S make
+      #     # echo "C:/mozilla-build/bin" >> $GITHUB_PATH
+      #     # echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
+      #     # echo "MOZILLABUILD=C:/mozilla-build" >> $GITHUB_ENV
+      #     # echo "MOZBUILD_STATE_PATH=C:/mozbuild-state" >> $GITHUB_ENV
+      #     echo "OS_TARGET=WIN95" >> $GITHUB_ENV
+      #     # echo "GYP_MSVS_OVERRIDE_PATH=C:/Program Files (x86)/Microsoft Visual Studio/2022/Community" >> $GITHUB_ENV
 
       - name: Fetch NSS and NSPR
         shell: bash
         run: |
+          python3 -m pip install gyp-next
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           sed -i 's|mv -f $(DESTDIR)$(includedir)/$(MDCPUCFG_H).*||g' "$NSPR_DIR"/pr/include/md/Makefile.in
