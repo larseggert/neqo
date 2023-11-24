@@ -62,8 +62,8 @@ jobs:
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           grep -Ri nologo "$NSS_DIR" || true
           grep -Ri nologo "$NSPR_DIR" || true
-          find "$NSPR_DIR" -type f | xargs sed -i 's/-nologo//gi'
-          find "$NSS_DIR" -type f | xargs sed -i 's/-nologo//gi'
+          find "$NSPR_DIR" -type f -exec sed -i 's/-nologo//gi' {} +
+          find "$NSS_DIR" -type f -exec sed -i 's/-nologo//gi' {} +
           grep -Ri nologo "$NSS_DIR" || true
           grep -Ri nologo "$NSPR_DIR" || true
           "$NSS_DIR"/build.sh -v --msvc
