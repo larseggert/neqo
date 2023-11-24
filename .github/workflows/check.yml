@@ -46,6 +46,13 @@ jobs:
           install: nsinstall gyp ninja python-six
           path-type: inherit
 
+      - name: Set env (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo "OS_TARGET=WIN95" >> $GITHUB_ENV
+          echo "GYP_MSVS_OVERRIDE_PATH=C:/Program Files (x86)/Microsoft Visual Studio/2022/Community" >> $GITHUB_ENV
+
       # - name: Install dependencies (Windows)
       #   if: runner.os == 'Windows'
       #   shell: bash
@@ -68,7 +75,7 @@ jobs:
           gyp -h
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
-          "$NSS_DIR"/build.sh -v
+          "$NSS_DIR"/build.sh
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
