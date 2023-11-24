@@ -60,6 +60,9 @@ jobs:
       - name: Fetch NSS and NSPR
         shell: bash
         run: |
+          ls -l /mingw64/bin
+          ls -l /usr/bin
+          ls -l /d/a/_temp/setup-msys2
           which nsinstall || true
           which nsinstall.exe ||true
           python3 -m pip install gyp-next
