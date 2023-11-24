@@ -22,7 +22,7 @@ jobs:
       #     cache: false # enabling the cache leads to spurious failures
 
       # - name: Install dependencies (Linux)
-      #   if: matrix.os == 'Linux'
+      #   if: runner.os == 'Linux'
       #   env:
       #     DEBIAN_FRONTEND: noninteractive
       #   run: |
@@ -30,7 +30,7 @@ jobs:
       #     sudo apt-get install -y --no-install-recommends gyp mercurial ninja-build
 
       # - name: Install dependencies (MacOS)
-      #   if: matrix.os == 'MacOS'
+      #   if: runner.os == 'MacOS'
       #   run: |
       #     brew install ninja mercurial
       #     python3 -m pip install gyp-next
@@ -38,7 +38,7 @@ jobs:
 
 
       - name: Install dependencies (Windows)
-        if: matrix.os == 'Windows'
+        if: runner.os == 'Windows'
         uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64
@@ -47,7 +47,7 @@ jobs:
           path-type: inherit
 
       - name: Set env (Windows)
-        if: matrix.os == 'Windows'
+        if: runner.os == 'Windows'
         shell: bash
         run: |
           python3 -m pip install gyp-next
@@ -57,7 +57,7 @@ jobs:
           echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
 
       # - name: Install dependencies (Windows)
-      #   if: matrix.os == 'Windows'
+      #   if: runner.os == 'Windows'
       #   shell: bash
       #   run: |
       #     # choco install --no-progress MozillaBuild # python3
@@ -73,7 +73,7 @@ jobs:
           # sed -i 's|mv -f $(DESTDIR)$(includedir)/$(MDCPUCFG_H).*||g' "$NSPR_DIR"/pr/include/md/Makefile.in
 
       - name: Fetch NSS and NSPR
-        shell: ${{ matrix.os == 'Windows' && 'msys2' || 'bash' }}
+        shell: ${{ runner.os == 'Windows' && 'msys2' || 'bash' }}
         run: |
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
