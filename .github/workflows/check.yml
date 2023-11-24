@@ -42,6 +42,7 @@ jobs:
         run: |
           # choco install --no-progress MozillaBuild # python3
           python3 -m pip install gyp-next || true
+          pacman -S make
           # echo "C:/mozilla-build/bin" >> $GITHUB_PATH
           # echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
           # echo "MOZILLABUILD=C:/mozilla-build" >> $GITHUB_ENV
