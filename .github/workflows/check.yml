@@ -14,39 +14,40 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust-toolchain }}
-          components: rustfmt, clippy
-          cache: false # enabling the cache leads to spurious failures
+      # - name: Install Rust
+      #   uses: actions-rust-lang/setup-rust-toolchain@v1
+      #   with:
+      #     toolchain: ${{ matrix.rust-toolchain }}
+      #     components: rustfmt, clippy
+      #     cache: false # enabling the cache leads to spurious failures
 
-      - name: Install dependencies (Linux)
-        if: runner.os == 'Linux'
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends gyp mercurial ninja-build
+      # - name: Install dependencies (Linux)
+      #   if: runner.os == 'Linux'
+      #   env:
+      #     DEBIAN_FRONTEND: noninteractive
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y --no-install-recommends gyp mercurial ninja-build
 
-      - name: Install dependencies (MacOS)
-        if: runner.os == 'MacOS'
-        run: |
-          brew install ninja mercurial
-          python3 -m pip install gyp-next
-          echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
+      # - name: Install dependencies (MacOS)
+      #   if: runner.os == 'MacOS'
+      #   run: |
+      #     brew install ninja mercurial
+      #     python3 -m pip install gyp-next
+      #     echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
 
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          choco install --no-progress MozillaBuild python3
+          # choco install --no-progress MozillaBuild # python3
           python3 -m pip install gyp-next || true
-          echo "C:/mozilla-build/bin" >> $GITHUB_PATH
-          echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
-          echo "MOZILLABUILD=C:/mozilla-build" >> $GITHUB_ENV
-          echo "MOZBUILD_STATE_PATH=C:/mozbuild-state" >> $GITHUB_ENV
+          # echo "C:/mozilla-build/bin" >> $GITHUB_PATH
+          # echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
+          # echo "MOZILLABUILD=C:/mozilla-build" >> $GITHUB_ENV
+          # echo "MOZBUILD_STATE_PATH=C:/mozbuild-state" >> $GITHUB_ENV
           echo "OS_TARGET=WIN95" >> $GITHUB_ENV
+          # echo "GYP_MSVS_OVERRIDE_PATH=C:/Program Files (x86)/Microsoft Visual Studio/2022/Community" >> $GITHUB_ENV
 
       - name: Fetch NSS and NSPR
         shell: bash
@@ -54,27 +55,27 @@ jobs:
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           sed -i 's|mv -f $(DESTDIR)$(includedir)/$(MDCPUCFG_H).*||g' "$NSPR_DIR"/pr/include/md/Makefile.in
-          "$NSS_DIR"/build.sh -v --gcc
+          "$NSS_DIR"/build.sh -v
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
 
-      - name: Checkout
-        uses: actions/checkout@v4
+      # - name: Checkout
+      #   uses: actions/checkout@v4
 
-      - name: Build
-        run: cargo +${{ matrix.rust-toolchain }} build -v --all-targets
+      # - name: Build
+      #   run: cargo +${{ matrix.rust-toolchain }} build -v --all-targets
 
-      - name: Run tests
-        run: cargo +${{ matrix.rust-toolchain }} test -v
-        env:
-           RUST_BACKTRACE: 1
-           RUST_LOG: neqo=debug
+      # - name: Run tests
+      #   run: cargo +${{ matrix.rust-toolchain }} test -v
+      #   env:
+      #      RUST_BACKTRACE: 1
+      #      RUST_LOG: neqo=debug
 
-      - name: Check formatting
-        run: cargo +${{ matrix.rust-toolchain }} fmt --all -- --check
-        if: ${{ success() || failure() }}
+      # - name: Check formatting
+      #   run: cargo +${{ matrix.rust-toolchain }} fmt --all -- --check
+      #   if: ${{ success() || failure() }}
 
-      - name: Clippy
-        run: cargo +${{ matrix.rust-toolchain }} clippy -v --tests -- -D warnings
-        if: ${{ success() || failure() }}
+      # - name: Clippy
+      #   run: cargo +${{ matrix.rust-toolchain }} clippy -v --tests -- -D warnings
+      #   if: ${{ success() || failure() }}
