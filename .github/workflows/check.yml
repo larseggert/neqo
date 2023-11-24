@@ -41,13 +41,8 @@ jobs:
         if: runner.os == 'Windows'
         uses: msys2/setup-msys2@v2
         with:
-          update: true
-          install: nsinstall
-      - shell: msys2 {0}
-        run: |
-          find /usr/bin  | grep nsinstall || true
-          ls -l /usr/bin
-          echo $PATH
+          # update: true
+          install: nsinstall python
 
       # - name: Install dependencies (Windows)
       #   if: runner.os == 'Windows'
@@ -66,9 +61,6 @@ jobs:
       - name: Fetch NSS and NSPR
         shell: msys2 {0}
         run: |
-          find /usr/bin  | grep nsinstall || true
-          ls -l /usr/bin
-          echo $PATH
           python3 -m pip install gyp-next
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
