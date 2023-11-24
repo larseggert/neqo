@@ -52,8 +52,9 @@ jobs:
         run: |
           python3 -m pip install gyp-next
           echo "OS_TARGET=WIN95" >> $GITHUB_ENV
+          find "C:/Program Files (x86)/Microsoft Visual Studio/2022/Community"
           # echo "GYP_MSVS_OVERRIDE_PATH=C:/Program Files (x86)/Microsoft Visual Studio/2022/Community" >> $GITHUB_ENV
-          # echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
+          echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
 
       # - name: Install dependencies (Windows)
       #   if: runner.os == 'Windows'
@@ -74,7 +75,6 @@ jobs:
       - name: Fetch NSS and NSPR
         shell: msys2 {0}
         run: |
-          gyp -h
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           "$NSS_DIR"/build.sh
