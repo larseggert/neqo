@@ -65,9 +65,9 @@ jobs:
       - name: Fetch NSS and NSPR
         shell: msys2 {0}
         run: |
-          hg clone https://hg.mozilla.org/projects/nspr ${{ github.workspace }}/nss
-          git clone --depth=1 https://github.com/nss-dev/nss ${{ github.workspace }}/nspr
-          ${{ github.workspace }}/nspr/build.sh -v
+          hg clone https://hg.mozilla.org/projects/nspr "${{ github.workspace }}\nss"
+          git clone --depth=1 https://github.com/nss-dev/nss "${{ github.workspace }}\nspr"
+          "${{ github.workspace }}\nspr\build.sh" -v
         # env:
         #   NSS_DIR: ${{ github.workspace }}/nss
         #   NSPR_DIR: ${{ github.workspace }}/nspr
