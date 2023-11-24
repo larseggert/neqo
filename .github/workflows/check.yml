@@ -78,19 +78,9 @@ jobs:
           # echo "OS_TARGET=WIN95" >> $GITHUB_ENV
           echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise" >> $GITHUB_ENV
           echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
-          hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
-          git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
-        env:
-          NSS_DIR: ${{ github.workspace }}/nss
-          NSPR_DIR: ${{ github.workspace }}/nspr
-
-      - name: Build
-        run: |
-          env
-          "${{ github.workspace }}\nss\build.sh" -v --msvc
-        # env:
-        #   NSS_DIR: ${{ github.workspace }}/nss
-        #   NSPR_DIR: ${{ github.workspace }}/nspr
+          hg clone https://hg.mozilla.org/projects/nspr
+          git clone --depth=1 https://github.com/nss-dev/nss
+          nss/build.sh -v --msvc
 
       # - name: Checkout
       #   uses: actions/checkout@v4
