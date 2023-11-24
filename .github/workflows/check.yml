@@ -58,18 +58,18 @@ jobs:
 
       - name: Fetch NSS and NSPR
         run: |
-          hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
-          git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
+          hg clone https://hg.mozilla.org/projects/nspr $NSPR_DIR
+          git clone --depth=1 https://github.com/nss-dev/nss $NSS_DIR
           # grep -Ri nologo "$NSS_DIR" || true
           # grep -Ri nologo "$NSPR_DIR" || true
           # find "$NSPR_DIR" -type f -exec sed -i 's/-nologo//gi' {} +
           # find "$NSS_DIR" -type f -exec sed -i 's/-nologo//gi' {} +
           # grep -Ri nologo "$NSS_DIR" || true
           # grep -Ri nologo "$NSPR_DIR" || true
-          "$NSS_DIR"\build.sh -v --msvc
+          $NSS_DIR\build.sh -v --msvc
         env:
-          NSS_DIR: ${{ github.workspace }}\nss
-          NSPR_DIR: ${{ github.workspace }}\nspr
+          NSS_DIR: ${{ github.workspace }}/nss
+          NSPR_DIR: ${{ github.workspace }}/nspr
 
       # - name: Checkout
       #   uses: actions/checkout@v4
