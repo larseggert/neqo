@@ -41,7 +41,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: msys2/setup-msys2@v2
         with:
-          install: make
+          install: nsinstall
 
       # - name: Install dependencies (Windows)
       #   if: runner.os == 'Windows'
@@ -63,7 +63,7 @@ jobs:
           python3 -m pip install gyp-next
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
-          sed -i 's|mv -f $(DESTDIR)$(includedir)/$(MDCPUCFG_H).*||g' "$NSPR_DIR"/pr/include/md/Makefile.in
+          # sed -i 's|mv -f $(DESTDIR)$(includedir)/$(MDCPUCFG_H).*||g' "$NSPR_DIR"/pr/include/md/Makefile.in
           "$NSS_DIR"/build.sh -v
         env:
           NSS_DIR: ${{ github.workspace }}/nss
