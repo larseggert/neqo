@@ -78,8 +78,6 @@ jobs:
           # echo "OS_TARGET=WIN95" >> $GITHUB_ENV
           echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise" >> $GITHUB_ENV
           echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
-
-        run: |
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
         env:
