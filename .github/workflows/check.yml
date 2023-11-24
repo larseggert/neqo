@@ -60,7 +60,8 @@ jobs:
         run: |
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
-          sed -i 's/-nologo//g' "$NSS_DIR"/coreconf/WIN32.mk
+          sed -i 's/-nologo//gi' "$NSPR_DIR"/configure
+          sed -i 's/-nologo//gi' "$NSS_DIR"/coreconf/WIN32.mk
           "$NSS_DIR"/build.sh -v --msvc
           # make -C "$NSS_DIR" nss_build_all
         env:
