@@ -86,7 +86,8 @@ jobs:
 
       - name: Build
         run: |
-          ${{ github.workspace }}\nss\build.sh -v --msvc
+          env
+          "${{ github.workspace }}\nss\build.sh" -v --msvc
         # env:
         #   NSS_DIR: ${{ github.workspace }}/nss
         #   NSPR_DIR: ${{ github.workspace }}/nspr
