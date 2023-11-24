@@ -44,7 +44,6 @@ jobs:
           msystem: UCRT64
           # update: true
           install: nsinstall gyp ninja
-          path-type: inherit
 
       # - name: Install dependencies (Windows)
       #   if: runner.os == 'Windows'
@@ -63,14 +62,13 @@ jobs:
           # sed -i 's|mv -f $(DESTDIR)$(includedir)/$(MDCPUCFG_H).*||g' "$NSPR_DIR"/pr/include/md/Makefile.in
 
       - name: Fetch NSS and NSPR
-        shell: msys2 {0}
         run: |
-          hg clone https://hg.mozilla.org/projects/nspr "${{ github.workspace }}\nss"
-          git clone --depth=1 https://github.com/nss-dev/nss "${{ github.workspace }}\nspr"
-          "${{ github.workspace }}\nspr\build.sh" -v
-        # env:
-        #   NSS_DIR: ${{ github.workspace }}/nss
-        #   NSPR_DIR: ${{ github.workspace }}/nspr
+          hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
+          git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
+          "$NSS_DIR"/build.sh -v
+        env:
+          NSS_DIR: ${{ github.workspace }}/nss
+          NSPR_DIR: ${{ github.workspace }}/nspr
 
       # - name: Checkout
       #   uses: actions/checkout@v4
