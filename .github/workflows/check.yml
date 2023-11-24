@@ -64,7 +64,7 @@ jobs:
       #     # echo "GYP_MSVS_OVERRIDE_PATH=C:/Program Files (x86)/Microsoft Visual Studio/2022/Community" >> $GITHUB_ENV
 
       - name: Fetch NSS and NSPR
-        shell: bash
+        shell: msys2 {0}
         run: |
           find /usr/bin  | grep nsinstall || true
           ls -l /usr/bin
