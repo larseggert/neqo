@@ -51,6 +51,7 @@ jobs:
           echo "MOZBUILD_STATE_PATH=C:/mozbuild-state" >> $GITHUB_ENV
           echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise" >> $GITHUB_ENV
           echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
+          echo "OS_TARGET=WIN95" >> $GITHUB_ENV
 
       - name: Fetch NSS and NSPR
         shell: bash
