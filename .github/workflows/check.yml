@@ -11,9 +11,6 @@ jobs:
       matrix:
         os: [windows-latest] # ubuntu-latest, macos-latest] #
         rust-toolchain: [stable] # , 1.65.0, beta]
-        include:
-          - os: windows-latest
-            shell: msys2 {0}
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -66,6 +63,7 @@ jobs:
           # sed -i 's|mv -f $(DESTDIR)$(includedir)/$(MDCPUCFG_H).*||g' "$NSPR_DIR"/pr/include/md/Makefile.in
 
       - name: Fetch NSS and NSPR
+        shell: msys2 {0}
         run: |
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
