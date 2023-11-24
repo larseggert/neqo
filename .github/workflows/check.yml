@@ -65,12 +65,14 @@ jobs:
       - name: Fetch NSS and NSPR
         shell: msys2 {0}
         run: |
+          gyp -V
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           "$NSS_DIR"/build.sh -v
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
+          GYP_MSVS_VERSION: 2022
 
       # - name: Checkout
       #   uses: actions/checkout@v4
