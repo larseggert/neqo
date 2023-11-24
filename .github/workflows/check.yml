@@ -43,7 +43,7 @@ jobs:
         with:
           msystem: UCRT64
           # update: true
-          install: nsinstall gyp ninja
+          install: nsinstall gyp ninja python-six
           path-type: inherit
 
       # - name: Install dependencies (Windows)
