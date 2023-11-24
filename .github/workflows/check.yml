@@ -67,12 +67,12 @@ jobs:
         if: runner.os == 'Windows'
         uses: msys2/setup-msys2@v2
         with:
-          install: nsinstall ninja python-six mercurial git # gyp in msys2 is too old, install separately
+          install: nsinstall ninja python-six # mercurial git # gyp in msys2 is too old, install separately
           # path-type: inherit
 
       - name: Install more dependencies (Windows)
         if: runner.os == 'Windows'
-        shell: bash
+        # shell: bash
         run: |
           python3 -m pip install gyp-next
           # echo "OS_TARGET=WIN95" >> $GITHUB_ENV
