@@ -58,13 +58,13 @@ jobs:
       #     echo "OS_TARGET=WIN95" >> $GITHUB_ENV
       #     # echo "GYP_MSVS_OVERRIDE_PATH=C:/Program Files (x86)/Microsoft Visual Studio/2022/Community" >> $GITHUB_ENV
 
+          # sed -i 's|mv -f $(DESTDIR)$(includedir)/$(MDCPUCFG_H).*||g' "$NSPR_DIR"/pr/include/md/Makefile.in
+
       - name: Fetch NSS and NSPR
         shell: msys2 {0}
         run: |
-          # python3 -m pip install gyp-next
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
-          # sed -i 's|mv -f $(DESTDIR)$(includedir)/$(MDCPUCFG_H).*||g' "$NSPR_DIR"/pr/include/md/Makefile.in
           "$NSS_DIR"/build.sh -v
         env:
           NSS_DIR: ${{ github.workspace }}/nss
