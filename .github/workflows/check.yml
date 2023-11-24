@@ -84,6 +84,9 @@ jobs:
         run: |
           hg clone https://hg.mozilla.org/projects/nspr "${{ github.workspace }}\nspr"
           git clone --depth=1 https://github.com/nss-dev/nss "${{ github.workspace }}\nss"
+
+      - name: Build
+        run: |
           "${{ github.workspace }}\nss\build.sh" -v --msvc
           # grep -Ri nologo "$NSS_DIR" || true
           # grep -Ri nologo "$NSPR_DIR" || true
