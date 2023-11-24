@@ -43,15 +43,17 @@ jobs:
         with:
           msystem: UCRT64
           # update: true
-          install: nsinstall gyp ninja python-six
+          install: nsinstall ninja python-six
           path-type: inherit
 
       - name: Set env (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
+          python3 -m pip install gyp-next
           echo "OS_TARGET=WIN95" >> $GITHUB_ENV
-          echo "GYP_MSVS_OVERRIDE_PATH=C:/Program Files (x86)/Microsoft Visual Studio/2022/Community" >> $GITHUB_ENV
+          # echo "GYP_MSVS_OVERRIDE_PATH=C:/Program Files (x86)/Microsoft Visual Studio/2022/Community" >> $GITHUB_ENV
+          # echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
 
       # - name: Install dependencies (Windows)
       #   if: runner.os == 'Windows'
@@ -79,7 +81,6 @@ jobs:
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
-          GYP_MSVS_VERSION: 2022
 
       # - name: Checkout
       #   uses: actions/checkout@v4
