@@ -42,7 +42,7 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           # update: true
-          install: nsinstall gyp
+          install: nsinstall gyp mercurial git ninja
 
       # - name: Install dependencies (Windows)
       #   if: runner.os == 'Windows'
