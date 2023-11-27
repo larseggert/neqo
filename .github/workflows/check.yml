@@ -100,13 +100,13 @@ jobs:
           which cl.exe || true
           # rm /usr/bin/link.exe || true
           # which link.exe || true
-          # nss/build.sh -v # --msvc
-          make -C nss nss_build_all || true
-          ls -l nss || true
-          cat nss/config.log || true
-          ls -l nspr || true
-          ls -l nspr/WIN954.0_DBG.OBJ || true
-          cat nspr/WIN954.0_DBG.OBJ/config.log || true
+          nss/build.sh -v # --msvc
+          # make -C nss nss_build_all || true
+          # ls -l nss || true
+          # cat nss/config.log || true
+          # ls -l nspr || true
+          # ls -l nspr/WIN954.0_DBG.OBJ || true
+          # cat nspr/WIN954.0_DBG.OBJ/config.log || true
 
       # - name: Checkout
       #   uses: actions/checkout@v4
