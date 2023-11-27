@@ -92,6 +92,8 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           which link || true
+          rm /usr/bin/link || true
+          which link || true
           nss/build.sh -v --msvc
 
       # - name: Checkout
