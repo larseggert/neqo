@@ -47,23 +47,19 @@ jobs:
         if: runner.os == 'Windows'
         uses: msys2/setup-msys2@v2
         with:
-          install: nsinstall # ninja python-six # gyp in msys2 is too old, install separately below
+          install: nsinstall
           path-type: inherit
 
       - name: Install other dependencies (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          # python3 -m pip install gyp-next
           echo "OS_TARGET=WIN95" >> $GITHUB_ENV
           hg clone https://hg.mozilla.org/projects/nspr
           git clone --depth=1 https://github.com/nss-dev/nss
-
-      - name: Build
-        if: runner.os == 'Windows'
-        run: |
           which perl
           perl -v
+          gcc -v
           make -j ${{ steps.cpu-cores.outputs.count }} -C nss nss_build_all USE_64=1 NS_USE_GCC=1 BUILD_OPT=1
 
       # - name: Checkout
