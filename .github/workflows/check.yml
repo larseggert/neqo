@@ -12,9 +12,9 @@ jobs:
         os: [windows-latest] # ubuntu-latest, macos-latest] #
         rust-toolchain: [stable] # , 1.65.0, beta]
     runs-on: ${{ matrix.os }}
-    # defaults:
-    #       run:
-    #         shell: ${{ matrix.os == 'windows-latest' && 'msys2 {0}' || 'bash' }}
+    defaults:
+          run:
+            shell: ${{ matrix.os == 'windows-latest' && 'msys2 {0}' || 'bash' }}
 
     steps:
       # - name: Install Rust
@@ -52,21 +52,13 @@ jobs:
         run: |
           python3 -m pip install gyp-next
           echo "OS_TARGET=WIN95" >> $GITHUB_ENV
-          # echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise" >> $GITHUB_ENV
-          # echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
-          # echo "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64" >> $GITHUB_PATH
           hg clone https://hg.mozilla.org/projects/nspr
           git clone --depth=1 https://github.com/nss-dev/nss
 
       - name: Build
         if: runner.os == 'Windows'
-        # Nuke the MSYS2-installed /usr/bin/link.exe, see
-        # https://anadoxin.org/blog/bringing-visual-studio-compiler-into-msys2-environment.html/
         run: |
-          # rm /usr/bin/link.exe || true
-          echo $nproc
           make -C nss nss_build_all USE_64=1 NS_USE_GCC=1 BUILD_OPT=1
-          # nss/build.sh -v --msvc -Ddisable_tests=1 -Dsign_libs=0
 
       # - name: Checkout
       #   uses: actions/checkout@v4
