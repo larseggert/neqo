@@ -84,12 +84,13 @@ jobs:
       - name: Build
         if: runner.os == 'Windows'
         # see https://anadoxin.org/blog/bringing-visual-studio-compiler-into-msys2-environment.html/
+        shell: bash
         run: |
-          which link.exe || true
-          rm /usr/bin/link.exe || true
-          which link.exe || true
-          nss/build.sh -g -v --enable-libpkix -Denable_draft_hpke=1
-          # make -C nss nss_build_all
+          # which link.exe || true
+          # rm /usr/bin/link.exe || true
+          # which link.exe || true
+          # nss/build.sh -v # --msvc
+          make -C nss nss_build_all
 
       # - name: Checkout
       #   uses: actions/checkout@v4
