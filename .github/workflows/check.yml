@@ -54,7 +54,7 @@ jobs:
 
       - name: Install other dependencies (Windows)
         if: runner.os == 'Windows'
-        shell: bash
+        # shell: bash
         run: |
           echo "OS_TARGET=WIN95" >> $GITHUB_ENV
           hg clone https://hg.mozilla.org/projects/nspr
@@ -62,7 +62,7 @@ jobs:
           which perl
           perl -v
           gcc -v
-          make -j ${{ steps.cpu-cores.outputs.count }} -C nss nss_build_all USE_64=1 NS_USE_GCC=1 BUILD_OPT=1
+          make -C nss nss_build_all USE_64=1 NS_USE_GCC=1 BUILD_OPT=1
 
       # - name: Checkout
       #   uses: actions/checkout@v4
