@@ -85,6 +85,10 @@ jobs:
           # echo "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/VSSDK/VisualStudioIntegration/Tools/Bin/" >> $GITHUB_PATH
           hg clone https://hg.mozilla.org/projects/nspr
           git clone --depth=1 https://github.com/nss-dev/nss
+        env:
+          MOZILLABUILD: "C:\\mozilla-build"
+          MOZBUILD_STATE_PATH: ${{ github.workspace }}/.mozbuild
+          CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG: true
 
       - name: Build
         if: runner.os == 'Windows'
