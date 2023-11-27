@@ -74,11 +74,6 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          which link.exe || true
-          rm /usr/bin/link.exe || true
-          which link.exe || true
-          rm "C:\Program Files\Git\usr\bin\link.exe" || true
-          which link.exe || true
           python3 -m pip install gyp-next
           echo "OS_TARGET=WIN95" >> $GITHUB_ENV
           echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise" >> $GITHUB_ENV
@@ -93,9 +88,7 @@ jobs:
           which link.exe || true
           rm /usr/bin/link.exe || true
           which link.exe || true
-          rm "C:\Program Files\Git\usr\bin\link.exe" || true
-          which link.exe || true
-          nss/build.sh -v --msvc
+          nss/build.sh -g -v --enable-libpkix -Denable_draft_hpke=1
           # make -C nss nss_build_all
 
       # - name: Checkout
