@@ -44,7 +44,7 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           install: nsinstall # ninja python-six # gyp in msys2 is too old, install separately below
-          # path-type: inherit
+          path-type: inherit
 
       - name: Install other dependencies (Windows)
         if: runner.os == 'Windows'
