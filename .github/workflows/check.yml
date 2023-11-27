@@ -57,7 +57,8 @@ jobs:
           hg clone https://hg.mozilla.org/projects/nspr
           git clone --depth=1 https://github.com/nss-dev/nss
           which msvc || true
-          find "C:\Program Files\Microsoft Visual Studio\2022\Enterprise" -name msvc.exe || true
+          ninja -v || true
+          ninja -V || true
 
       - name: Build
         if: runner.os == 'Windows'
