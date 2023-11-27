@@ -74,6 +74,11 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
+          which link.exe || true
+          rm /usr/bin/link.exe || true
+          which link.exe || true
+          rm "C:\Program Files\Git\usr\bin\link.exe" || true
+          which link.exe || true
           python3 -m pip install gyp-next
           echo "OS_TARGET=WIN95" >> $GITHUB_ENV
           echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise" >> $GITHUB_ENV
@@ -85,12 +90,13 @@ jobs:
         if: runner.os == 'Windows'
         # see https://anadoxin.org/blog/bringing-visual-studio-compiler-into-msys2-environment.html/
         run: |
-          # which link.exe || true
-          # rm /usr/bin/link.exe || true
-          where link.exe || true
-          whereis link.exe || true
-          # nss/build.sh -v --msvc
-          make -C nss nss_build_all
+          which link.exe || true
+          rm /usr/bin/link.exe || true
+          which link.exe || true
+          rm "C:\Program Files\Git\usr\bin\link.exe" || true
+          which link.exe || true
+          nss/build.sh -v --msvc
+          # make -C nss nss_build_all
 
       # - name: Checkout
       #   uses: actions/checkout@v4
