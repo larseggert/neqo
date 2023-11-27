@@ -91,7 +91,7 @@ jobs:
       - name: Build
         if: runner.os == 'Windows'
         run: |
-          nss/build.sh -v
+          nss/build.sh -v --msvc
 
       # - name: Checkout
       #   uses: actions/checkout@v4
