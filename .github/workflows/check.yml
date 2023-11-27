@@ -65,6 +65,7 @@ jobs:
           rm /usr/bin/link.exe || true
           which ninja || true
           ninja --version || true
+          ninja -t list || true
           nss/build.sh -v --msvc -Ddisable_tests=1 -Dsign_libs=0
 
       # - name: Checkout
