@@ -79,8 +79,8 @@ jobs:
           echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise" >> $GITHUB_ENV
           echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
           echo "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64" >> $GITHUB_PATH
-          echo "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/MSBuild/Current/Bin/" >> $GITHUB_PATH
-          echo "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/VSSDK/VisualStudioIntegration/Tools/Bin/" >> $GITHUB_PATH
+          # echo "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/MSBuild/Current/Bin/" >> $GITHUB_PATH
+          # echo "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/VSSDK/VisualStudioIntegration/Tools/Bin/" >> $GITHUB_PATH
           hg clone https://hg.mozilla.org/projects/nspr
           git clone --depth=1 https://github.com/nss-dev/nss
 
@@ -89,11 +89,10 @@ jobs:
         # see https://anadoxin.org/blog/bringing-visual-studio-compiler-into-msys2-environment.html/
         # shell: bash
         run: |
-          find "C:\Program Files" -name mt.exe || true
+          # find "C:\Program Files" -name mt.exe || true
           # find "C:\Program Files\Microsoft Visual Studio\2022\Enterprise" -name \*.exe || true
           # export PATH="/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64:$PATH"
           echo $PATH
-          which mt.exe || true
           which link.exe || true
           which cl.exe || true
           # rm /usr/bin/link.exe || true
@@ -103,6 +102,7 @@ jobs:
           ls -l nss || true
           cat nss/config.log || true
           ls -l nspr || true
+          ls -l nspr/WIN954.0_DBG.OBJ || true
           cat nspr/config.log || true
 
       # - name: Checkout
