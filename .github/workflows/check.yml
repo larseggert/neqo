@@ -67,7 +67,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: msys2/setup-msys2@v2
         with:
-          install: nsinstall ninja gyp python-six # gyp in msys2 is too old, install separately
+          install: nsinstall ninja python-six # gyp in msys2 is too old, install separately
           path-type: inherit
 
       - name: Install more dependencies (Windows)
@@ -81,7 +81,7 @@ jobs:
           which vswhere || true
           which vswhere.exe || true
           vswhere || true
-          # python3 -m pip install gyp-next
+          python3 -m pip install gyp-next
           echo "OS_TARGET=WIN95" >> $GITHUB_ENV
           echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise" >> $GITHUB_ENV
           echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
