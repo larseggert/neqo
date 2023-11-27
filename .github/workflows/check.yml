@@ -65,7 +65,7 @@ jobs:
         run: |
           # rm /usr/bin/link.exe || true
           echo $nproc
-          make -j$(nproc) -C nss nss_build_all USE_64=1 NS_USE_GCC=1
+          make -C nss nss_build_all USE_64=1 NS_USE_GCC=1 BUILD_OPT=1
           # nss/build.sh -v --msvc -Ddisable_tests=1 -Dsign_libs=0
 
       # - name: Checkout
