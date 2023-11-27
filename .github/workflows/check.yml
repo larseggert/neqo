@@ -91,8 +91,8 @@ jobs:
           # which link.exe || true
           # nss/build.sh -v # --msvc
           make -C nss nss_build_all || true
-          ls -l
-          cat config.log
+          ls -l nss
+          cat nss/config.log
 
       # - name: Checkout
       #   uses: actions/checkout@v4
