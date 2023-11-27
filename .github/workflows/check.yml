@@ -62,7 +62,8 @@ jobs:
       - name: Build
         if: runner.os == 'Windows'
         run: |
-          echo ${{ steps.cpu-cores.outputs.count }}
+          which perl
+          perl -v
           make -j ${{ steps.cpu-cores.outputs.count }} -C nss nss_build_all USE_64=1 NS_USE_GCC=1 BUILD_OPT=1
 
       # - name: Checkout
