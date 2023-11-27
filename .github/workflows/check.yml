@@ -73,16 +73,9 @@ jobs:
       - name: Install more dependencies (Windows)
         if: runner.os == 'Windows'
         shell: bash
-        # see https://anadoxin.org/blog/bringing-visual-studio-compiler-into-msys2-environment.html/
         run: |
-          which link || true
-          rm /usr/bin/link || true
-          which link || true
-          which link.exe || true
-          rm /usr/bin/link.exe || true
-          which link.exe || true
           python3 -m pip install gyp-next
-          # echo "OS_TARGET=WIN95" >> $GITHUB_ENV
+          echo "OS_TARGET=WIN95" >> $GITHUB_ENV
           echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise" >> $GITHUB_ENV
           echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
           hg clone https://hg.mozilla.org/projects/nspr
@@ -90,10 +83,11 @@ jobs:
 
       - name: Build
         if: runner.os == 'Windows'
+        # see https://anadoxin.org/blog/bringing-visual-studio-compiler-into-msys2-environment.html/
         run: |
-          which link || true
-          rm /usr/bin/link || true
-          which link || true
+          which link.exe || true
+          rm /usr/bin/link.exe || true
+          which link.exe || true
           nss/build.sh -v --msvc
 
       # - name: Checkout
