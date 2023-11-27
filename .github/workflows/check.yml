@@ -54,7 +54,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          python3 -m pip install gyp-next
+          # python3 -m pip install gyp-next
           echo "OS_TARGET=WIN95" >> $GITHUB_ENV
           hg clone https://hg.mozilla.org/projects/nspr
           git clone --depth=1 https://github.com/nss-dev/nss
