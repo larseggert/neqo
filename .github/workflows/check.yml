@@ -98,10 +98,10 @@ jobs:
           # echo $PATH
           # cl -v || true
           # mt || true
-          # which link.exe || true
-          # which cl.exe || true
-          # rm /usr/bin/link.exe || true
-          # which link.exe || true
+          which link.exe || true
+          which cl.exe || true
+          rm /usr/bin/link.exe || true
+          which link.exe || true
           nss/build.sh -v --msvc
           # make -C nss nss_build_all || true
           # ls -l nss || true
