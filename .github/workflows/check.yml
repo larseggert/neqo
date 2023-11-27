@@ -59,8 +59,9 @@ jobs:
 
       - name: Build
         if: runner.os == 'Windows'
-        # see https://anadoxin.org/blog/bringing-visual-studio-compiler-into-msys2-environment.html/
-        shell: bash
+        # Nuke the MSYS2-installed /usr/bin/link.exe, see
+        # https://anadoxin.org/blog/bringing-visual-studio-compiler-into-msys2-environment.html/
+        # shell: bash
         run: |
           rm /usr/bin/link.exe || true
           which link.exe || true
