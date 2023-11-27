@@ -76,10 +76,10 @@ jobs:
         # see https://anadoxin.org/blog/bringing-visual-studio-compiler-into-msys2-environment.html/
         run: |
           which link || true
-          rm /usr/bin/link
+          rm /usr/bin/link || true
           which link || true
           which link.exe || true
-          rm /usr/bin/link.exe
+          rm /usr/bin/link.exe || true
           which link.exe || true
           python3 -m pip install gyp-next
           # echo "OS_TARGET=WIN95" >> $GITHUB_ENV
@@ -91,6 +91,7 @@ jobs:
       - name: Build
         if: runner.os == 'Windows'
         run: |
+          which link || true
           nss/build.sh -v --msvc
 
       # - name: Checkout
