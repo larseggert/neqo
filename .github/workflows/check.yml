@@ -63,6 +63,7 @@ jobs:
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git config --global core.autocrlf false
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
+          which sed || true
           sed -i'' 's/-w44996//' "$NSS_DIR"/lib/sqlite/Makefile
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
