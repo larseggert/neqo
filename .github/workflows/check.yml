@@ -23,7 +23,7 @@ jobs:
         with:
           toolchain: ${{ matrix.rust-toolchain }}
           components: rustfmt, clippy
-          cache: false # enabling the cache leads to spurious failures
+          # cache: false # enabling the cache leads to spurious failures
 
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
