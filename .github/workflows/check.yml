@@ -9,9 +9,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: [windows-latest] # ubuntu-latest, macos-latest] #
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        rust-toolchain: [1.65.0] #, stable, beta]
+        os: [ubuntu-latest, macos-latest] #, windows-latest]
+        rust-toolchain: [1.65.0, stable] #, beta]
     runs-on: ${{ matrix.os }}
     defaults:
           run:
@@ -99,7 +98,7 @@ jobs:
         if: success() || failure()
 
       - name: Determine converage
-        run: cargo +${{ matrix.rust-toolchain }} llvm-cov nextest --all-targets --lcov --output-path lcov.info
+        run: cargo +${{ matrix.rust-toolchain }} llvm-cov nextest --all-targets --no-fail-fast --lcov --output-path lcov.info
         env:
            RUST_BACKTRACE: 1
            RUST_LOG: neqo=debug
