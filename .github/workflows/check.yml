@@ -17,11 +17,7 @@ jobs:
             shell: ${{ matrix.os == 'windows-latest' && 'msys2 {0}' || 'bash' }}
 
     steps:
-      - name: Get number of CPU cores
-        uses: SimenB/github-actions-cpu-cores@v1
-        id: cpu-cores
-
-        # - name: Install Rust
+      # - name: Install Rust
       #   uses: actions-rust-lang/setup-rust-toolchain@v1
       #   with:
       #     toolchain: ${{ matrix.rust-toolchain }}
@@ -54,14 +50,12 @@ jobs:
 
       - name: Install other dependencies (Windows)
         if: runner.os == 'Windows'
-        # shell: bash
         run: |
           echo "OS_TARGET=WIN95" >> $GITHUB_ENV
           hg clone https://hg.mozilla.org/projects/nspr
           git clone --depth=1 https://github.com/nss-dev/nss
-          which perl
-          perl -v
-          gcc -v
+          which clang-cl || true
+          which cl-clang || true
           make -C nss nss_build_all USE_64=1 NS_USE_GCC=1 BUILD_OPT=1
 
       # - name: Checkout
