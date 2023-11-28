@@ -41,10 +41,9 @@ jobs:
       - name: Install dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
-          brew install ninja mercurial gnu-sed
+          brew install ninja mercurial
           python3 -m pip install gyp-next
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
-          echo "$HOMEBREW_PREFIX/opt/gnu-sed/libexec/gnubin" >> "$GITHUB_PATH"
 
       - name: Install MSYS2 dependencies (Windows)
         if: runner.os == 'Windows'
@@ -64,7 +63,7 @@ jobs:
           git config --global core.autocrlf false
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           which sed || true
-          sed -i'' 's/-w44996//' "$NSS_DIR"/lib/sqlite/Makefile
+          sed -i.bak 's/-w44996//' "$NSS_DIR"/lib/sqlite/Makefile
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
           cat "$GITHUB_ENV" || true
