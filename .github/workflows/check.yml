@@ -51,12 +51,15 @@ jobs:
       - name: Install other dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
-          echo "OS_TARGET=WIN95" >> $GITHUB_ENV
+          # echo "OS_TARGET=WIN95" >> $GITHUB_ENV
+          echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
+          echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise" >> $GITHUB_ENV
+          ls -l "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise" || true
           hg clone https://hg.mozilla.org/projects/nspr
           git config --global core.autocrlf false
           git clone --depth=1 https://github.com/nss-dev/nss
           # make -C nss nss_build_all USE_64=1 BUILD_OPT=1 NS_USE_GCC=1
-          nss/build.sh -v --clang -Ddisable_tests=1
+          ./nss/build.sh -g -v --enable-libpkix -Denable_draft_hpke=1 -Ddisable_tests=1
 
       # - name: Checkout
       #   uses: actions/checkout@v4
