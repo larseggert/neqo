@@ -44,7 +44,7 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64
-          update: true
+          # update: true
           install: nsinstall
           path-type: inherit
 
@@ -55,8 +55,8 @@ jobs:
           hg clone https://hg.mozilla.org/projects/nspr
           git clone --depth=1 https://github.com/nss-dev/nss
           which clang-cl || true
-          ls -l /c/Program Files/LLVM/bin/ || true
-          echo "/c/Program Files/LLVM/bin/" >> $GITHUB_PATH
+          ls -l "C:\Program Files\LLVM\bin" || true
+          echo "C:\Program Files\LLVM\bin" >> $GITHUB_PATH
           make -C nss nss_build_all USE_64=1 BUILD_OPT=1
 
       # - name: Checkout
