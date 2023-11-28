@@ -54,6 +54,8 @@ jobs:
           hg clone https://hg.mozilla.org/projects/nspr
           git config --global core.autocrlf false
           git clone --depth=1 https://github.com/nss-dev/nss
+          ls -l ||true
+          ls -l nss ||true
           sed -i 's/OS_CFLAGS += -w44996//' nss/lib/sqlite3/Makefile
           make -C -j16 nss nss_build_all USE_64=1 NS_USE_GCC=1 # BUILD_OPT=1
 
