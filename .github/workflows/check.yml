@@ -48,6 +48,8 @@ jobs:
           install: nsinstall #gyp python-six
           path-type: inherit
 
+      - uses: GuillaumeFalourd/setup-windows10-sdk-action@v1.12
+
       - name: Install other dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
