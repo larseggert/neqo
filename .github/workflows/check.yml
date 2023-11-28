@@ -80,28 +80,27 @@ jobs:
         run: |
           cargo +${{ matrix.rust-toolchain }} build -v --tests # --all-targets
           echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
+          echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
+          ls -l "${{ github.workspace }}/dist/Debug/lib" || true
 
       - name: Run tests
-        run: |
-          env | sort
-          cargo +${{ matrix.rust-toolchain }} test -v # nextest run
+        run: cargo +${{ matrix.rust-toolchain }} nextest run -v
         env:
-           LD_LIBRARY_PATH: ${{ github.workspace }}/dist/Debug/lib
-           RUST_BACKTRACE: full
+           RUST_BACKTRACE: 1
            RUST_LOG: neqo=debug
 
       - name: Check formatting
-        if: success() || failure()
         run: cargo +${{ matrix.rust-toolchain }} fmt --all -- --check
+        if: success() || failure()
 
       - name: Clippy
-        if: success() || failure()
         run: cargo +${{ matrix.rust-toolchain }} clippy --tests -- -D warnings
+        if: success() || failure()
 
-      - name: Determine converage # nextest
-        run: cargo +${{ matrix.rust-toolchain }} llvm-cov --all-targets --lcov --output-path lcov.info
+      - name: Determine converage
+        run: cargo +${{ matrix.rust-toolchain }} llvm-cov nextest --all-targets --lcov --output-path lcov.info
         env:
-           RUST_BACKTRACE: full
+           RUST_BACKTRACE: 1
            RUST_LOG: neqo=debug
 
       - name: Upload coverage reports to Codecov
