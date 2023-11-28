@@ -55,7 +55,7 @@ jobs:
           git config --global core.autocrlf false
           git clone --depth=1 https://github.com/nss-dev/nss
           sed -i 's/OS_CFLAGS += -w44996//' nss/lib/sqlite/Makefile
-          make -C nss nss_build_all USE_64=1 NS_USE_GCC=1 # BUILD_OPT=1
+          make -C nss nss_build_all USE_64=1 NS_USE_GCC=1 NSS_BUILD_WITHOUT_SOFTOKEN=1
 
       # - name: Checkout
       #   uses: actions/checkout@v4
