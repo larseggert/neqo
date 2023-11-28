@@ -23,7 +23,6 @@ jobs:
         with:
           toolchain: ${{ matrix.rust-toolchain }}
           components: rustfmt, clippy
-          # cache: false # enabling the cache leads to spurious failures
 
       - name: Install Rust tools
         uses: taiki-e/install-action@v2
@@ -62,7 +61,7 @@ jobs:
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git config --global core.autocrlf false
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
-          sed -i 's/-w44996//' nss/lib/sqlite/Makefile
+          sed -i'' 's/-w44996//' nss/lib/sqlite/Makefile
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
         env:
