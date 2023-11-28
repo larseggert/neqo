@@ -63,7 +63,7 @@ jobs:
         run: cargo +${{ matrix.rust-toolchain }} build --all-targets
 
       - name: Run tests
-        run: cargo +${{ matrix.rust-toolchain }} test
+        run: cargo +${{ matrix.rust-toolchain }} nextest run
         env:
            RUST_BACKTRACE: 1
            RUST_LOG: neqo=debug
@@ -80,7 +80,7 @@ jobs:
         uses: taiki-e/install-action@cargo-llvm-cov
 
       - name: Determine converage
-        run: cargo +${{ matrix.rust-toolchain }} llvm-cov --all-targets --lcov --output-path lcov.info
+        run: cargo +${{ matrix.rust-toolchain }} llvm-cov nextest --all-targets --lcov --output-path lcov.info
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
