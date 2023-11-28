@@ -56,8 +56,8 @@ jobs:
           git clone --depth=1 https://github.com/nss-dev/nss
           ls -l nss ||true
           ls -l nss/lib ||true
-          ls -l nss/nss ||true
-          sed -i 's/OS_CFLAGS += -w44996//' nss/nss/lib/sqlite3/Makefile
+          ls -l nss/lib/sqlite ||true
+          sed -i 's/OS_CFLAGS += -w44996//' nss/lib/sqlite/Makefile
           make -C -j16 nss nss_build_all USE_64=1 NS_USE_GCC=1 # BUILD_OPT=1
 
       # - name: Checkout
