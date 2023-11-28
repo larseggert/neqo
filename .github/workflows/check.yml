@@ -52,6 +52,9 @@ jobs:
           install: nsinstall
           path-type: inherit
 
+      - name: Checkout
+        uses: actions/checkout@v4
+
       # This step might be removed if the distro included a recent enough
       # version of NSS.  Ubuntu 20.04 only has 3.49, which is far too old.
       # (neqo-crypto/build.rs would also need to query pkg-config to get the
@@ -77,9 +80,6 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           make -C "$NSS_DIR" nss_build_all USE_64=1 NS_USE_GCC=1
-
-      - name: Checkout
-        uses: actions/checkout@v4
 
       - name: Build
         run: cargo +${{ matrix.rust-toolchain }} build --all-targets
