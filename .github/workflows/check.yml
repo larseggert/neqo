@@ -9,35 +9,29 @@ jobs:
     strategy:
       # fail-fast: false
       matrix:
-        os: [windows-latest] # ubuntu-latest, macos-latest] #
-        rust-toolchain: [stable] # , 1.65.0, beta]
+        # os: [windows-latest] # ubuntu-latest, macos-latest] #
+        os: [ubuntu-latest, macos-latest]
+        rust-toolchain: [1.65.0] #, stable, beta]
     runs-on: ${{ matrix.os }}
     defaults:
           run:
             shell: ${{ matrix.os == 'windows-latest' && 'msys2 {0}' || 'bash' }}
 
     steps:
-      # - name: Install Rust
-      #   uses: actions-rust-lang/setup-rust-toolchain@v1
-      #   with:
-      #     toolchain: ${{ matrix.rust-toolchain }}
-      #     components: rustfmt, clippy
-      #     cache: false # enabling the cache leads to spurious failures
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gyp mercurial ninja-build
 
-      # - name: Install dependencies (Linux)
-      #   if: runner.os == 'Linux'
-      #   env:
-      #     DEBIAN_FRONTEND: noninteractive
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install -y --no-install-recommends gyp mercurial ninja-build
-
-      # - name: Install dependencies (MacOS)
-      #   if: runner.os == 'MacOS'
-      #   run: |
-      #     brew install ninja mercurial
-      #     python3 -m pip install gyp-next
-      #     echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
+      - name: Install dependencies (MacOS)
+        if: runner.os == 'MacOS'
+        run: |
+          brew install ninja mercurial
+          python3 -m pip install gyp-next
+          echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
 
       - name: Install MSYS2 dependencies (Windows)
         if: runner.os == 'Windows'
@@ -55,22 +49,29 @@ jobs:
           sed -i 's/-w44996//' nss/lib/sqlite/Makefile
           make -C nss nss_build_all USE_64=1 NS_USE_GCC=1
 
-      # - name: Checkout
-      #   uses: actions/checkout@v4
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust-toolchain }}
+          components: rustfmt, clippy
+          cache: false # enabling the cache leads to spurious failures
 
-      # - name: Build
-      #   run: cargo +${{ matrix.rust-toolchain }} build -v --all-targets
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # - name: Run tests
-      #   run: cargo +${{ matrix.rust-toolchain }} test -v
-      #   env:
-      #      RUST_BACKTRACE: 1
-      #      RUST_LOG: neqo=debug
+      - name: Build
+        run: cargo +${{ matrix.rust-toolchain }} build -v --all-targets
 
-      # - name: Check formatting
-      #   run: cargo +${{ matrix.rust-toolchain }} fmt --all -- --check
-      #   if: ${{ success() || failure() }}
+      - name: Run tests
+        run: cargo +${{ matrix.rust-toolchain }} test -v
+        env:
+           RUST_BACKTRACE: 1
+           RUST_LOG: neqo=debug
 
-      # - name: Clippy
-      #   run: cargo +${{ matrix.rust-toolchain }} clippy -v --tests -- -D warnings
-      #   if: ${{ success() || failure() }}
+      - name: Check formatting
+        run: cargo +${{ matrix.rust-toolchain }} fmt --all -- --check
+        if: ${{ success() || failure() }}
+
+      - name: Clippy
+        run: cargo +${{ matrix.rust-toolchain }} clippy -v --tests -- -D warnings
+        if: ${{ success() || failure() }}
