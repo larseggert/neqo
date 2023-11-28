@@ -40,8 +40,10 @@ jobs:
       - name: Install dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
+          python -v || true
+          brew search python || true
           brew install --force --overwrite ninja mercurial
-          python3 -m pip install gyp-next distutils
+          python3 -m pip install gyp-next
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
 
       - name: Install dependencies (Windows)
@@ -78,15 +80,9 @@ jobs:
 
       - name: Build
         run: |
-          cargo +${{ matrix.rust-toolchain }} build -v --tests # --all-targets
-          echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
-          echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
-          ls -l "${{ github.workspace }}" || true
-          ls -l "${{ github.workspace }}/dist" || true
-          ls -l "${{ github.workspace }}/dist/Debug" || true
-          ls -l "${{ github.workspace }}/dist/Debug/lib" || true
-          ls -l "${{ github.workspace }}/dist/Release" || true
-          ls -l "${{ github.workspace }}/dist/Release/lib" || true
+          cargo +${{ matrix.rust-toolchain }} build -v --all-targets
+          echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Release/lib" >> "$GITHUB_ENV"
+          echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Release/lib" >> "$GITHUB_ENV"
 
       - name: Run tests
         run: cargo +${{ matrix.rust-toolchain }} nextest run -v
