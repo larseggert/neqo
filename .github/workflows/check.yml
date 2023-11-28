@@ -77,12 +77,10 @@ jobs:
       #     make -C "$NSS_DIR" nss_build_all USE_64=1 NS_USE_GCC=1
 
       - name: Build
-        run: |
-          env | sort
-          cargo +${{ matrix.rust-toolchain }} build --all-targets
+        run: cargo +${{ matrix.rust-toolchain }} build --tests # --all-targets
 
       - name: Run tests
-        run: cargo +${{ matrix.rust-toolchain }} test # nextest run
+        run: cargo +${{ matrix.rust-toolchain }} nextest run
         env:
            RUST_BACKTRACE: 1
            RUST_LOG: neqo=debug
@@ -95,14 +93,13 @@ jobs:
         if: success() || failure()
         run: cargo +${{ matrix.rust-toolchain }} clippy --tests -- -D warnings
 
-      - name: Determine converage # nextest
-        run: cargo +${{ matrix.rust-toolchain }} llvm-cov --all-targets --lcov --output-path lcov.info
+      - name: Determine converage
+        run: cargo +${{ matrix.rust-toolchain }} llvm-cov nextest --all-targets --lcov --output-path lcov.info
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         with:
           file: lcov.info
           fail_ci_if_error: true
-          os: ${{ runner.os}}
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
