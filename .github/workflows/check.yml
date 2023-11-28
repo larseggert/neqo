@@ -23,7 +23,6 @@ jobs:
         with:
           toolchain: ${{ matrix.rust-toolchain }}
           components: rustfmt, clippy
-          cache: false
 
       - name: Install Rust tools
         uses: taiki-e/install-action@v2
@@ -41,7 +40,7 @@ jobs:
       - name: Install dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
-          brew install ninja mercurial
+          brew install --force --overwrite ninja mercurial
           python3 -m pip install gyp-next
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
 
