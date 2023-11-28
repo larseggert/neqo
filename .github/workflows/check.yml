@@ -69,18 +69,18 @@ jobs:
            RUST_LOG: neqo=debug
 
       - name: Check formatting
+        if: success() || failure()
         run: cargo +${{ matrix.rust-toolchain }} fmt --all -- --check
-        if: ${{ success() || failure() }}
 
       - name: Clippy
+        if: success() || failure()
         run: cargo +${{ matrix.rust-toolchain }} clippy --tests -- -D warnings
-        if: ${{ success() || failure() }}
 
       - name: Set up coverage
         uses: taiki-e/install-action@cargo-llvm-cov
 
       - name: Determine converage
-        run: cargo llvm-cov --all-features --lcov --output-path lcov.info
+        run: cargo +${{ matrix.rust-toolchain }} llvm-cov --all-features --lcov --output-path lcov.info
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
