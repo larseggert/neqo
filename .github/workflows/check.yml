@@ -45,7 +45,7 @@ jobs:
         with:
           msystem: UCRT64
           # update: true
-          install: nsinstall gyp
+          install: nsinstall gyp python-six
           path-type: inherit
 
       - name: Install other dependencies (Windows)
@@ -56,7 +56,7 @@ jobs:
           git config --global core.autocrlf false
           git clone --depth=1 https://github.com/nss-dev/nss
           # make -C nss nss_build_all USE_64=1 BUILD_OPT=1 NS_USE_GCC=1
-          nss/build.sh -v -Ddisable_tests=1
+          nss/build.sh -v --clang -Ddisable_tests=1
 
       # - name: Checkout
       #   uses: actions/checkout@v4
