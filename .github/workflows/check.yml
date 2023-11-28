@@ -25,6 +25,11 @@ jobs:
           components: rustfmt, clippy
           # cache: false # enabling the cache leads to spurious failures
 
+      - name: Install Rust tools
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest, cargo-llvm-cov
+
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
         env:
@@ -47,14 +52,27 @@ jobs:
           install: nsinstall
           path-type: inherit
 
+      # This step might be removed if the distro included a recent enough
+      # version of NSS.  Ubuntu 20.04 only has 3.49, which is far too old.
+      # (neqo-crypto/build.rs would also need to query pkg-config to get the
+      # right build flags rather than building NSS.)
+      # We're also tweaking the NSS checkout for Windows builds.
+      - name: Fetch NSS and NSPR
+        run: |
+          hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
+          git config --global core.autocrlf false
+          git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
+          sed -i 's/-w44996//' nss/lib/sqlite/Makefile
+          echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
+          echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
+        env:
+          NSS_DIR: ${{ github.workspace }}/nss
+          NSPR_DIR: ${{ github.workspace }}/nspr
+
       - name: Install other dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
-          hg clone https://hg.mozilla.org/projects/nspr
-          git config --global core.autocrlf false
-          git clone --depth=1 https://github.com/nss-dev/nss
-          sed -i 's/-w44996//' nss/lib/sqlite/Makefile
-          make -C nss nss_build_all USE_64=1 NS_USE_GCC=1
+          make -C "$NSS_DIR" nss_build_all USE_64=1 NS_USE_GCC=1
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -75,9 +93,6 @@ jobs:
       - name: Clippy
         if: success() || failure()
         run: cargo +${{ matrix.rust-toolchain }} clippy --tests -- -D warnings
-
-      - name: Set up coverage
-        uses: taiki-e/install-action@cargo-llvm-cov
 
       - name: Determine converage
         run: cargo +${{ matrix.rust-toolchain }} llvm-cov nextest --all-targets --lcov --output-path lcov.info
