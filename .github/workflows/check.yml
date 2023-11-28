@@ -59,7 +59,8 @@ jobs:
           ls -l "$VSPATH/VC" || true
           ls -l "$VSPATH/SDK" || true
           # find "$VSPATH/SDK" || true
-          touch "$VSPATH/VC/vcvarsall.bat"
+          ls -l "/c/Program Files"
+          find "/c/Program Files" -name mt.exe || true
           export PATH="$VSPATH/VC/Tools/MSVC/$UCRTVersion/bin/Hostx64/x86:$PATH"
           export PATH="$VSPATH/VC/Tools/MSVC/$UCRTVersion/bin/Hostx64/x64:$PATH"
           # export PATH="$VSPATH/VC/bin/Host${m}/${m}:$PATH"
