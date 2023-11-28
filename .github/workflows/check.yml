@@ -48,7 +48,7 @@ jobs:
           install: nsinstall #gyp python-six
           path-type: inherit
 
-      - uses: GuillaumeFalourd/setup-windows10-sdk-action@v1.12
+      - uses: fbactions/setup-winsdk@v2
 
       - name: Install other dependencies (Windows)
         if: runner.os == 'Windows'
@@ -63,7 +63,6 @@ jobs:
           # find "$VSPATH/SDK" || true
           ls -l "/c/Program Files"
           find "/c/Program Files/Microsoft SDKs" -name \*.exe || true
-          find "/c/Program Files/MSBuild" -name \*.exe || true
           # find "/c/Program Files/Microsoft Visual Studio" -name vsdevcmd.bat || true
           export PATH="$VSPATH/VC/Tools/MSVC/$UCRTVersion/bin/Hostx64/x86:$PATH"
           export PATH="$VSPATH/VC/Tools/MSVC/$UCRTVersion/bin/Hostx64/x64:$PATH"
