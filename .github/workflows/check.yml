@@ -55,8 +55,9 @@ jobs:
           hg clone https://hg.mozilla.org/projects/nspr
           git clone --depth=1 https://github.com/nss-dev/nss
           which clang-cl || true
-          which cl-clang || true
-          make -C nss nss_build_all USE_64=1 NS_USE_GCC=1 BUILD_OPT=1
+          ls -l /c/Program Files/LLVM/bin/ || true
+          echo "/c/Program Files/LLVM/bin/" >> $GITHUB_PATH
+          make -C nss nss_build_all USE_64=1 BUILD_OPT=1
 
       # - name: Checkout
       #   uses: actions/checkout@v4
