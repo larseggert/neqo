@@ -55,7 +55,7 @@ jobs:
           hg clone https://hg.mozilla.org/projects/nspr
           git config --global core.autocrlf false
           git clone --depth=1 https://github.com/nss-dev/nss
-          make -C nss nss_build_all USE_64=1 BUILD_OPT=1 NS_USE_GCC=1
+          # make -C nss nss_build_all USE_64=1 BUILD_OPT=1 NS_USE_GCC=1
           nss/build.sh -Ddisable_tests=1
 
       # - name: Checkout
