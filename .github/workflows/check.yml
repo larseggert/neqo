@@ -45,16 +45,18 @@ jobs:
         with:
           msystem: UCRT64
           # update: true
-          install: nsinstall gyp python-six
+          install: nsinstall #gyp python-six
           path-type: inherit
 
       - name: Install other dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
+          python3 -m pip install gyp-next
           # echo "OS_TARGET=WIN95" >> $GITHUB_ENV
           echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise" >> $GITHUB_ENV
           echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
           ls -l "C:\Program Files\Microsoft Visual Studio\2022\Enterprise" || true
+          ls -l "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC" || true
           hg clone https://hg.mozilla.org/projects/nspr
           git config --global core.autocrlf false
           git clone --depth=1 https://github.com/nss-dev/nss
