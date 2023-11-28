@@ -23,6 +23,7 @@ jobs:
         with:
           toolchain: ${{ matrix.rust-toolchain }}
           components: rustfmt, clippy
+          cache: false
 
       - name: Install Rust tools
         uses: taiki-e/install-action@v2
@@ -65,6 +66,9 @@ jobs:
           sed -i'' 's/-w44996//' "$NSS_DIR"/lib/sqlite/Makefile
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
+          cat "$GITHUB_ENV" || true
+          ls -l "$NSS_DIR" || true
+          ls -l ${{ github.workspace }} || true
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
