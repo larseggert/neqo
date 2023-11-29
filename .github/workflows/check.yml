@@ -86,7 +86,9 @@ jobs:
       # happens as part of neqo-crypto/build.rs.
       - name: NSS build attempt (Windows)
         if: runner.os == 'Windows'
-        run: make -C "$NSS_DIR" -j "$NUMBER_OF_PROCESSORS" nss_build_all USE_64=1 NS_USE_GCC=1
+        shell: bash
+        run: $NSS_DIR/build.sh -v -Ddisable_tests=1 --static
+        # run: make -C "$NSS_DIR" -j "$NUMBER_OF_PROCESSORS" nss_build_all USE_64=1 NS_USE_GCC=1
 
       - name: Build
         run: |
