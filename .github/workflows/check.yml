@@ -13,10 +13,6 @@ jobs:
         os: [windows-latest]
         rust-toolchain: [1.65.0] #, stable] #, beta]
     runs-on: ${{ matrix.os }}
-    # defaults:
-    #   run:
-        # shell: bash
-        # shell: ${{ matrix.os == 'windows-latest' && 'msys2 {0}' || 'bash' }}
 
     steps:
       - name: Install Rust
@@ -39,13 +35,6 @@ jobs:
           brew install --force --overwrite ninja mercurial cargo-binstall || brew link --overwrite python@3.11
           python3 -m pip install gyp-next
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
-
-      # - name: Install dependencies (Windows)
-      #   if: runner.os == 'Windows'
-      #   uses: msys2/setup-msys2@v2
-      #   with:
-      #     install: nsinstall
-      #     path-type: inherit
 
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
@@ -86,6 +75,7 @@ jobs:
           sed -i.bak 's/-w44996//' "$NSS_DIR"/lib/sqlite/Makefile
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
+          echo "OS_TARGET=WIN95" >> "$GITHUB_ENV"
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
