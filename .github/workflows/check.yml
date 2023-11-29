@@ -52,13 +52,7 @@ jobs:
 
       - name: Install Rust tools
         run: |
-          cargo +${{ matrix.rust-toolchain }} binstall --no-confirm cargo-llvm-cov
-          cargo +${{ matrix.rust-toolchain }} binstall --no-confirm nextest
-          which nextest || true
-          which cargo-llvm-cov || true
-          echo $PATH
-          env | sort
-          cargo +${{ matrix.rust-toolchain }} --list
+          cargo +${{ matrix.rust-toolchain }} binstall --no-confirm cargo-llvm-cov cargo-nextest
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -93,9 +87,7 @@ jobs:
           echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Release/lib" >> "$GITHUB_ENV"
 
       - name: Run tests
-        run: |
-          cargo +${{ matrix.rust-toolchain }} --list
-          cargo +${{ matrix.rust-toolchain }} nextest run -v
+        run: cargo +${{ matrix.rust-toolchain }} nextest run -v
         env:
            RUST_BACKTRACE: 1
            RUST_LOG: neqo=debug
