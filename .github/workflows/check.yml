@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         # os: [ubuntu-latest, macos-latest] #, windows-latest]
-        os: [macos-latest] #, windows-latest]
+        os: [macos-latest, windows-latest]
         rust-toolchain: [1.65.0] #, stable] #, beta]
     runs-on: ${{ matrix.os }}
     defaults:
@@ -37,11 +37,11 @@ jobs:
         run: |
           brew install --force --overwrite ninja mercurial cargo-binstall || brew link --overwrite python@3.11
           # python3 -m pip install gyp-next
+          # Above does not work, since pypi only has gyp 0.15.0, which is too old
+          # for the homebrew python3. Install from source instead.
           python3 -m pip install git+https://github.com/nodejs/gyp-next
-          python3 -m pip install packaging setuptools
+          python3 -m pip install packaging
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
-          which gyp || true
-          gyp -V
 
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
@@ -85,12 +85,12 @@ jobs:
       # Once this works, this step should be
       - name: NSS build attempt (Windows)
         if: runner.os == 'Windows'
-        run: make -C "$NSS_DIR" -j "$NUMBER_OF_PROCESSORS" nss_build_all USE_64=1 NS_USE_GCC=1
+        shell: bash
+        # run: make -C "$NSS_DIR" -j "$NUMBER_OF_PROCESSORS" nss_build_all USE_64=1 NS_USE_GCC=1
+        run: "$NSS_DIR"/build.sh -v -Ddisable_tests=1 --static
 
       - name: Build
         run: |
-          gyp -V
-          python -V
           cargo +${{ matrix.rust-toolchain }} build -v --all-targets
           echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
           echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
