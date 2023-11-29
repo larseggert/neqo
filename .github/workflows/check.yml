@@ -37,7 +37,7 @@ jobs:
       - name: Install dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
-          brew install --force --overwrite ninja mercurial cargo-binstall
+          brew install --force --overwrite ninja mercurial cargo-binstall || brew link --overwrite python@3.11
           python3 -m pip install gyp-next
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
 
@@ -69,7 +69,7 @@ jobs:
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git config --global core.autocrlf false
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
-          sed -i '.bak' -e 's/-w44996//' "$NSS_DIR"/lib/sqlite/Makefile
+          sed -i.bak 's/-w44996//' "$NSS_DIR"/lib/sqlite/Makefile
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
         env:
@@ -78,6 +78,7 @@ jobs:
 
       - name: NSS build attempt (Windows)
         if: runner.os == 'Windows'
+        shell: bash
         run: |
           make -C "$NSS_DIR" nss_build_all USE_64=1 NS_USE_GCC=1
 
