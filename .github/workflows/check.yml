@@ -9,8 +9,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest] #, windows-latest]
-        rust-toolchain: [1.65.0, stable] #, beta]
+        # os: [ubuntu-latest, macos-latest] #, windows-latest]
+        os: [macos-latest] #, windows-latest]
+        rust-toolchain: [1.65.0] #, stable] #, beta]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -34,6 +35,8 @@ jobs:
       - name: Install dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
+          brew update
+          brew upgrade
           brew install --force --overwrite ninja mercurial cargo-binstall || brew link --overwrite python@3.11
           python3 -m pip install gyp-next
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
