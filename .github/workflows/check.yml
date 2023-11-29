@@ -57,7 +57,7 @@ jobs:
           which cargo-llvm-cov || true
           echo $PATH
           env | sort
-          cargo +${{ matrix.rust-toolchain }} list
+          cargo +${{ matrix.rust-toolchain }} --list
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -93,7 +93,7 @@ jobs:
 
       - name: Run tests
         run: |
-          cargo +${{ matrix.rust-toolchain }} list
+          cargo +${{ matrix.rust-toolchain }} --list
           cargo +${{ matrix.rust-toolchain }} nextest run -v
         env:
            RUST_BACKTRACE: 1
