@@ -29,16 +29,12 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get dist-upgrade -y
           sudo apt-get install -y --no-install-recommends gyp mercurial ninja-build
           curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 
       - name: Install dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
-          brew update
-          brew upgrade
           brew install --force --overwrite ninja mercurial cargo-binstall || brew link --overwrite python@3.11
           python3 -m pip install gyp-next
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
@@ -53,6 +49,8 @@ jobs:
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         run:
+          pacman -h
+          pacman -S nsinstall
           Set-ExecutionPolicy Unrestricted -Scope Process; iex (iwr "https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.ps1").Content
 
       - name: Install Rust tools
@@ -81,7 +79,7 @@ jobs:
 
       - name: NSS build attempt (Windows)
         if: runner.os == 'Windows'
-        shell: bash
+        # shell: bash
         run: |
           make -C "$NSS_DIR" nss_build_all USE_64=1 NS_USE_GCC=1
 
