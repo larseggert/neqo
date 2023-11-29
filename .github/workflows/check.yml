@@ -38,6 +38,7 @@ jobs:
           brew install --force --overwrite ninja mercurial cargo-binstall || brew link --overwrite python@3.11
           # python3 -m pip install gyp-next
           pip install https://github.com/nodejs/gyp-next/archive/refs/tags/v0.16.1.zip
+          pip install packaging
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
 
       - name: Install dependencies (Windows)
