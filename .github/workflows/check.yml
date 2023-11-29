@@ -56,6 +56,12 @@ jobs:
         shell: bash
         run:
           choco install --no-progress MozillaBuild
+          echo "C:/mozilla-build/bin" >> $GITHUB_PATH
+          echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
+          echo "MOZILLABUILD=C:/mozilla-build" >> $GITHUB_ENV
+          echo "MOZBUILD_STATE_PATH=C:/mozbuild-state" >> $GITHUB_ENV
+          echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise" >> $GITHUB_ENV
+          echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
 
       - name: Install Rust tools
         run: |
@@ -88,7 +94,6 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          make -C "$NSS_DIR"/coreconf/nsinstall install || true
           make -C "$NSS_DIR" nss_build_all USE_64=1 NS_USE_GCC=1 || true
           "$NSS_DIR"/build.sh -v
 
