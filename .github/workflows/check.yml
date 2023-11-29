@@ -94,7 +94,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          make -C "$NSS_DIR" nss_build_all USE_64=1 NS_USE_GCC=1 || true
+          # make -C "$NSS_DIR" nss_build_all USE_64=1 NS_USE_GCC=1 #|| true
           "$NSS_DIR"/build.sh -v
 
       - name: Build
