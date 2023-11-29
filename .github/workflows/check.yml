@@ -81,11 +81,6 @@ jobs:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
 
-      # Just here to have a convenient way to debug the build.
-      # Once this works, this step should be removed, since the actual build
-      # happens as part of neqo-crypto/build.rs.
-        # run: make -C "$NSS_DIR" -j "$NUMBER_OF_PROCESSORS" nss_build_all USE_64=1 NS_USE_GCC=1
-
       - name: NSS build attempt (Windows)
         if: runner.os == 'Windows'
         run: "$NSS_DIR"/build.sh -v -Ddisable_tests=1 --static
