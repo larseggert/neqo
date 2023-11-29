@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
-          brew install --force --overwrite ninja mercurial taiki-e/tap/cargo-llvm-cov
+          brew install --force --overwrite ninja mercurial
           python3 -m pip install gyp-next
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
           curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
@@ -54,7 +54,7 @@ jobs:
           Set-ExecutionPolicy Unrestricted -Scope Process; iex (iwr "https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.ps1").Content
 
       - name: Install Rust tools
-        run: cargo +${{ matrix.rust-toolchain }} binstall nextest cargo-llvm-cov
+        run: cargo +${{ matrix.rust-toolchain }} binstall --no-confirm nextest cargo-llvm-cov
 
       - name: Checkout
         uses: actions/checkout@v4
