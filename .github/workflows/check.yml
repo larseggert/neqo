@@ -9,8 +9,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        rust-toolchain: [1.65.0] #, stable] #, beta]
+        os: [ubuntu-latest, macos-latest] #, windows-latest]
+        rust-toolchain: [1.65.0, stable] #, beta]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -51,7 +51,12 @@ jobs:
           echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
 
       - name: Install Rust tools
-        run: cargo +${{ matrix.rust-toolchain }} binstall --no-confirm nextest cargo-llvm-cov
+        run: |
+          cargo +${{ matrix.rust-toolchain }} binstall --no-confirm nextest cargo-llvm-cov
+          which nextest || true
+          which cargo-llvm-cov || true
+          echo $PATH
+          env | sort
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -69,7 +74,7 @@ jobs:
           sed -i.bak 's/-w44996//' "$NSS_DIR"/lib/sqlite/Makefile
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
-          echo "OS_TARGET=WINNT" >> "$GITHUB_ENV"
+          echo "OS_TARGET=WIN95" >> "$GITHUB_ENV"
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
