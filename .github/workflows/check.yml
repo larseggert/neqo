@@ -52,12 +52,14 @@ jobs:
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
-          find "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/" -name \*.bat
           find "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/" -name stdio.h
-          env | sort
+          env > 1
           ls -l "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/Common7/Tools/vsdevcmd/ext/vcvars/vcvars140.bat" || true
           "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/Common7/Tools/vsdevcmd/ext/vcvars/vcvars140.bat" || true
-          env | sort
+          chmod +x "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/Common7/Tools/vsdevcmd/ext/vcvars/vcvars140.bat"
+          "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/Common7/Tools/vsdevcmd/ext/vcvars/vcvars140.bat" || true
+          env > 2
+          diff -Baur 1 2
           echo "INCLUDE=C:\Program Files\Microsoft Visual Studio\2022\Enterprise/SDK/ScopeCppSDK/vc15/SDK/include/ucrt" >> $GITHUB_ENV
           choco install --no-progress MozillaBuild ninja
           echo "C:/mozilla-build/bin" >> $GITHUB_PATH
@@ -104,11 +106,11 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          find /c/mozilla-build -name \*.exe
           which cl || true
           which link || true
           which gyp || true
           which ninja || true
+          echo $INCLUDE
           $NSS_DIR/build.sh -v -Ddisable_tests=1 --static --msvc
         # run: make -C "$NSS_DIR" -j "$NUMBER_OF_PROCESSORS" nss_build_all USE_64=1 NS_USE_GCC=1
 
