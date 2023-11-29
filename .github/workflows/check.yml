@@ -54,7 +54,7 @@ jobs:
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         shell: bash
-        run:
+        run: |
           choco install --no-progress MozillaBuild
           echo "C:/mozilla-build/bin" >> $GITHUB_PATH
           echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
