@@ -30,13 +30,15 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update
+          sudo apt-get dist-upgrade -y
           sudo apt-get install -y --no-install-recommends gyp mercurial ninja-build
-          sudo apt search cargo-
           curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 
       - name: Install dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
+          brew update
+          brew upgrade
           brew install --force --overwrite ninja mercurial cargo-binstall || brew link --overwrite python@3.11
           python3 -m pip install gyp-next
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
@@ -65,6 +67,7 @@ jobs:
       # right build flags rather than building NSS.)
       # We're also tweaking the NSS checkout for Windows builds.
       - name: Fetch NSS and NSPR
+        shell: bash
         run: |
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git config --global core.autocrlf false
