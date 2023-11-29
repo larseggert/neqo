@@ -52,7 +52,8 @@ jobs:
 
       - name: Install Rust tools
         run: |
-          cargo +${{ matrix.rust-toolchain }} binstall --no-confirm nextest cargo-llvm-cov
+          cargo +${{ matrix.rust-toolchain }} binstall --no-confirm cargo-llvm-cov
+          cargo +${{ matrix.rust-toolchain }} binstall --no-confirm nextest
           which nextest || true
           which cargo-llvm-cov || true
           echo $PATH
