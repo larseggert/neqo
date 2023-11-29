@@ -53,10 +53,9 @@ jobs:
 
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
-        shell: 'msys2 {0}'
+        shell: bash
         run:
-          pacman -h
-          pacman -S nsinstall
+          choco install MozillaBuild
 
       - name: Install Rust tools
         run: cargo +${{ matrix.rust-toolchain }} binstall --no-confirm nextest cargo-llvm-cov
