@@ -54,6 +54,11 @@ jobs:
         run: |
           find "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/" -name \*.bat
           find "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/" -name stdio.h
+          env | sort
+          ls -l "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/Common7/Tools/vsdevcmd/ext/vcvars/vcvars140.bat" || true
+          "C:\Program Files\Microsoft Visual Studio\2022\Enterprise/Common7/Tools/vsdevcmd/ext/vcvars/vcvars140.bat" || true
+          env | sort
+          echo "INCLUDE=C:\Program Files\Microsoft Visual Studio\2022\Enterprise/SDK/ScopeCppSDK/vc15/SDK/include/ucrt" >> $GITHUB_ENV
           choco install --no-progress MozillaBuild ninja
           echo "C:/mozilla-build/bin" >> $GITHUB_PATH
           echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
