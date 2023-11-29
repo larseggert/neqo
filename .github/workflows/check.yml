@@ -48,10 +48,14 @@ jobs:
 
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
+        run: Set-ExecutionPolicy Unrestricted -Scope Process; iex (iwr "https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.ps1").Content
+
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
         run:
           pacman -h
           pacman -S nsinstall
-          Set-ExecutionPolicy Unrestricted -Scope Process; iex (iwr "https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.ps1").Content
 
       - name: Install Rust tools
         run: cargo +${{ matrix.rust-toolchain }} binstall --no-confirm nextest cargo-llvm-cov
