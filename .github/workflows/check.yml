@@ -92,7 +92,7 @@ jobs:
       - name: NSS build attempt (Windows)
         if: runner.os == 'Windows'
         shell: bash
-        run: $NSS_DIR/build.sh -v -Ddisable_tests=1 --static
+        run: $NSS_DIR/build.sh -v -Ddisable_tests=1 --static --msvc
         # run: make -C "$NSS_DIR" -j "$NUMBER_OF_PROCESSORS" nss_build_all USE_64=1 NS_USE_GCC=1
 
       - name: Build
