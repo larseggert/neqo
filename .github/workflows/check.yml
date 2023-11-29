@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        shell: bash
+        # shell: bash
         # shell: ${{ matrix.os == 'windows-latest' && 'msys2 {0}' || 'bash' }}
 
     steps:
@@ -24,9 +24,6 @@ jobs:
           toolchain: ${{ matrix.rust-toolchain }}
           components: rustfmt, clippy
 
-      - name: Install Rust tools
-        run: cargo +${{ matrix.rust-toolchain }} install nextest cargo-llvm-cov
-
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
         env:
@@ -34,13 +31,15 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends gyp mercurial ninja-build
+          curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 
       - name: Install dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
-          brew install --force --overwrite ninja mercurial
+          brew install --force --overwrite ninja mercurial taiki-e/tap/cargo-llvm-cov
           python3 -m pip install gyp-next
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
+          curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 
       # - name: Install dependencies (Windows)
       #   if: runner.os == 'Windows'
@@ -48,6 +47,14 @@ jobs:
       #   with:
       #     install: nsinstall
       #     path-type: inherit
+
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        run:
+          Set-ExecutionPolicy Unrestricted -Scope Process; iex (iwr "https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.ps1").Content
+
+      - name: Install Rust tools
+        run: cargo +${{ matrix.rust-toolchain }} binstall nextest cargo-llvm-cov
 
       - name: Checkout
         uses: actions/checkout@v4
