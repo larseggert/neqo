@@ -29,14 +29,14 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get install -y --no-install-recommends gyp mercurial ninja-build
+          sudo apt update
+          sudo apt install -y --no-install-recommends gyp mercurial ninja-build
           curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 
       - name: Install dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
           brew update
-          brew upgrade
           brew install --force --overwrite ninja mercurial cargo-binstall || brew link --overwrite python@3.11
           python3 -m pip install gyp-next
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
