@@ -29,8 +29,8 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt update
-          sudo apt install -y --no-install-recommends gyp mercurial ninja-build
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gyp mercurial ninja-build
           curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 
       - name: Install dependencies (MacOS)
@@ -38,7 +38,8 @@ jobs:
         run: |
           brew update
           brew install --force --overwrite ninja mercurial cargo-binstall || brew link --overwrite python@3.11
-          python3 -m pip install gyp-next
+          # python3 -m pip install gyp-next
+          pip install https://github.com/nodejs/gyp-next/archive/refs/tags/v0.16.1.zip
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
 
       - name: Install dependencies (Windows)
@@ -87,6 +88,8 @@ jobs:
 
       - name: Build
         run: |
+          gyp -V
+          python -V
           cargo +${{ matrix.rust-toolchain }} build -v --all-targets
           echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
           echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
