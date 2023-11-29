@@ -58,7 +58,10 @@ jobs:
           choco install MozillaBuild
 
       - name: Install Rust tools
-        run: cargo +${{ matrix.rust-toolchain }} binstall --no-confirm nextest cargo-llvm-cov
+        run: |
+          cargo +${{ matrix.rust-toolchain }} binstall --no-confirm nextest cargo-llvm-cov
+          echo $PATH
+          env | sort
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -83,9 +86,10 @@ jobs:
 
       - name: NSS build attempt (Windows)
         if: runner.os == 'Windows'
-        # shell: bash
+        shell: bash
         run: |
-          make -C "$NSS_DIR" nss_build_all USE_64=1 NS_USE_GCC=1
+          make -C "$NSS_DIR" nss_build_all USE_64=1 NS_USE_GCC=1 || true
+          "$NSS_DIR"/build.sh -v
 
       - name: Build
         run: |
