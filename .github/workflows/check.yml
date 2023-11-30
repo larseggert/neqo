@@ -51,7 +51,6 @@ jobs:
       # We only need nsinstall, but without the MSYS2 action, I can't come up with a better way to install it.
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
-        env:
         run: |
           export PYTHON_BIN="$(python3 -m site --user-base)/bin"
           curl https://hg.mozilla.org/mozilla-central/raw-file/tip/config/nsinstall.py > "$PYTHON_BIN"/nsinstall
