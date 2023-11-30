@@ -52,10 +52,9 @@ jobs:
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
-          export PYTHON_BIN="$(python3 -m site --user-base)/bin"
-          curl https://hg.mozilla.org/mozilla-central/raw-file/tip/config/nsinstall.py > "$PYTHON_BIN"/nsinstall
-          chmod +x "$PYTHON_BIN"/nsinstall
-          echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
+          curl -v https://hg.mozilla.org/mozilla-central/raw-file/tip/config/nsinstall.py > /usr/bin/nsinstall
+          ls -l /usr/bin/nsinstall
+          chmod +x /usr/bin/nsinstall
 
           # choco install --no-progress MozillaBuild ninja
           # echo "C:/mozilla-build/bin" >> $GITHUB_PATH
