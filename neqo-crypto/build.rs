@@ -153,7 +153,7 @@ fn get_bash() -> PathBuf {
 
 fn build_nss(dir: PathBuf) {
     let mut build_nss = match env::consts::OS {
-        "windows" => vec![String::from("-c"), String::from("make")],
+        "windows" => vec![String::from("-c"), String::from("env")],
         _ => vec![
             String::from("./build.sh"),
             String::from("-Ddisable_tests=1"),
