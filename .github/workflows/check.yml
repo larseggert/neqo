@@ -82,7 +82,7 @@ jobs:
       - name: Fetch NSS and NSPR
         run: |
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
-          git config --global core.autocrlf false
+          # git config --global core.autocrlf false
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           # sed -i.bak 's/-w44996//' "$NSS_DIR"/lib/sqlite/Makefile
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
@@ -97,13 +97,11 @@ jobs:
       - name: NSS build attempt with make/msvc(Windows)
         if: runner.os == 'Windows' && (success() || failure())
         shell: bash
-        env:
-          OS_TARGET: WIN95
-          # OS_ARCH: WINNT
+        # env:
+        #   OS_TARGET: WIN95
         run: |
           rm /usr/bin/link.exe || true
-          make -C "$NSS_DIR" nss_build_all USE_64=1 OS_ARCH=WINNT || true
-          find dist || true
+          make -C "$NSS_DIR" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1 OS_ARCH=WINNT
 
       # - name: NSS build attempt with build.sh/msvc (Windows)
       #   if: runner.os == 'Windows' && (success() || failure())
