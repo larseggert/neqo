@@ -52,7 +52,7 @@ jobs:
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
-          curl -L -O moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
+          curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
           unzip moztools.zip -d /
           rm moztools.zip
           echo "/moztools/bin" >> $GITHUB_PATH
