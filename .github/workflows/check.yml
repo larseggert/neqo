@@ -52,7 +52,8 @@ jobs:
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
-          curl https://hg.mozilla.org/mozilla-central/raw-file/tip/config/nsinstall.py > /usr/bin/nsinstall
+          echo "#!/usr/bin/env python3" > /usr/bin/nsinstall
+          curl https://hg.mozilla.org/mozilla-central/raw-file/tip/config/nsinstall.py >> /usr/bin/nsinstall
           chmod +x /usr/bin/nsinstall
           ls -l /usr/bin/nsinstall
           nsinstall || true
