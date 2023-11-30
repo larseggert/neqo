@@ -9,8 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: [ubuntu-latest, macos-latest] #, windows-latest]
-        os: [windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         rust-toolchain: [1.65.0] #, stable] #, beta]
     runs-on: ${{ matrix.os }}
     defaults:
@@ -48,18 +47,13 @@ jobs:
         shell: pwsh
         run: Set-ExecutionPolicy Unrestricted -Scope Process; iex (iwr "https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.ps1").Content
 
-      # We only need nsinstall, but without the MSYS2 action, I can't come up with a better way to install it.
-      - name: Install dependencies (Windows)
+      - name: Install moztools (Windows)
         if: runner.os == 'Windows'
         run: |
           curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
-          unzip moztools.zip # -d /
-          cp moztools/bin/nsinstall.exe /usr/bin
+          unzip moztools.zip
+          mv moztools/bin/nsinstall.exe /usr/bin
           rm -r moztools.zip moztools
-          echo "/moztools/bin" >> $GITHUB_PATH
-          # choco install --no-progress MozillaBuild ninja
-          # echo "C:/mozilla-build/bin" >> $GITHUB_PATH
-          # echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
 
       - name: Set up Windows build environment
         if: runner.os == 'Windows'
@@ -89,16 +83,14 @@ jobs:
       # Just here to have a convenient way to debug the build.
       # Once this works, this step should be removed, since the actual build
       # happens as part of neqo-crypto/build.rs.
-      - name: NSS build attempt with make/msvc(Windows)
+      - name: NSS build attempt (Windows)
         if: runner.os == 'Windows'
         env:
           OS_TARGET: WIN95
         shell: bash
         run: |
           rm /usr/bin/link.exe
-          which gmake
-          which nsinstall
-          make -C "$NSS_DIR" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1 # OS_ARCH=WINNT
+          make -C "$NSS_DIR" -j "$NUMBER_OF_PROCESSORS" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1
 
       - name: Build
         run: |
