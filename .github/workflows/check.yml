@@ -108,7 +108,7 @@ jobs:
         if: runner.os == 'Windows' && (success() || failure())
         shell: bash
         env:
-          OS_TARGET: WIN95
+          OS_TARGET: WINNT
         run: |
           rm /usr/bin/link.exe || true
           make -C "$NSS_DIR" nss_build_all USE_64=1 NS_USE_GCC=1 || true
@@ -118,7 +118,7 @@ jobs:
         if: runner.os == 'Windows' && (success() || failure())
         shell: bash
         env:
-          OS_TARGET: WIN95
+          OS_TARGET: WINNT
         run: |
           rm /usr/bin/link.exe || true
           make -C "$NSS_DIR" nss_build_all USE_64=1 || true
