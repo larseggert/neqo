@@ -163,14 +163,10 @@ fn build_nss(dir: PathBuf) {
         build_nss.push(d);
     }
 
-    let mut workdir = dir.clone();
     if env::consts::OS == "windows" {
-        build_nss.push(String::from("-C"));
-        build_nss.push(String::from(dir.to_str().unwrap()));
         build_nss.push(String::from("nss_build_all"));
         build_nss.push(String::from("USE_64=1"));
         build_nss.push(String::from("NSS_DISABLE_GTESTS=1"));
-        workdir = workdir.parent().unwrap().to_path_buf();
     } else {
         if is_debug() {
             build_nss.push(String::from("--static"));
@@ -188,11 +184,11 @@ fn build_nss(dir: PathBuf) {
         "{} {} {}",
         cmd.display(),
         build_nss.join(" "),
-        workdir.display()
+        dir.display()
     );
     let status = Command::new(cmd)
         .args(build_nss)
-        .current_dir(workdir)
+        .current_dir(dir)
         .status()
         .expect("couldn't start NSS build");
     assert!(status.success(), "NSS build failed");
