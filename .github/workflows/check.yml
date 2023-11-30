@@ -52,6 +52,8 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           which -a bash.exe
+          ls -l / || true
+          ls -l /msys*/bin/ || true
           curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
           unzip moztools.zip
           mv moztools/bin/nsinstall.exe /usr/bin
@@ -74,6 +76,7 @@ jobs:
       # right build flags rather than building NSS.)
       - name: Fetch NSS and NSPR
         run: |
+          which -a bash.exe
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
