@@ -137,7 +137,7 @@ fn get_bash() -> PathBuf {
         Err(_) => {
             if env::consts::OS == "windows" {
                 // On Windows w/o MOZILLABUILD, we need to invoke a different bash.exe
-                PathBuf::from("/c").join("Windows").join("system32").join("bash.exe")
+                PathBuf::from("C:\\").join("usr").join("bin").join("bash.exe")
             } else {
                 PathBuf::from("bash")
             }
