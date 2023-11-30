@@ -77,8 +77,6 @@ jobs:
       # right build flags rather than building NSS.)
       - name: Fetch NSS and NSPR
         run: |
-          which nsinstall || true
-          nsinstall -h || true
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
@@ -97,6 +95,8 @@ jobs:
         shell: bash
         run: |
           rm /usr/bin/link.exe
+          which gmake
+          which nsinstall
           make -C "$NSS_DIR" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1 # OS_ARCH=WINNT
 
       - name: Build
