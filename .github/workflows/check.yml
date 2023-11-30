@@ -86,13 +86,13 @@ jobs:
       # Once this works, this step should be removed, since the actual build
       # happens as part of neqo-crypto/build.rs.
       - name: NSS build attempt (Windows)
-        if: runner.os == 'Windows'
+        if: 0 && runner.os == 'Windows'
         env:
           OS_TARGET: WIN95
         shell: bash
         run: |
           rm /usr/bin/link.exe
-          make -C "$NSS_DIR" -j "$NUMBER_OF_PROCESSORS" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1
+          make -C "$NSS_DIR" -j "$NSS_JOBS" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1
 
       - name: Build
         run: |

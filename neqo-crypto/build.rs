@@ -139,28 +139,28 @@ fn get_bash() -> PathBuf {
 }
 
 fn build_nss(dir: PathBuf) {
-    let mut build_nss = match env::consts::OS  {
-        "windows" => vec![
-            String::from("make"),
-            String::from("nss_build_all"),
-            String::from("USE_64=1"),
-            String::from("NSS_DISABLE_GTESTS=1"),
-        ],
+    let mut build_nss = match env::consts::OS {
+        "windows" => vec![String::from("make")],
         _ => vec![
             String::from("./build.sh"),
             String::from("-Ddisable_tests=1"),
         ],
     };
 
-    if env::consts::OS != "windows" {
+    if let Ok(d) = env::var("NSS_JOBS") {
+        build_nss.push(String::from("-j"));
+        build_nss.push(d);
+    }
+
+    if env::consts::OS == "windows" {
+        build_nss.push(String::from("nss_build_all"));
+        build_nss.push(String::from("USE_64=1"));
+        build_nss.push(String::from("NSS_DISABLE_GTESTS=1"));
+    } else {
         if is_debug() {
             build_nss.push(String::from("--static"));
         } else {
             build_nss.push(String::from("-o"));
-        }
-        if let Ok(d) = env::var("NSS_JOBS") {
-            build_nss.push(String::from("-j"));
-            build_nss.push(d);
         }
         let target = env::var("TARGET").unwrap();
         if target.strip_prefix("aarch64-").is_some() {
@@ -302,7 +302,7 @@ fn build_bindings(base: &str, bindings: &Bindings, flags: &[String], gecko: bool
 }
 
 fn setup_standalone() -> Vec<String> {
-    setup_clang();
+    // setup_clang();
 
     println!("cargo:rerun-if-env-changed=NSS_DIR");
     let nss = nss_dir();
