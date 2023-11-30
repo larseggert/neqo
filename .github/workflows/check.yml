@@ -94,6 +94,17 @@ jobs:
       # Just here to have a convenient way to debug the build.
       # Once this works, this step should be removed, since the actual build
       # happens as part of neqo-crypto/build.rs.
+      - name: NSS build attempt with make/msvc(Windows)
+        if: runner.os == 'Windows' && (success() || failure())
+        shell: bash
+        env:
+          OS_TARGET: WIN95
+          OS_ARCH: WINNT
+        run: |
+          rm /usr/bin/link.exe || true
+          make -C "$NSS_DIR" nss_build_all USE_64=1 || true
+          find dist || true
+
       - name: NSS build attempt with build.sh/msvc (Windows)
         if: runner.os == 'Windows' && (success() || failure())
         shell: bash
@@ -108,20 +119,10 @@ jobs:
         if: runner.os == 'Windows' && (success() || failure())
         shell: bash
         env:
-          OS_TARGET: WINNT
+          OS_TARGET: WIN95
         run: |
           rm /usr/bin/link.exe || true
           make -C "$NSS_DIR" nss_build_all USE_64=1 NS_USE_GCC=1 || true
-          find dist || true
-
-      - name: NSS build attempt with make/msvc(Windows)
-        if: runner.os == 'Windows' && (success() || failure())
-        shell: bash
-        env:
-          OS_TARGET: WINNT
-        run: |
-          rm /usr/bin/link.exe || true
-          make -C "$NSS_DIR" nss_build_all USE_64=1 || true
           find dist || true
 
       - name: Build
