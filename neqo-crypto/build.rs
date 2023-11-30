@@ -139,7 +139,11 @@ fn get_bash() -> PathBuf {
                 // On Windows w/o MOZILLABUILD, we need to invoke a different bash.exe
                 // C:\Program Files\Git\bin\bash.EXE
                 // PathBuf::from("C:\\").join("usr").join("bin").join("bash.exe")
-                PathBuf::from("C:\\").join("Program Files").join("Git").join("bin").join("bash.EXE")
+                PathBuf::from("C:\\")
+                    .join("Program Files")
+                    .join("Git")
+                    .join("bin")
+                    .join("bash.EXE")
             } else {
                 PathBuf::from("bash")
             }
@@ -149,7 +153,7 @@ fn get_bash() -> PathBuf {
 
 fn build_nss(dir: PathBuf) {
     let mut build_nss = match env::consts::OS {
-        "windows" => vec![String::from("gmake")],
+        "windows" => vec![String::from("-c"), String::from("gmake")],
         _ => vec![
             String::from("./build.sh"),
             String::from("-Ddisable_tests=1"),
@@ -178,7 +182,12 @@ fn build_nss(dir: PathBuf) {
     }
 
     let cmd = get_bash();
-    println!("2 {}", cmd.display());
+    println!(
+        "{} {} {}",
+        cmd.display(),
+        build_nss.join(" "),
+        dir.display()
+    );
     let status = Command::new(cmd)
         .args(build_nss)
         .current_dir(dir)
@@ -426,8 +435,6 @@ fn main() {
     } else {
         setup_standalone()
     };
-    let cmd = get_bash();
-    println!("1 {}", cmd.display());
 
     let config_file = PathBuf::from(BINDINGS_DIR).join(BINDINGS_CONFIG);
     println!("cargo:rerun-if-changed={}", config_file.to_str().unwrap());
