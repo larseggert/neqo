@@ -52,6 +52,8 @@ jobs:
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
+          unzip -h || true
+          unzip /? || true
           curl https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip | unzip -d /usr -v
           # choco install --no-progress MozillaBuild ninja
           # echo "C:/mozilla-build/bin" >> $GITHUB_PATH
