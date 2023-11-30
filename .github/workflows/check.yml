@@ -55,17 +55,10 @@ jobs:
           choco install --no-progress MozillaBuild ninja
           echo "C:/mozilla-build/bin" >> $GITHUB_PATH
           echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
-          # echo "MOZILLABUILD=C:/mozilla-build" >> $GITHUB_ENV
-          # echo "MOZBUILD_STATE_PATH=C:/mozbuild-state" >> $GITHUB_ENV
-          # echo "GYP_MSVS_OVERRIDE_PATH=C:\Program Files\Microsoft Visual Studio\2022\Enterprise" >> $GITHUB_ENV
-          # echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
-          # echo "OS_TARGET=WIN95" >> $GITHUB_ENV
-          python3 -m pip install git+https://github.com/nodejs/gyp-next
-          python3 -m pip install packaging
-          echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
 
-      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Set up Windows build environment
         if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Install Rust tools
         run: |
@@ -78,7 +71,6 @@ jobs:
       # version of NSS.  Ubuntu 20.04 only has 3.49, which is far too old.
       # (neqo-crypto/build.rs would also need to query pkg-config to get the
       # right build flags rather than building NSS.)
-      # We're also tweaking the NSS checkout for Windows builds.
       - name: Fetch NSS and NSPR
         run: |
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
@@ -93,7 +85,9 @@ jobs:
       # Once this works, this step should be removed, since the actual build
       # happens as part of neqo-crypto/build.rs.
       - name: NSS build attempt with make/msvc(Windows)
-        if: runner.os == 'Windows' && (success() || failure())
+        if: runner.os == 'Windows'
+        env:
+          OS_TARGET: WIN95
         shell: bash
         run: |
           # rm /usr/bin/link.exe || true
