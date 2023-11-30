@@ -51,9 +51,6 @@ jobs:
       - name: Install moztools (Windows)
         if: runner.os == 'Windows'
         run: |
-          which -a bash.exe
-          ls -l / || true
-          ls -l /msys*/bin/ || true
           curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
           unzip moztools.zip
           mv moztools/bin/nsinstall.exe /usr/bin
@@ -76,9 +73,6 @@ jobs:
       # right build flags rather than building NSS.)
       - name: Fetch NSS and NSPR
         run: |
-          which -a bash.exe
-          ps -ef || true
-          ps -efww || true
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
@@ -97,6 +91,7 @@ jobs:
           OS_TARGET: WIN95
         shell: bash
         run: |
+          # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe
           make -C "$NSS_DIR" -j "$NSS_JOBS" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1
 
@@ -104,9 +99,7 @@ jobs:
         run: |
           # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe || true
-          which -a make || true
-          which -a gmake || true
-          cargo +${{ matrix.rust-toolchain }} build -vvv --all-targets
+          cargo +${{ matrix.rust-toolchain }} build -vv --all-targets
           echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
           echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
         env:

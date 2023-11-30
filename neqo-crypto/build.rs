@@ -138,12 +138,12 @@ fn get_bash() -> PathBuf {
             if env::consts::OS == "windows" {
                 // On Windows w/o MOZILLABUILD, we need to invoke a different bash.exe
                 // C:\Program Files\Git\bin\bash.EXE
-                // PathBuf::from("C:\\").join("usr").join("bin").join("bash.exe")
-                PathBuf::from("C:\\")
-                    .join("Program Files")
-                    .join("Git")
-                    .join("bin")
-                    .join("bash.EXE")
+                PathBuf::from("C:\\").join("usr").join("bin").join("bash.exe")
+                // PathBuf::from("C:\\")
+                //     .join("Program Files")
+                //     .join("Git")
+                //     .join("bin")
+                //     .join("bash.EXE")
             } else {
                 PathBuf::from("bash")
             }
@@ -153,7 +153,7 @@ fn get_bash() -> PathBuf {
 
 fn build_nss(dir: PathBuf) {
     let mut build_nss = match env::consts::OS {
-        "windows" => vec![String::from("-c"), String::from("gmake")],
+        "windows" => vec![String::from("-c"), String::from("make")],
         _ => vec![
             String::from("./build.sh"),
             String::from("-Ddisable_tests=1"),
@@ -166,6 +166,8 @@ fn build_nss(dir: PathBuf) {
     }
 
     if env::consts::OS == "windows" {
+        build_nss.push(String::from("-C"));
+        build_nss.push(String::from(dir.to_str().unwrap()));
         build_nss.push(String::from("nss_build_all"));
         build_nss.push(String::from("USE_64=1"));
         build_nss.push(String::from("NSS_DISABLE_GTESTS=1"));
