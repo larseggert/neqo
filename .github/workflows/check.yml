@@ -109,11 +109,12 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          rm /usr/bin/link || true
-          which cl || true
+          which link.exe || true
+          rm /usr/bin/link.exe || true
+          which link.exe || true
+          rm /usr/bin/link.exe || true
+          which link.exe || true
           which link || true
-          which gyp || true
-          which ninja || true
           rm $NSS_DIR/coreconf/msvc.sh
           touch $NSS_DIR/coreconf/msvc.sh
           $NSS_DIR/build.sh -v -Ddisable_tests=1 --static --msvc
