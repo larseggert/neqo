@@ -52,10 +52,11 @@ jobs:
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
-          curl -v https://hg.mozilla.org/mozilla-central/raw-file/tip/config/nsinstall.py > /usr/bin/nsinstall
-          ls -l /usr/bin/nsinstall
+          curl https://hg.mozilla.org/mozilla-central/raw-file/tip/config/nsinstall.py > /usr/bin/nsinstall
           chmod +x /usr/bin/nsinstall
-
+          ls -l /usr/bin/nsinstall
+          nsinstall || true
+          nsinstall --help || true
           # choco install --no-progress MozillaBuild ninja
           # echo "C:/mozilla-build/bin" >> $GITHUB_PATH
           # echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
