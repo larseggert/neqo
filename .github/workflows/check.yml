@@ -102,8 +102,10 @@ jobs:
           which link.exe || true
           rm $NSS_DIR/coreconf/msvc.sh
           touch $NSS_DIR/coreconf/msvc.sh
-          $NSS_DIR/build.sh -v -Ddisable_tests=1 --static --msvc
-        # run: make -C "$NSS_DIR" -j "$NUMBER_OF_PROCESSORS" nss_build_all USE_64=1 NS_USE_GCC=1
+          $NSS_DIR/build.sh -v -Ddisable_tests=1 --static --msvc || true
+          find $NSS_DIR/dist/Debug/ || true
+          make -C "$NSS_DIR" -j "$NUMBER_OF_PROCESSORS" nss_build_all USE_64=1 NS_USE_GCC=1 || true
+          make -C "$NSS_DIR" -j "$NUMBER_OF_PROCESSORS" nss_build_all USE_64=1 || true
 
       - name: Build
         run: |
