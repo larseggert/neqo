@@ -86,20 +86,20 @@ jobs:
       # Once this works, this step should be removed, since the actual build
       # happens as part of neqo-crypto/build.rs.
       - name: NSS build attempt (Windows)
-        if: 0 && runner.os == 'Windows'
-        env:
-          OS_TARGET: WIN95
+        if: runner.os == 'Windows'
+        # env:
+        #   OS_TARGET: WIN95
         shell: bash
         run: |
           rm /usr/bin/link.exe
-          make -C "$NSS_DIR" -j "$NSS_JOBS" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1
+          cd "$NSS_DIR" && make -j "$NSS_JOBS" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1
 
       - name: Build
         run: |
           # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe || true
-          cargo +${{ matrix.rust-toolchain }} build -v --all-targets || true
-          find .
+          pwd
+          cargo +${{ matrix.rust-toolchain }} build -v --all-targets
           echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
           echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
         env:
