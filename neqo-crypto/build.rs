@@ -175,7 +175,9 @@ fn build_nss(dir: PathBuf) {
         }
     }
 
-    let status = Command::new(get_bash())
+    let cmd = get_bash();
+    println!("2 {}", cmd.display());
+    let status = Command::new(cmd)
         .args(build_nss)
         .current_dir(dir)
         .status()
@@ -422,6 +424,8 @@ fn main() {
     } else {
         setup_standalone()
     };
+    let cmd = get_bash();
+    println!("1 {}", cmd.display());
 
     let config_file = PathBuf::from(BINDINGS_DIR).join(BINDINGS_CONFIG);
     println!("cargo:rerun-if-changed={}", config_file.to_str().unwrap());
