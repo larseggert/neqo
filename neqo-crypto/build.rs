@@ -135,18 +135,16 @@ fn get_bash() -> PathBuf {
     match env::var("MOZILLABUILD") {
         Ok(d) => PathBuf::from(d).join("msys").join("bin").join("bash.exe"),
         Err(_) => {
-            // if env::consts::OS == "windows" {
-            //     // On Windows w/o MOZILLABUILD, we need to invoke a different bash.exe
-            //     // C:\Program Files\Git\bin\bash.EXE
-            //     // PathBuf::from("C:\\").join("usr").join("bin").join("bash.exe")
-            //     PathBuf::from("C:\\")
-            //         .join("Program Files")
-            //         .join("Git")
-            //         .join("bin")
-            //         .join("bash.EXE")
-            // } else {
+            if env::consts::OS == "windows" {
+                // On Windows w/o MOZILLABUILD, we need to invoke a different bash.exe
+                PathBuf::from("C:\\")
+                    .join("Program Files")
+                    .join("Git")
+                    .join("bin")
+                    .join("bash.EXE")
+            } else {
                 PathBuf::from("bash")
-            // }
+            }
         }
     }
 }
