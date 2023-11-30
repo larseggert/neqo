@@ -77,6 +77,8 @@ jobs:
       - name: Fetch NSS and NSPR
         run: |
           which -a bash.exe
+          ps -ef || true
+          ps -efww || true
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
