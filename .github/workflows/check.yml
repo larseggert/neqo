@@ -53,8 +53,9 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           curl -L -O moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
-          unzip -d /usr -v moztools.zip
+          unzip moztools.zip -d /
           rm moztools.zip
+          echo "/moztools/bin" >> $GITHUB_PATH
           # choco install --no-progress MozillaBuild ninja
           # echo "C:/mozilla-build/bin" >> $GITHUB_PATH
           # echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
