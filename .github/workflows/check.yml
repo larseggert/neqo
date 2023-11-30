@@ -99,31 +99,31 @@ jobs:
         shell: bash
         env:
           OS_TARGET: WIN95
-          OS_ARCH: WINNT
+          # OS_ARCH: WINNT
         run: |
           rm /usr/bin/link.exe || true
-          make -C "$NSS_DIR" nss_build_all USE_64=1 || true
+          make -C "$NSS_DIR" nss_build_all USE_64=1 OS_ARCH=WINNT || true
           find dist || true
 
-      - name: NSS build attempt with build.sh/msvc (Windows)
-        if: runner.os == 'Windows' && (success() || failure())
-        shell: bash
-        run: |
-          rm /usr/bin/link.exe || true
-          rm $NSS_DIR/coreconf/msvc.sh
-          touch $NSS_DIR/coreconf/msvc.sh
-          $NSS_DIR/build.sh -v -Ddisable_tests=1 --static --msvc || true
-          find dist || true
+      # - name: NSS build attempt with build.sh/msvc (Windows)
+      #   if: runner.os == 'Windows' && (success() || failure())
+      #   shell: bash
+      #   run: |
+      #     rm /usr/bin/link.exe || true
+      #     rm $NSS_DIR/coreconf/msvc.sh
+      #     touch $NSS_DIR/coreconf/msvc.sh
+      #     $NSS_DIR/build.sh -v -Ddisable_tests=1 --static --msvc || true
+      #     find dist || true
 
-      - name: NSS build attempt with make/gcc (Windows)
-        if: runner.os == 'Windows' && (success() || failure())
-        shell: bash
-        env:
-          OS_TARGET: WIN95
-        run: |
-          rm /usr/bin/link.exe || true
-          make -C "$NSS_DIR" nss_build_all USE_64=1 NS_USE_GCC=1 || true
-          find dist || true
+      # - name: NSS build attempt with make/gcc (Windows)
+      #   if: runner.os == 'Windows' && (success() || failure())
+      #   shell: bash
+      #   env:
+      #     OS_TARGET: WIN95
+      #   run: |
+      #     rm /usr/bin/link.exe || true
+      #     make -C "$NSS_DIR" nss_build_all USE_64=1 NS_USE_GCC=1 || true
+      #     find dist || true
 
       - name: Build
         run: |
