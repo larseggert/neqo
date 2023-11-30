@@ -166,8 +166,8 @@ fn build_nss(dir: PathBuf) {
     }
 
     if env::consts::OS == "windows" {
-        build_nss.push(String::from("-C"));
-        build_nss.push(String::from(dir.to_str().unwrap()));
+        // build_nss.push(String::from("-C"));
+        // build_nss.push(String::from(dir.to_str().unwrap()));
         build_nss.push(String::from("nss_build_all"));
         build_nss.push(String::from("USE_64=1"));
         build_nss.push(String::from("NSS_DISABLE_GTESTS=1"));
