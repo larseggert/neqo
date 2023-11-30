@@ -102,24 +102,27 @@ jobs:
           rm $NSS_DIR/coreconf/msvc.sh
           touch $NSS_DIR/coreconf/msvc.sh
           $NSS_DIR/build.sh -v -Ddisable_tests=1 --static --msvc || true
-          find $NSS_DIR/../dist/Debug/ || true
+          find dist || true
 
       - name: NSS build attempt with make/gcc (Windows)
         if: runner.os == 'Windows' && (success() || failure())
         shell: bash
+        env:
+          OS_TARGET: WIN95
         run: |
           rm /usr/bin/link.exe || true
-          which link.exe || true
           make -C "$NSS_DIR" nss_build_all USE_64=1 NS_USE_GCC=1 || true
-          find $NSS_DIR/../dist/Debug/ || true
+          find dist || true
 
       - name: NSS build attempt with make/msvc(Windows)
         if: runner.os == 'Windows' && (success() || failure())
         shell: bash
+        env:
+          OS_TARGET: WIN95
         run: |
           rm /usr/bin/link.exe || true
           make -C "$NSS_DIR" nss_build_all USE_64=1 || true
-          find $NSS_DIR/../dist/Debug/ || true
+          find dist || true
 
       - name: Build
         run: |
