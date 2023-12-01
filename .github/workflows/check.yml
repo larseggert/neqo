@@ -54,6 +54,7 @@ jobs:
           curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
           unzip moztools.zip
           mv moztools/bin/nsinstall.exe /usr/bin
+          mv moztools/bin/gmake.exe /usr/bin/make.exe
           rm -r moztools.zip moztools
           # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe
@@ -94,6 +95,7 @@ jobs:
 
       - name: Build
         run: |
+          which -a make || true
           cargo +${{ matrix.rust-toolchain }} build -vv -j1 --all-targets || true
           # pwd || true
           # ls -lt || true
