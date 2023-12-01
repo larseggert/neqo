@@ -134,60 +134,29 @@ fn get_bash() -> PathBuf {
     // another instance of bash that might be sitting around (like WSL).
     match env::var("MOZILLABUILD") {
         Ok(d) => PathBuf::from(d).join("msys").join("bin").join("bash.exe"),
-        Err(_) => {
-            if env::consts::OS == "windows" {
-                // On Windows w/o MOZILLABUILD, we need to invoke a different bash.exe
-                PathBuf::from("C:\\")
-                    .join("Program Files")
-                    .join("Git")
-                    .join("bin")
-                    .join("bash.EXE")
-            } else {
-                PathBuf::from("bash")
-            }
-        }
+        Err(_) => PathBuf::from("bash"),
     }
 }
 
 fn build_nss(dir: PathBuf) {
-    let mut build_nss = match env::consts::OS {
-        "windows" => vec![String::from("-c"), String::from("make")],
-        _ => vec![
-            String::from("./build.sh"),
-            String::from("-Ddisable_tests=1"),
-        ],
-    };
-
+    let mut build_nss = vec![
+        String::from("./build.sh"),
+        String::from("-Ddisable_tests=1"),
+    ];
+    if is_debug() {
+        build_nss.push(String::from("--static"));
+    } else {
+        build_nss.push(String::from("-o"));
+    }
     if let Ok(d) = env::var("NSS_JOBS") {
         build_nss.push(String::from("-j"));
         build_nss.push(d);
     }
-
-    if env::consts::OS == "windows" {
-        build_nss.push(String::from("--debug=b"));
-        build_nss.push(String::from("nss_build_all"));
-        build_nss.push(String::from("USE_64=1"));
-        build_nss.push(String::from("NSS_DISABLE_GTESTS=1"));
-    } else {
-        if is_debug() {
-            build_nss.push(String::from("--static"));
-        } else {
-            build_nss.push(String::from("-o"));
-        }
-        let target = env::var("TARGET").unwrap();
-        if target.strip_prefix("aarch64-").is_some() {
-            build_nss.push(String::from("--target=arm64"));
-        }
+    let target = env::var("TARGET").unwrap();
+    if target.strip_prefix("aarch64-").is_some() {
+        build_nss.push(String::from("--target=arm64"));
     }
-
-    let cmd = get_bash();
-    println!(
-        "{} {} {}",
-        cmd.display(),
-        build_nss.join(" "),
-        dir.display()
-    );
-    let status = Command::new(cmd)
+    let status = Command::new(get_bash())
         .args(build_nss)
         .current_dir(dir)
         .status()
@@ -321,7 +290,7 @@ fn build_bindings(base: &str, bindings: &Bindings, flags: &[String], gecko: bool
 }
 
 fn setup_standalone() -> Vec<String> {
-    // setup_clang();
+    setup_clang();
 
     println!("cargo:rerun-if-env-changed=NSS_DIR");
     let nss = nss_dir();
