@@ -99,8 +99,9 @@ jobs:
           which link.exe || true
           cargo +${{ matrix.rust-toolchain }} build -v --all-targets || true
           pwd || true
-          ls -l || true
+          ls -lt || true
           find dist || true
+          find target || true
           echo "NSS_DIR=$NSS_DIR" || true
           ls -l "$NSS_DIR" || true
           echo "NSPR_DIR=$NSPR_DIR" || true
