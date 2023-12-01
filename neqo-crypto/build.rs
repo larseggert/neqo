@@ -60,7 +60,8 @@ fn is_debug() -> bool {
 // On windows, this doesn't just work, you have to set LIBCLANG_PATH.
 // Rather than download the 400Mb+ files, like gecko does, let's just reuse their work.
 fn setup_clang() {
-    if env::consts::OS != "windows" {
+    // If this isn't Windows, or we're in CI, then we don't need to do anything.
+    if env::consts::OS != "windows" || env::var("GITHUB_WORKFLOW").unwrap() == "CI" {
         return;
     }
     println!("rerun-if-env-changed=LIBCLANG_PATH");
