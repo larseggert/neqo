@@ -35,13 +35,13 @@ jobs:
       - name: Install dependencies (MacOS)
         if: runner.os == 'MacOS'
         run: |
-          brew install --force --overwrite ninja mercurial cargo-binstall || brew link --overwrite python@3.11
+          brew install ninja mercurial cargo-binstall
           # python3 -m pip install gyp-next
           # Above does not work, since pypi only has gyp 0.15.0, which is too old
           # for the homebrew python3. Install from source instead.
           python3 -m pip install git+https://github.com/nodejs/gyp-next
           python3 -m pip install packaging
-          echo "$(python3 -m site --user-base)/bin" >> $GITHUB_PATH
+          echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
 
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
@@ -53,8 +53,7 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Install Rust tools
-        run: |
-          cargo +${{ matrix.rust-toolchain }} binstall --no-confirm cargo-llvm-cov cargo-nextest
+        run: cargo +${{ matrix.rust-toolchain }} binstall --no-confirm cargo-llvm-cov cargo-nextest
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -67,13 +66,20 @@ jobs:
         run: |
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
-          echo "NSS_DIR=$NSS_DIR" >> $GITHUB_ENV
-          echo "NSPR_DIR=$NSPR_DIR" >> $GITHUB_ENV
-          # echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> $GITHUB_ENV
-          echo "NSS_JOBS=1" >> $GITHUB_ENV
+          echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
+          echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
+          echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> "$GITHUB_ENV"
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
+
+      - name: Rewire NSS build.sh (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          echo "#!/usr/bin/env bash" > "$NSS_DIR"/build.sh
+          echo "make -C \"$NSS_DIR\" -j \"$NSS_JOBS\" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1" >> "$NSS_DIR"/build.sh
+          cat "$NSS_DIR"/build.sh
+          env | sort
 
       - name: Install moztools (Windows)
         if: runner.os == 'Windows'
@@ -84,9 +90,6 @@ jobs:
           rm -r moztools.zip moztools
           # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe
-          echo "#!/usr/bin/env bash" > "$NSS_DIR"/build.sh
-          echo "make -C \"$NSS_DIR\"-j \"$NSS_JOBS\" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1" >> "$NSS_DIR"/build.sh
-          cat "$NSS_DIR"/build.sh
 
       # Just here to have a convenient way to debug the build.
       # Once this works, this step should be removed, since the actual build
@@ -97,15 +100,14 @@ jobs:
 
       - name: Build
         run: |
-          cargo +${{ matrix.rust-toolchain }} build -vv -j1 --all-targets || true
-          echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> $GITHUB_ENV
-          echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> $GITHUB_ENV
+          cargo +${{ matrix.rust-toolchain }} build -vv --all-targets || true
+          echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
+          echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
         env:
           RUST_BACKTRACE: 1
 
       - name: Run tests
-        run: |
-          cargo +${{ matrix.rust-toolchain }} nextest run -v --no-fail-fast
+        run: cargo +${{ matrix.rust-toolchain }} nextest run -v --no-fail-fast
         env:
            RUST_BACKTRACE: 1
            RUST_LOG: neqo=debug
