@@ -301,13 +301,17 @@ fn setup_standalone() -> Vec<String> {
     println!("cargo:rerun-if-env-changed=NSS_DIR");
     let nss = nss_dir();
     build_nss(nss.clone());
+    println!("YEAH");
 
     // $NSS_DIR/../dist/
     let nssdist = nss.parent().unwrap().join("dist");
+    println!("{}", nssdist.to_str().unwrap());
     println!("cargo:rerun-if-env-changed=NSS_TARGET");
     let nsstarget = env::var("NSS_TARGET")
         .unwrap_or_else(|_| fs::read_to_string(nssdist.join("latest")).unwrap());
+    println!("{}", nsstarget);
     let nsstarget = nssdist.join(nsstarget.trim());
+    println!("{}", nsstarget.to_str().unwrap());
 
     let includes = get_includes(&nsstarget, &nssdist);
 
@@ -326,7 +330,7 @@ fn setup_standalone() -> Vec<String> {
     for i in includes {
         flags.push(String::from("-I") + i.to_str().unwrap());
     }
-
+    println!("{}", flags.join(" "));
     flags
 }
 
