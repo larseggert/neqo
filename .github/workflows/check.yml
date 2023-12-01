@@ -81,10 +81,8 @@ jobs:
           # echo "make -C \"$NSS_DIR\" -j \"$NSS_JOBS\" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1" >> "$NSS_DIR"/build.sh
           echo "make -C \"$NSS_DIR\" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1" >> "$NSS_DIR"/build.sh
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
-          ls -l "C:\\" || true
-          ls -l "C:\\Program Files" || true
-          ls -l "C:\\LLVM\\bin" || true
-          # echo "LIBCLANG_PATH="C:\\LLVM\\bin" >> "$GITHUB_ENV"
+          ls -l "C:\\Program Files\\LLVM" || true
+          echo "LIBCLANG_PATH="C:\\Program Files\\LLVM" >> "$GITHUB_ENV"
 
       - name: Install moztools (Windows)
         if: runner.os == 'Windows'
