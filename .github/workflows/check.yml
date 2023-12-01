@@ -80,6 +80,8 @@ jobs:
           echo "make -C \"$NSS_DIR\" -j \"$NSS_JOBS\" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1" >> "$NSS_DIR"/build.sh
           cat "$NSS_DIR"/build.sh
           env | sort
+          echo $SHELL
+          echo "BASH=$SHELL" >> "$GITHUB_ENV"
 
       - name: Install moztools (Windows)
         if: runner.os == 'Windows'

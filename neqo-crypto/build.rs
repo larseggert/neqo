@@ -131,6 +131,11 @@ fn nss_dir() -> PathBuf {
 }
 
 fn get_bash() -> PathBuf {
+    // If BASH is set, use that.
+    if let Ok(bash) = env::var("BASH") {
+        return PathBuf::from(bash);
+    }
+
     // When running under MOZILLABUILD, we need to make sure not to invoke
     // another instance of bash that might be sitting around (like WSL).
     match env::var("MOZILLABUILD") {
