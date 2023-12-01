@@ -98,6 +98,8 @@ jobs:
           # rm /usr/bin/link.exe || true
           which link.exe || true
           cargo +${{ matrix.rust-toolchain }} build -v --all-targets || true
+          pwd || true
+          ls -l || true
           find dist || true
           echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> $GITHUB_ENV
           echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> $GITHUB_ENV
