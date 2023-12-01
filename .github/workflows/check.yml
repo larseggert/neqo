@@ -80,7 +80,8 @@ jobs:
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           echo "NSS_DIR=$NSS_DIR" >> $GITHUB_ENV
           echo "NSPR_DIR=$NSPR_DIR" >> $GITHUB_ENV
-          echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> $GITHUB_ENV
+          # echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> $GITHUB_ENV
+          echo "NSS_JOBS=1" >> $GITHUB_ENV
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
@@ -98,7 +99,7 @@ jobs:
           make -v
           which -a gmake || true
           gmake -v
-          cargo +${{ matrix.rust-toolchain }} build -vv --all-targets || true
+          cargo +${{ matrix.rust-toolchain }} build -vv -j1 --all-targets || true
           echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> $GITHUB_ENV
           echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> $GITHUB_ENV
         env:
