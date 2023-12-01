@@ -79,7 +79,8 @@ jobs:
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           echo "NSS_DIR=$NSS_DIR" >> $GITHUB_ENV
           echo "NSPR_DIR=$NSPR_DIR" >> $GITHUB_ENV
-          echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> $GITHUB_ENV
+          # echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> $GITHUB_ENV
+          echo "NSS_JOBS=1" >> $GITHUB_ENV
         env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
@@ -89,23 +90,19 @@ jobs:
       # happens as part of neqo-crypto/build.rs.
       - name: NSS build attempt (Windows)
         if: 0 && runner.os == 'Windows'
-        run: |
-          rm /usr/bin/link.exe
-          cd "$NSS_DIR" && make -j "$NSS_JOBS" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1
+        run: cd "$NSS_DIR" && make -j "$NSS_JOBS" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1
 
       - name: Build
         run: |
-          # rm /usr/bin/link.exe || true
-          which link.exe || true
-          cargo +${{ matrix.rust-toolchain }} build -v --all-targets || true
-          pwd || true
-          ls -lt || true
-          find dist || true
-          find target || true
-          echo "NSS_DIR=$NSS_DIR" || true
-          ls -l "$NSS_DIR" || true
-          echo "NSPR_DIR=$NSPR_DIR" || true
-          ls -l "$NSPR_DIR" || true
+          cargo +${{ matrix.rust-toolchain }} build -vv -j1 --all-targets || true
+          # pwd || true
+          # ls -lt || true
+          # find dist || true
+          # find target || true
+          # echo "NSS_DIR=$NSS_DIR" || true
+          # ls -l "$NSS_DIR" || true
+          # echo "NSPR_DIR=$NSPR_DIR" || true
+          # ls -l "$NSPR_DIR" || true
           echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> $GITHUB_ENV
           echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> $GITHUB_ENV
         env:
