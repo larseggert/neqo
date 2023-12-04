@@ -80,7 +80,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           echo "#!/usr/bin/env bash" > "$NSS_DIR"/build.sh
-          echo "make -C \"$NSS_DIR\" -j \"$NSS_JOBS\" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1" >> "$NSS_DIR"/build.sh
+          echo "make -C \"$NSS_DIR\" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1" >> "$NSS_DIR"/build.sh
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
           echo "NSS_GYP_PREFIX=$NSS_DIR/../dist/Debug" >> "$GITHUB_ENV"
           # echo "LIBCLANG_PATH=C:\\Program Files\\LLVM\\bin" >> "$GITHUB_ENV"
@@ -97,7 +97,7 @@ jobs:
 
       - name: Build
         run: |
-          cargo +${{ matrix.rust-toolchain }} build -v --all-targets
+          cargo +${{ matrix.rust-toolchain }} build -j1 -v --all-targets
           echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
           echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
         env:
