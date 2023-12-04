@@ -227,11 +227,12 @@ fn static_link() {
 }
 
 fn get_includes(nsstarget: &Path, nssdist: &Path) -> Vec<PathBuf> {
+    let nssinclude = nssdist.join("public").join("nss");
     let mut nsprinclude = nsstarget.join("include");
-    let mut nssinclude = nssdist.join("public");
+    // If we're on Windows and in CI, don't add the nspr directory,
+    // since we're building/installing via NSS in a different way.
     if env::consts::OS != "windows" || env::var("GITHUB_WORKFLOW").unwrap() != "CI" {
         nsprinclude = nsprinclude.join("nspr");
-        nssinclude = nssinclude.join("nss");
     }
     let includes = vec![nsprinclude, nssinclude];
     for i in &includes {
@@ -309,13 +310,10 @@ fn setup_standalone() -> Vec<String> {
 
     // $NSS_DIR/../dist/
     let nssdist = nss.parent().unwrap().join("dist");
-    println!("{}", nssdist.to_str().unwrap());
     println!("cargo:rerun-if-env-changed=NSS_TARGET");
     let nsstarget = env::var("NSS_TARGET")
         .unwrap_or_else(|_| fs::read_to_string(nssdist.join("latest")).unwrap());
-    println!("{}", nsstarget);
     let nsstarget = nssdist.join(nsstarget.trim());
-    println!("{}", nsstarget.to_str().unwrap());
 
     let includes = get_includes(&nsstarget, &nssdist);
 
@@ -334,7 +332,6 @@ fn setup_standalone() -> Vec<String> {
     for i in includes {
         flags.push(String::from("-I") + i.to_str().unwrap());
     }
-    println!("{}", flags.join(" "));
     flags
 }
 
