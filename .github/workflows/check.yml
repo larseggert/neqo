@@ -84,6 +84,7 @@ jobs:
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
           # w/o anything: ../../../../dist/WIN954.0_x86_64_64_DBG.OBJ/include -> dist/WIN954.0_x86_64_64_DBG.OBJ/include/nspr.h
           echo "NSS_GYP_PREFIX=$NSS_DIR/../dist/WIN954.0_x86_64_64_DBG.OBJ" >> "$GITHUB_ENV"
+          # ../../dist/include/nspr ->
           # echo "LIBCLANG_PATH=C:\\Program Files\\LLVM\\bin" >> "$GITHUB_ENV"
 
       - name: Install moztools (Windows)
@@ -99,7 +100,11 @@ jobs:
       - name: Build
         run: |
           cargo +${{ matrix.rust-toolchain }} build -v --all-targets || true
-          ls -l
+          ls -lt || true
+          ls -lt .. || true
+          ls -lt ../.. || true
+          ls -lt nss || true
+          ls -lt nspr || true
           find dist
           exit 1
           echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
