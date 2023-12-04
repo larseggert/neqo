@@ -82,15 +82,15 @@ jobs:
           echo "#!/usr/bin/env bash" > "$NSS_DIR"/build.sh
           echo "make -C \"$NSS_DIR\" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1" >> "$NSS_DIR"/build.sh
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
-          echo "OBJDIR_NAME=${{ runner.os }}"
-          echo "NSS_GYP_PREFIX=$NSS_DIR/../dist/${{ runner.os }}" >> "$GITHUB_ENV"
+          # echo "OBJDIR_NAME=${{ runner.os }}"
+          echo "NSS_GYP_PREFIX=$NSS_DIR/../dist/WIN954.0_x86_64_64_DBG.OBJ" >> "$GITHUB_ENV"
           # echo "LIBCLANG_PATH=C:\\Program Files\\LLVM\\bin" >> "$GITHUB_ENV"
-          echo "include manifest.mn" > "$NSS_DIR"/M
-          echo 'include $(CORE_DEPTH)/coreconf/WIN95.mk' >> "$NSS_DIR"/M
-          echo "vars:" >> "$NSS_DIR"/M
-          echo '	echo $(OS_TARGET)$(OS_RELEASE)$(CPU_TAG)$(OBJDIR_NAME_COMPILER)$(LIBC_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG)' >> "$NSS_DIR"/M
-          cat $NSS_DIR/M || true
-          make -C "$NSS_DIR" -f M vars
+          # echo "include manifest.mn" > "$NSS_DIR"/M
+          # echo 'include $(CORE_DEPTH)/coreconf/WIN95.mk' >> "$NSS_DIR"/M
+          # echo "vars:" >> "$NSS_DIR"/M
+          # echo '	echo $(OS_TARGET)$(OS_RELEASE)$(CPU_TAG)$(OBJDIR_NAME_COMPILER)$(LIBC_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG)' >> "$NSS_DIR"/M
+          # cat $NSS_DIR/M || true
+          # make -C "$NSS_DIR" -f M vars
 
       - name: Install moztools (Windows)
         if: runner.os == 'Windows'
