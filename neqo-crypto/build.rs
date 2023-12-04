@@ -147,9 +147,8 @@ fn get_bash() -> PathBuf {
 fn build_nss(dir: PathBuf) {
     let mut build_nss = vec![
         String::from("./build.sh"),
+        String::from("-g"),
         String::from("-v"),
-        String::from("-j"),
-        String::from("1"),
         String::from("-Ddisable_tests=1"),
     ];
     if is_debug() {
