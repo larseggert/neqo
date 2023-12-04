@@ -82,6 +82,9 @@ jobs:
           # echo "#!/usr/bin/env bash" > "$NSS_DIR"/build.sh
           # echo "make -C \"$NSS_DIR\" -j \"$NSS_JOBS\" nss_build_all USE_64=1" >> "$NSS_DIR"/build.sh
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
+          python3 -m pip install git+https://github.com/nodejs/gyp-next
+          python3 -m pip install packaging
+          echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
 
       - name: Install moztools (Windows)
         if: runner.os == 'Windows'
