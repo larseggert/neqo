@@ -89,7 +89,8 @@ jobs:
           echo 'include $(CORE_DEPTH)/coreconf/WIN95.mk' >> "$NSS_DIR"/M
           echo "vars:" >> "$NSS_DIR"/M
           echo '	echo $(OS_TARGET)$(OS_RELEASE)$(CPU_TAG)$(OBJDIR_NAME_COMPILER)$(LIBC_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG)' >> "$NSS_DIR"/M
-          make -C "$NSS_DIR" -f M
+          cat $NSS_DIR/M || true
+          make -C "$NSS_DIR" -f M vars
 
       - name: Install moztools (Windows)
         if: runner.os == 'Windows'
