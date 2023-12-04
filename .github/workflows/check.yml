@@ -80,17 +80,9 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           echo "#!/usr/bin/env bash" > "$NSS_DIR"/build.sh
-          echo "make -C \"$NSS_DIR\" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1" >> "$NSS_DIR"/build.sh
+          echo "make -C \"$NSS_DIR\" -j \"$NSS_JOBS\" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1" >> "$NSS_DIR"/build.sh
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
-          # echo "OBJDIR_NAME=${{ runner.os }}"
-          echo "NSS_GYP_PREFIX=$NSS_DIR/../dist/WIN954.0_x86_64_64_DBG.OBJ" >> "$GITHUB_ENV"
           # echo "LIBCLANG_PATH=C:\\Program Files\\LLVM\\bin" >> "$GITHUB_ENV"
-          # echo "include manifest.mn" > "$NSS_DIR"/M
-          # echo 'include $(CORE_DEPTH)/coreconf/WIN95.mk' >> "$NSS_DIR"/M
-          # echo "vars:" >> "$NSS_DIR"/M
-          # echo '	echo $(OS_TARGET)$(OS_RELEASE)$(CPU_TAG)$(OBJDIR_NAME_COMPILER)$(LIBC_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG)' >> "$NSS_DIR"/M
-          # cat $NSS_DIR/M || true
-          # make -C "$NSS_DIR" -f M vars
 
       - name: Install moztools (Windows)
         if: runner.os == 'Windows'
@@ -104,8 +96,10 @@ jobs:
 
       - name: Build
         run: |
-          cargo +${{ matrix.rust-toolchain }} build -j1 -v --all-targets || true
+          cargo +${{ matrix.rust-toolchain }} build -v --all-targets || true
+          ls -l
           find dist
+          exit 1
           echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
           echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
         env:
