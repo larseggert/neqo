@@ -85,8 +85,8 @@ jobs:
           # w/o anything: ../../../../dist/WIN954.0_x86_64_64_DBG.OBJ/include -> dist/WIN954.0_x86_64_64_DBG.OBJ/include/nspr.h
           echo "NSS_GYP_PREFIX=${{ github.workspace }}" >> "$GITHUB_ENV"
           # ../../dist/include/nspr ->
-          mkdir dist
-          ln -sf dist/WIN954.0_x86_64_64_DBG.OBJ "$NSPR_DIR"/WIN954.0_x86_64_64_DBG.OBJ
+          # mkdir dist
+          # ln -sf dist/WIN954.0_x86_64_64_DBG.OBJ "$NSPR_DIR"/WIN954.0_x86_64_64_DBG.OBJ
           # echo "LIBCLANG_PATH=C:\\Program Files\\LLVM\\bin" >> "$GITHUB_ENV"
 
       - name: Install moztools (Windows)
