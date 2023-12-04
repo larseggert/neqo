@@ -81,7 +81,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           echo "#!/usr/bin/env bash" > "$NSS_DIR"/build.sh
-          echo "make -C \"$NSS_DIR\" -j \"$NSS_JOBS\" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1" >> "$NSS_DIR"/build.sh
+          echo "make -C \"$NSS_DIR\" -j \"$NSS_JOBS\" nss_build_all USE_64=1" >> "$NSS_DIR"/build.sh
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
 
       - name: Install moztools (Windows)
