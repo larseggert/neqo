@@ -227,8 +227,12 @@ fn static_link() {
 }
 
 fn get_includes(nsstarget: &Path, nssdist: &Path) -> Vec<PathBuf> {
-    let nsprinclude = nsstarget.join("include").join("nspr");
-    let nssinclude = nssdist.join("public").join("nss");
+    let mut nsprinclude = nsstarget.join("include").join("nspr");
+    let mut nssinclude = nssdist.join("public").join("nss");
+    if env::consts::OS != "windows" || env::var("GITHUB_WORKFLOW").unwrap() == "CI" {
+        nsprinclude = nsprinclude.join("nspr");
+        nssinclude = nssinclude.join("nss");
+    }
     let includes = vec![nsprinclude, nssinclude];
     for i in &includes {
         println!("cargo:include={}", i.to_str().unwrap());
