@@ -86,7 +86,7 @@ jobs:
           echo "NSS_GYP_PREFIX=${{ github.workspace }}" >> "$GITHUB_ENV"
           # ../../dist/include/nspr ->
           mkdir dist
-          ln -s dist/WIN954.0_x86_64_64_DBG.OBJ "$NSPR_DIR"/WIN954.0_x86_64_64_DBG.OBJ
+          ln -sf dist/WIN954.0_x86_64_64_DBG.OBJ "$NSPR_DIR"/WIN954.0_x86_64_64_DBG.OBJ
           # echo "LIBCLANG_PATH=C:\\Program Files\\LLVM\\bin" >> "$GITHUB_ENV"
 
       - name: Install moztools (Windows)
