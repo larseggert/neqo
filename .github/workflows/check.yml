@@ -82,8 +82,11 @@ jobs:
           echo "#!/usr/bin/env bash" > "$NSS_DIR"/build.sh
           echo "make -C \"$NSS_DIR\" -j \"$NSS_JOBS\" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1" >> "$NSS_DIR"/build.sh
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
+          sed -i.bak 's/filter-out WIN/filter-out XYZ/' "$NSS_DIR"/Makefile
+          ls -lt "$NSS_DIR"
+          cat "$NSS_DIR"/Makefile
           # w/o anything: ../../../../dist/WIN954.0_x86_64_64_DBG.OBJ/include -> dist/WIN954.0_x86_64_64_DBG.OBJ/include/nspr.h
-          echo "NSS_GYP_PREFIX=${{ github.workspace }}" >> "$GITHUB_ENV"
+          # echo "NSS_GYP_PREFIX=${{ github.workspace }}" >> "$GITHUB_ENV"
           # ../../dist/include/nspr ->
           # mkdir dist
           # ln -sf dist/WIN954.0_x86_64_64_DBG.OBJ "$NSPR_DIR"/WIN954.0_x86_64_64_DBG.OBJ
