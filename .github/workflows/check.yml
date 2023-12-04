@@ -83,7 +83,7 @@ jobs:
           echo "make -C \"$NSS_DIR\" -j \"$NSS_JOBS\" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1" >> "$NSS_DIR"/build.sh
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
           # w/o anything: ../../../../dist/WIN954.0_x86_64_64_DBG.OBJ/include -> dist/WIN954.0_x86_64_64_DBG.OBJ/include/nspr.h
-          # echo "NSS_GYP_PREFIX=${{ github.workspace }}/dist/WIN954.0_x86_64_64_DBG.OBJ" >> "$GITHUB_ENV"
+          echo "NSS_GYP_PREFIX=${{ github.workspace }}" >> "$GITHUB_ENV"
           # ../../dist/include/nspr ->
           # echo "LIBCLANG_PATH=C:\\Program Files\\LLVM\\bin" >> "$GITHUB_ENV"
 
@@ -99,7 +99,7 @@ jobs:
 
       - name: Build
         run: |
-          cargo +${{ matrix.rust-toolchain }} build -v --all-targets --keep-going || true
+          cargo +${{ matrix.rust-toolchain }} build -v --all-targets || true
           ls -lt || true
           ls -lt .. || true
           ls -lt ../.. || true
