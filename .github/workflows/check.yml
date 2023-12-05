@@ -80,27 +80,30 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           echo "#!/usr/bin/env bash" > "$NSS_DIR"/build.sh
-          echo "make -C \"$NSS_DIR\" -j \"$NSS_JOBS\" nss_build_all USE_64=1" >> "$NSS_DIR"/build.sh
+          echo "make -C \"$NSS_DIR\" -j \"$NSS_JOBS\" nss_build_all USE_64=1 NSS_DISABLE_GTESTS=1" >> "$NSS_DIR"/build.sh
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
+
           sed -i.bak 's/smime ssl/smime ssl mozpkix/' "$NSS_DIR"/lib/Makefile
           cp "$NSS_DIR"/lib/libpkix/Makefile "$NSS_DIR"/lib/libpkix/manifest.mn "$NSS_DIR"/lib/mozpkix/
           sed -i.bak 's/pkix pkix_pl_nss//' "$NSS_DIR"/lib/mozpkix/manifest.mn
+          echo "LIBRARY_NAME = mozpkix" >> "$NSS_DIR"/lib/mozpkix/manifest.mn
+          echo "MODULE = mozpkix" >> "$NSS_DIR"/lib/mozpkix/manifest.mn
           echo "CPPSRC = \\" >> "$NSS_DIR"/lib/mozpkix/manifest.mn
           ls "$NSS_DIR"/lib/mozpkix/lib | sed -E 's|(.*)|lib/\1 \\|' >> "$NSS_DIR"/lib/mozpkix/manifest.mn
           echo '$(NULL)' >> "$NSS_DIR"/lib/mozpkix/manifest.mn
+
           cp "$NSS_DIR"/lib/libpkix/include/Makefile "$NSS_DIR"/lib/mozpkix/include/
-          cat "$NSS_DIR"/lib/libpkix/include/manifest.mn | grep -Ev 'pkix|PRIVATE' > "$NSS_DIR"/lib/mozpkix/include/manifest.mn
-          echo "PRIVATE_EXPORTS = \\" >> "$NSS_DIR"/lib/mozpkix/include/manifest.mn
-          ls "$NSS_DIR"/lib/mozpkix/include/pkix | sed -E 's|(.*)|pkix/\1 \\|' >> "$NSS_DIR"/lib/mozpkix/include/manifest.mn
-          echo '$(NULL)' >> "$NSS_DIR"/lib/mozpkix/include/manifest.mn
-          echo "$NSS_DIR"/lib/mozpkix/Makefile
-          cat "$NSS_DIR"/lib/mozpkix/Makefile
-          echo "$NSS_DIR"/lib/mozpkix/manifest.mn
-          cat "$NSS_DIR"/lib/mozpkix/manifest.mn
-          echo "$NSS_DIR"/lib/mozpkix/include/Makefile
-          cat "$NSS_DIR"/lib/mozpkix/include/Makefile
-          echo "$NSS_DIR"/lib/mozpkix/include/manifest.mn
-          cat "$NSS_DIR"/lib/mozpkix/include/manifest.mn
+          cp "$NSS_DIR"/lib/libpkix/manifest.mn "$NSS_DIR"/lib/mozpkix/include
+          sed -i.bak -e 's/include pkix pkix_pl_nss/pkix/' -e 's|../..|../../..|g' "$NSS_DIR"/lib/mozpkix/include/manifest.mn
+
+          cp "$NSS_DIR"/lib/libpkix/include/Makefile "$NSS_DIR"/lib/mozpkix/include/pkix/
+
+          cat "$NSS_DIR"/lib/libpkix/include/manifest.mn | grep -Ev 'pkix' > "$NSS_DIR"/lib/mozpkix/include/pkix/manifest.mn
+          sed -i.bak -e 's|../../..|../../../..|g' "$NSS_DIR"/lib/mozpkix/include/pkix/manifest.mn
+          echo "PRIVATE_EXPORTS = \\" >> "$NSS_DIR"/lib/mozpkix/include/pkix/manifest.mn
+          ls "$NSS_DIR"/lib/mozpkix/include/pkix | sed 's|$| \\|' >> "$NSS_DIR"/lib/mozpkix/include/pkix/manifest.mn
+          echo '$(NULL)' >> "$NSS_DIR"/lib/mozpkix/include/pkix/manifest.mn
+          echo "MODULE = mozpkix" >> "$NSS_DIR"/lib/mozpkix/include/pkix/manifest.mn
 
       - name: Install moztools (Windows)
         if: runner.os == 'Windows'
