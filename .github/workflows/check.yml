@@ -105,6 +105,9 @@ jobs:
           echo '$(NULL)' >> "$NSS_DIR"/lib/mozpkix/include/pkix/manifest.mn
           echo "MODULE = mozpkix" >> "$NSS_DIR"/lib/mozpkix/include/pkix/manifest.mn
 
+          cp "$NSS_DIR"/lib/nss/nss.rc "$NSS_DIR"/lib/mozpkix/mozpkix.rc
+          sed -i.bak -e 's|"nss"|"mozpkix"|' "$NSS_DIR"/lib/mozpkix/mozpkix.rc
+
       - name: Install moztools (Windows)
         if: runner.os == 'Windows'
         run: |
