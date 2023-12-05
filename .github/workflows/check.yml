@@ -86,8 +86,9 @@ jobs:
           cp "$NSS_DIR"/lib/libpkix/Makefile "$NSS_DIR"/lib/libpkix/manifest.mn "$NSS_DIR"/lib/mozpkix/
           sed -i.bak 's/pkix pkix_pl_nss//' "$NSS_DIR"/lib/mozpkix/manifest.mn
           echo "CPPSRC = \\" >> "$NSS_DIR"/lib/mozpkix/manifest.mn
-          ls "$NSS_DIR"/lib/mozpkix/include/pkix | sed -E 's|(.*)|pkix/\1 \\|' >> "$NSS_DIR"/lib/mozpkix/manifest.mn
+          ls "$NSS_DIR"/lib/mozpkix/lib | sed -E 's|(.*)|lib/\1 \\|' >> "$NSS_DIR"/lib/mozpkix/manifest.mn
           echo '$(NULL)' >> "$NSS_DIR"/lib/mozpkix/manifest.mn
+          cp "$NSS_DIR"/lib/libpkix/include/Makefile "$NSS_DIR"/lib/mozpkix/include/
           cat "$NSS_DIR"/lib/libpkix/include/manifest.mn | grep -Ev 'pkix|PRIVATE' > "$NSS_DIR"/lib/mozpkix/include/manifest.mn
           echo "PRIVATE_EXPORTS = \\" >> "$NSS_DIR"/lib/mozpkix/include/manifest.mn
           ls "$NSS_DIR"/lib/mozpkix/include/pkix | sed -E 's|(.*)|pkix/\1 \\|' >> "$NSS_DIR"/lib/mozpkix/include/manifest.mn
