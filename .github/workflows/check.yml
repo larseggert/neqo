@@ -79,12 +79,14 @@ jobs:
       - name: Rewire NSS build.sh (Windows)
         if: runner.os == 'Windows'
         run: |
-          # echo "#!/usr/bin/env bash" > "$NSS_DIR"/build.sh
-          # echo "make -C \"$NSS_DIR\" -j \"$NSS_JOBS\" nss_build_all USE_64=1" >> "$NSS_DIR"/build.sh
+          echo "#!/usr/bin/env bash" > "$NSS_DIR"/build.sh
+          echo "make -C \"$NSS_DIR\" -j \"$NSS_JOBS\" nss_build_all USE_64=1" >> "$NSS_DIR"/build.sh
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
-          python3 -m pip install git+https://github.com/nodejs/gyp-next
-          python3 -m pip install packaging
-          echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
+          cp "$NSS_DIR"/lib/smime/Makefile "$NSS_DIR"/lib/mozpkix/
+          sed -i.bak 's/smime ssl/smime ssl mozpkix/' "$NSS_DIR"/lib/Makefile
+          # python3 -m pip install git+https://github.com/nodejs/gyp-next
+          # python3 -m pip install packaging
+          # echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
 
       - name: Install moztools (Windows)
         if: runner.os == 'Windows'
