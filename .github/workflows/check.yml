@@ -86,11 +86,11 @@ jobs:
           sed -i.bak 's/smime ssl/smime ssl mozpkix/' "$NSS_DIR"/lib/Makefile
           echo "CORE_DEPTH = ../.." >> "$NSS_DIR"/lib/mozpkix/manifest.mn
           echo "EXPORTS = \\" >> "$NSS_DIR"/lib/mozpkix/manifest.mn
-          ls lib/mozpkix/include | xargs >> "$NSS_DIR"/lib/mozpkix/manifest.mn
+          ls "$NSS_DIR"/lib/mozpkix/include | xargs >> "$NSS_DIR"/lib/mozpkix/manifest.mn
           echo "MODULE = nss" >> "$NSS_DIR"/lib/mozpkix/manifest.mn
           echo "LIBRARY_NAME = mozpkix" >> "$NSS_DIR"/lib/mozpkix/manifest.mn
           echo "CPPSRCS = \\" >> "$NSS_DIR"/lib/mozpkix/manifest.mn
-          ls lib/mozpkix/lib | xargs >> "$NSS_DIR"/lib/mozpkix/manifest.mn
+          ls "$NSS_DIR"/lib/mozpkix/lib | xargs >> "$NSS_DIR"/lib/mozpkix/manifest.mn
           cat "$NSS_DIR"/lib/mozpkix/manifest.mn
           # python3 -m pip install git+https://github.com/nodejs/gyp-next
           # python3 -m pip install packaging
