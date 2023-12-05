@@ -94,6 +94,7 @@ jobs:
           cp "$NSS_DIR"/lib/libpkix/include/Makefile "$NSS_DIR"/lib/mozpkix/include/
           cp "$NSS_DIR"/lib/libpkix/manifest.mn "$NSS_DIR"/lib/mozpkix/include
           sed -i.bak -e 's/include pkix pkix_pl_nss/pkix/' -e 's|../..|../../..|g' "$NSS_DIR"/lib/mozpkix/include/manifest.mn
+          echo "MODULE = mozpkix" >> "$NSS_DIR"/lib/mozpkix/include/manifest.mn
           cp "$NSS_DIR"/lib/libpkix/include/Makefile "$NSS_DIR"/lib/mozpkix/include/pkix/
           cat "$NSS_DIR"/lib/libpkix/include/manifest.mn | grep -Ev 'pkix' > "$NSS_DIR"/lib/mozpkix/include/pkix/manifest.mn
           sed -i.bak -e 's|../../..|../../../..|g' "$NSS_DIR"/lib/mozpkix/include/pkix/manifest.mn
@@ -103,6 +104,7 @@ jobs:
           echo "MODULE = mozpkix" >> "$NSS_DIR"/lib/mozpkix/include/pkix/manifest.mn
           cp "$NSS_DIR"/gtests/pkcs11testmodule/pkcs11testmodule.rc "$NSS_DIR"/lib/mozpkix/mozpkix.rc
           sed -i.bak -e 's|"pkcs11testmodule"|"mozpkix"|' -e 's|NSS PKCS #11 Test Module|mozpkix|' "$NSS_DIR"/lib/mozpkix/mozpkix.rc
+          cat "$NSS_DIR"/lib/mozpkix/mozpkix.rc
 
       - name: Install moztools (Windows)
         if: runner.os == 'Windows'
