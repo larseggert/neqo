@@ -57,11 +57,10 @@ jobs:
       - name: Install moztools (Windows)
         if: runner.os == 'Windows'
         run: |
-          which -a bash
-          # curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
-          # unzip moztools.zip
-          # mv moztools/bin/nsinstall.exe /usr/bin
-          # rm -r moztools.zip moztools
+          curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
+          unzip moztools.zip
+          mv moztools/bin/nsinstall.exe /usr/bin
+          rm -r moztools.zip moztools
           # curl -L -o /usr/bin/nsinstall.py https://hg.mozilla.org/mozilla-central/raw-file/tip/config/nsinstall.py
           # python3 -m pip install mozfile
           # echo "#! $(which bash)" > /usr/bin/nsinstall
@@ -87,6 +86,7 @@ jobs:
       # (neqo-crypto/build.rs would also need to query pkg-config to get the
       # right build flags rather than building NSS.)
       - name: Fetch NSS and NSPR
+        shell: /usr/bin/bash
         run: |
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
@@ -94,8 +94,8 @@ jobs:
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
           echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> "$GITHUB_ENV"
           echo go
-          find "$NSPR_DIR" -name Makefile.in -exec sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' -e 's|$(NSINSTALL) -t|install -p|g' {} \;
-          hg diff "$NSPR_DIR"
+          # find "$NSPR_DIR" -name Makefile.in -exec sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' -e 's|$(NSINSTALL) -t|install -p|g' {} \;
+          # hg diff "$NSPR_DIR"
           # sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           # sed -i.bak -e 's|$(NSINSTALL) -t|install|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           # cat "$NSPR_DIR"/pr/include/md/Makefile.in
