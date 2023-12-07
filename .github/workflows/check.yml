@@ -58,6 +58,8 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           choco install --no-progress MozillaBuild
+          echo "C:/mozilla-build/bin" >> $GITHUB_PATH
+          echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
           which nsinstall
           # curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
           # unzip moztools.zip
