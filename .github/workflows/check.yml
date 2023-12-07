@@ -99,6 +99,7 @@ jobs:
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
           echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> "$GITHUB_ENV"
           echo go
+          rm /usr/bin/link.exe || true
           which nsinstall
           # find "$NSPR_DIR" -name Makefile.in -exec sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' -e 's|$(NSINSTALL) -t|install -p|g' {} \;
           # hg diff "$NSPR_DIR"
