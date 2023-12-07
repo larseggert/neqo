@@ -66,15 +66,13 @@ jobs:
       # right build flags rather than building NSS.)
       - name: Fetch NSS and NSPR
         run: |
-          echo ${{ github.workspace }}
-          echo "$NSPR_DIR"
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
           echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> "$GITHUB_ENV"
           echo go
-          echo "#!/usr/bin/env bash" > "$NSS_DIR"/build.sh
+          echo "BASH=$SHELL" >> "$GITHUB_ENV"
           cd "$NSS_DIR" && ./build.sh -v
           echo done
           exit 1
