@@ -60,7 +60,8 @@ jobs:
           choco install --no-progress MozillaBuild
           echo "C:/mozilla-build/bin" >> $GITHUB_PATH
           echo "C:/mozilla-build/msys2/usr/bin" >> $GITHUB_PATH
-          which nsinstall
+          find "C:/mozilla-build/bin"
+          find "C:/mozilla-build/msys2/usr/bin"
           # curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
           # unzip moztools.zip
           # mv moztools/bin/nsinstall.exe /usr/bin
@@ -98,6 +99,7 @@ jobs:
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
           echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> "$GITHUB_ENV"
           echo go
+          which nsinstall
           # find "$NSPR_DIR" -name Makefile.in -exec sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' -e 's|$(NSINSTALL) -t|install -p|g' {} \;
           # hg diff "$NSPR_DIR"
           # sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' "$NSPR_DIR"/pr/include/md/Makefile.in
