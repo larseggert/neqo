@@ -133,7 +133,7 @@ jobs:
           # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
-          sed -i.bak -e 's|mv -f $(DESTDIR)|echo DESTDIR $(DESTDIR) \&\& echo includedir $(includedir) \&\& find $(DESTDIR) \&\& mv -f $(DESTDIR)|' "$NSPR_DIR"/pr/include/md/Makefile.in
+          sed -i.bak -e 's|mv -f $(DESTDIR)|echo DESTDIR $(DESTDIR) \&\& echo includedir $(includedir) \&\& find $(includedir) -ls \&\& mv -f $(DESTDIR)|' "$NSPR_DIR"/pr/include/md/Makefile.in
           cat "$NSPR_DIR"/pr/include/md/Makefile.in
           which nsinstall
 
