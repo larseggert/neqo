@@ -20,11 +20,11 @@ jobs:
         shell: bash
 
     steps:
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: ${{ matrix.rust-toolchain }}
-          components: rustfmt, clippy
+      # - name: Install Rust
+      #   uses: dtolnay/rust-toolchain@master
+      #   with:
+      #     toolchain: ${{ matrix.rust-toolchain }}
+      #     components: rustfmt, clippy
 
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
@@ -45,20 +45,20 @@ jobs:
           python3 -m pip install packaging
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
 
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: Set-ExecutionPolicy Unrestricted -Scope Process; iex (iwr "https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.ps1").Content
+      # - name: Install dependencies (Windows)
+      #   if: runner.os == 'Windows'
+      #   shell: pwsh
+      #   run: Set-ExecutionPolicy Unrestricted -Scope Process; iex (iwr "https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.ps1").Content
 
       - name: Set up Windows build environment
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Install Rust tools
-        run: cargo +${{ matrix.rust-toolchain }} binstall --no-confirm cargo-llvm-cov cargo-nextest
+      # - name: Install Rust tools
+      #   run: cargo +${{ matrix.rust-toolchain }} binstall --no-confirm cargo-llvm-cov cargo-nextest
 
-      - name: Checkout
-        uses: actions/checkout@v4
+      # - name: Checkout
+      #   uses: actions/checkout@v4
 
       # This step might be removed if the distro included a recent enough
       # version of NSS.  Ubuntu 20.04 only has 3.49, which is far too old.
@@ -71,7 +71,12 @@ jobs:
           echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
           echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> "$GITHUB_ENV"
-        env:
+          echo go
+          echo "#!/usr/bin/env bash" > "$NSS_DIR"/build.sh
+          cd "$NSS_DIR" && ./build.sh -v
+          echo done
+          exit 1
+          env:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
 
