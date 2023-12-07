@@ -57,16 +57,17 @@ jobs:
       - name: Install moztools (Windows)
         if: runner.os == 'Windows'
         run: |
-          curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
-          unzip moztools.zip
-          mv moztools/bin/nsinstall.exe /usr/bin
-          rm -r moztools.zip moztools
-          # curl -L -o /usr/bin/nsinstall.py https://hg.mozilla.org/mozilla-central/raw-file/tip/config/nsinstall.py
-          # python3 -m pip install mozfile
-          # echo "#! $(which bash)" > /usr/bin/nsinstall
-          # echo 'python3 /usr/bin/nsinstall.py "$@"' > /usr/bin/nsinstall
-          # chmod a+x /usr/bin/nsinstall
-          # cat /usr/bin/nsinstall
+          # curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
+          # unzip moztools.zip
+          # mv moztools/bin/nsinstall.exe /usr/bin
+          # rm -r moztools.zip moztools
+          curl -L -o /usr/bin/nsinstall.py https://hg.mozilla.org/mozilla-central/raw-file/tip/config/nsinstall.py
+          python3 -m pip install mozfile
+          echo "#! $(which bash) -x" > /usr/bin/nsinstall
+          echp 'echo "$@"' >> /usr/bin/nsinstall
+          echo 'python3 /usr/bin/nsinstall.py "$@"' >> /usr/bin/nsinstall
+          chmod a+x /usr/bin/nsinstall
+          cat /usr/bin/nsinstall
           # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
@@ -86,7 +87,6 @@ jobs:
       # (neqo-crypto/build.rs would also need to query pkg-config to get the
       # right build flags rather than building NSS.)
       - name: Fetch NSS and NSPR
-        shell: /usr/bin/bash
         run: |
           hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
           git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
