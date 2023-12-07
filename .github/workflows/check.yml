@@ -66,6 +66,8 @@ jobs:
           echo '#! /usr/bin/env python3' > /usr/bin/nsinstall
           cat /usr/bin/nsinstall.py >> /usr/bin/nsinstall
           chmod a+x /usr/bin/nsinstall
+          which python3
+          cat /usr/bin/nsinstall
           # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
