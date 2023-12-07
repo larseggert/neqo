@@ -67,7 +67,8 @@ jobs:
           python3 -m pip install git+https://github.com/nodejs/gyp-next
           python3 -m pip install packaging
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
-
+          echo "GYP_MSVS_OVERRIDE_PATH=$VSINSTALLDIR" >> $GITHUB_ENV
+          echo "GYP_MSVS_VERSION=2022" >> $GITHUB_ENV
       # - name: Install Rust tools
       #   run: cargo +${{ matrix.rust-toolchain }} binstall --no-confirm cargo-llvm-cov cargo-nextest
 
