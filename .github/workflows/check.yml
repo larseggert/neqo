@@ -101,9 +101,12 @@ jobs:
           # sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           # sed -i.bak -e 's|$(NSINSTALL) -t|install|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           # cat "$NSPR_DIR"/pr/include/md/Makefile.in
-          cd "$NSS_DIR" && ./build.sh -v || true
+          "$NSS_DIR"/build.sh -v || true
           echo done
           find /d/a/neqo/neqo/dist -ls
+          ls -l / || true
+          ls -l /c || true
+          ls -l /d || true
           exit 1
         env:
           NSS_DIR: ${{ github.workspace }}/nss
