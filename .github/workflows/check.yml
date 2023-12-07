@@ -64,6 +64,9 @@ jobs:
           # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
+          python3 -m pip install git+https://github.com/nodejs/gyp-next
+          python3 -m pip install packaging
+          echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
 
       # - name: Install Rust tools
       #   run: cargo +${{ matrix.rust-toolchain }} binstall --no-confirm cargo-llvm-cov cargo-nextest
@@ -83,8 +86,6 @@ jobs:
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
           echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> "$GITHUB_ENV"
           echo go
-          which nsinstall
-          nsinstall -h || true
           sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           sed -i.bak -e 's|$(NSINSTALL) -t|install|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           cat "$NSPR_DIR"/pr/include/md/Makefile.in
