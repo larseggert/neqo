@@ -89,6 +89,7 @@ jobs:
       # (neqo-crypto/build.rs would also need to query pkg-config to get the
       # right build flags rather than building NSS.)
       - name: Fetch NSS and NSPR
+        shell: "C:\\msys64\\usr\\bin\\bash.exe"
         run: |
           which -a bash
           hg clone https://hg.mozilla.org/projects/nspr
