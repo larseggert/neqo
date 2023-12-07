@@ -85,7 +85,7 @@ jobs:
           echo go
           sed -i.bak -e 's|mv -f $(DESTDIR)|echo DESTDIR $(DESTDIR) \&\& echo includedir $(includedir) \&\& find /d/a/neqo/neqo/dist -ls \&\& mv -f $(DESTDIR)|' "$NSPR_DIR"/pr/include/md/Makefile.in
           sed -i.bak -e 's|$(NSINSTALL)|$(NSINSTALL) -v |g' "$NSPR_DIR"/pr/include/md/Makefile.in
-          sed -i.bak -e 's|mv -f|#mv -f||g' "$NSPR_DIR"/pr/include/md/Makefile.in
+          sed -i.bak -e 's|mv -f|#mv -f|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           cat "$NSPR_DIR"/pr/include/md/Makefile.in
           cd "$NSS_DIR" && ./build.sh -v || true
           echo done
