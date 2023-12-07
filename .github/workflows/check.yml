@@ -107,6 +107,8 @@ jobs:
           ls -l / || true
           ls -l /c || true
           ls -l /d || true
+          ls -l /d/a || true
+          ls -l /d/d || true
           exit 1
         env:
           NSS_DIR: ${{ github.workspace }}/nss
