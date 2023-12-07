@@ -83,7 +83,9 @@ jobs:
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
           echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> "$GITHUB_ENV"
           echo go
-          sed -i.bak -e 's|$(NSINSTALL)|$(NSINSTALL) -v |g' "$NSPR_DIR"/pr/include/md/Makefile.in
+          which nsinstall
+          nsinstall -h || true
+          # sed -i.bak -e 's|$(NSINSTALL)|$(NSINSTALL) -v |g' "$NSPR_DIR"/pr/include/md/Makefile.in
           cat "$NSPR_DIR"/pr/include/md/Makefile.in
           cd "$NSS_DIR" && env OS_ARCH=WIN95 ./build.sh -v || true
           echo done
