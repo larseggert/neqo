@@ -54,6 +54,21 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
+      - name: Install moztools (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
+          unzip moztools.zip
+          mv moztools/bin/nsinstall.exe /usr/bin
+          rm -r moztools.zip moztools
+          # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
+          rm /usr/bin/link.exe
+          echo "BASH=$SHELL" >> "$GITHUB_ENV"
+          # sed -i.bak -e 's|mv -f $(DESTDIR)|echo DESTDIR $(DESTDIR) \&\& echo includedir $(includedir) \&\& find $(includedir) -ls \&\& mv -f $(DESTDIR)|' "$NSPR_DIR"/pr/include/md/Makefile.in
+          # sed -i.bak 's|$(includedir)$|$(includedir)/|' "$NSPR_DIR"/pr/include/md/Makefile.in
+          # cat "$NSPR_DIR"/pr/include/md/Makefile.in
+          # which nsinstall
+
       # - name: Install Rust tools
       #   run: cargo +${{ matrix.rust-toolchain }} binstall --no-confirm cargo-llvm-cov cargo-nextest
 
@@ -72,7 +87,6 @@ jobs:
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
           echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> "$GITHUB_ENV"
           echo go
-          echo "BASH=$SHELL" >> "$GITHUB_ENV"
           cd "$NSS_DIR" && ./build.sh -v
           echo done
           exit 1
@@ -128,20 +142,20 @@ jobs:
           cp "$NSS_DIR"/gtests/pkcs11testmodule/pkcs11testmodule.rc "$NSS_DIR"/lib/mozpkix/mozpkix.rc
           sed -i.bak -e 's|"pkcs11testmodule"|"mozpkix"|' -e 's|NSS PKCS #11 Test Module|mozpkix|' "$NSS_DIR"/lib/mozpkix/mozpkix.rc
 
-      - name: Install moztools (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
-          unzip moztools.zip
-          mv moztools/bin/nsinstall.exe /usr/bin
-          rm -r moztools.zip moztools
-          # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
-          rm /usr/bin/link.exe
-          echo "BASH=$SHELL" >> "$GITHUB_ENV"
-          sed -i.bak -e 's|mv -f $(DESTDIR)|echo DESTDIR $(DESTDIR) \&\& echo includedir $(includedir) \&\& find $(includedir) -ls \&\& mv -f $(DESTDIR)|' "$NSPR_DIR"/pr/include/md/Makefile.in
-          sed -i.bak 's|$(includedir)$|$(includedir)/|' "$NSPR_DIR"/pr/include/md/Makefile.in
-          cat "$NSPR_DIR"/pr/include/md/Makefile.in
-          which nsinstall
+      # - name: Install moztools (Windows)
+      #   if: runner.os == 'Windows'
+      #   run: |
+      #     curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
+      #     unzip moztools.zip
+      #     mv moztools/bin/nsinstall.exe /usr/bin
+      #     rm -r moztools.zip moztools
+      #     # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
+      #     rm /usr/bin/link.exe
+      #     echo "BASH=$SHELL" >> "$GITHUB_ENV"
+      #     sed -i.bak -e 's|mv -f $(DESTDIR)|echo DESTDIR $(DESTDIR) \&\& echo includedir $(includedir) \&\& find $(includedir) -ls \&\& mv -f $(DESTDIR)|' "$NSPR_DIR"/pr/include/md/Makefile.in
+      #     sed -i.bak 's|$(includedir)$|$(includedir)/|' "$NSPR_DIR"/pr/include/md/Makefile.in
+      #     cat "$NSPR_DIR"/pr/include/md/Makefile.in
+      #     which nsinstall
 
       - name: Build
         run: |
