@@ -88,10 +88,10 @@ jobs:
       # right build flags rather than building NSS.)
       - name: Fetch NSS and NSPR
         run: |
-          hg clone https://hg.mozilla.org/projects/nspr "$NSPR_DIR"
-          git clone --depth=1 https://github.com/nss-dev/nss "$NSS_DIR"
-          echo "NSS_DIR=$NSS_DIR" >> "$GITHUB_ENV"
-          echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
+          hg clone https://hg.mozilla.org/projects/nspr
+          git clone --depth=1 https://github.com/nss-dev/nss
+          echo "NSS_DIR=$(cygpath $NSS_DIR)" >> "$GITHUB_ENV"
+          echo "NSPR_DIR=$(cygpath $NSPR_DIR)" >> "$GITHUB_ENV"
           echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> "$GITHUB_ENV"
           echo go
           which -a cygpath || true
@@ -101,15 +101,9 @@ jobs:
           # sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           # sed -i.bak -e 's|$(NSINSTALL) -t|install|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           # cat "$NSPR_DIR"/pr/include/md/Makefile.in
-          "$NSS_DIR"/build.sh -v || true
+          nss/build.sh -v || true
           echo done
           find /d/a/neqo/neqo/dist -ls
-          ls -l / || true
-          ls -l /c || true
-          ls -l /d || true
-          ls -l /d/a || true
-          ls -l /d/d/neqo || true
-          ls -l /d/d/a || true
           exit 1
         env:
           NSS_DIR: ${{ github.workspace }}/nss
