@@ -147,8 +147,6 @@ fn get_bash() -> PathBuf {
 fn build_nss(dir: PathBuf) {
     let mut build_nss = vec![
         String::from("./build.sh"),
-        String::from("-g"),
-        String::from("-v"),
         String::from("-Ddisable_tests=1"),
     ];
     if is_debug() {
@@ -334,6 +332,7 @@ fn setup_standalone() -> Vec<String> {
     for i in includes {
         flags.push(String::from("-I") + i.to_str().unwrap());
     }
+
     flags
 }
 
