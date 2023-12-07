@@ -61,12 +61,12 @@ jobs:
           # unzip moztools.zip
           # mv moztools/bin/nsinstall.exe /usr/bin
           # rm -r moztools.zip moztools
-          curl -L -o /usr/bin/nsinstall.py https://hg.mozilla.org/mozilla-central/raw-file/tip/config/nsinstall.py
-          python3 -m pip install mozfile
-          echo "#! $(which bash)" > /usr/bin/nsinstall
-          echo 'python3 /usr/bin/nsinstall.py "$@"' > /usr/bin/nsinstall
-          chmod a+x /usr/bin/nsinstall
-          cat /usr/bin/nsinstall
+          # curl -L -o /usr/bin/nsinstall.py https://hg.mozilla.org/mozilla-central/raw-file/tip/config/nsinstall.py
+          # python3 -m pip install mozfile
+          # echo "#! $(which bash)" > /usr/bin/nsinstall
+          # echo 'python3 /usr/bin/nsinstall.py "$@"' > /usr/bin/nsinstall
+          # chmod a+x /usr/bin/nsinstall
+          # cat /usr/bin/nsinstall
           # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
@@ -93,10 +93,12 @@ jobs:
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
           echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> "$GITHUB_ENV"
           echo go
+          find "$NSPR_DIR" -name Makefile.in -exec sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' -e 's|$(NSINSTALL) -t|install -p|g' {} \;
+          hg diff "$NSPR_DIR"
           # sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           # sed -i.bak -e 's|$(NSINSTALL) -t|install|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           # cat "$NSPR_DIR"/pr/include/md/Makefile.in
-          cd "$NSS_DIR" && env OS_ARCH=WIN95 ./build.sh -v || true
+          cd "$NSS_DIR" && ./build.sh -v || true
           echo done
           find /d/a/neqo/neqo/dist -ls
           exit 1
