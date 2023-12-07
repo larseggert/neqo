@@ -85,7 +85,7 @@ jobs:
           echo go
           sed -i.bak -e 's|$(NSINSTALL)|$(NSINSTALL) -v |g' "$NSPR_DIR"/pr/include/md/Makefile.in
           cat "$NSPR_DIR"/pr/include/md/Makefile.in
-          cd "$NSS_DIR" && ./build.sh -v || true
+          cd "$NSS_DIR" && env OS_ARCH=WIN95 ./build.sh -v || true
           echo done
           find /d/a/neqo/neqo/dist -ls
           exit 1
