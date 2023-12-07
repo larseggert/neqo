@@ -92,6 +92,8 @@ jobs:
         shell: "C:\\msys64\\usr\\bin\\bash.exe"
         run: |
           which -a bash
+          rm /usr/bin/link.exe
+
           hg clone https://hg.mozilla.org/projects/nspr
           git clone --depth=1 https://github.com/nss-dev/nss
           echo "NSS_DIR=$(cygpath $NSS_DIR)" >> "$GITHUB_ENV"
