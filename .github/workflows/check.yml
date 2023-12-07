@@ -64,10 +64,6 @@ jobs:
           # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
-          # sed -i.bak -e 's|mv -f $(DESTDIR)|echo DESTDIR $(DESTDIR) \&\& echo includedir $(includedir) \&\& find $(includedir) -ls \&\& mv -f $(DESTDIR)|' "$NSPR_DIR"/pr/include/md/Makefile.in
-          # sed -i.bak 's|$(includedir)$|$(includedir)/|' "$NSPR_DIR"/pr/include/md/Makefile.in
-          # cat "$NSPR_DIR"/pr/include/md/Makefile.in
-          # which nsinstall
 
       # - name: Install Rust tools
       #   run: cargo +${{ matrix.rust-toolchain }} binstall --no-confirm cargo-llvm-cov cargo-nextest
@@ -87,6 +83,10 @@ jobs:
           echo "NSPR_DIR=$NSPR_DIR" >> "$GITHUB_ENV"
           echo "NSS_JOBS=$NUMBER_OF_PROCESSORS" >> "$GITHUB_ENV"
           echo go
+          sed -i.bak -e 's|mv -f $(DESTDIR)|echo DESTDIR $(DESTDIR) \&\& echo includedir $(includedir) \&\& find /d/a/neqo/neqo/dist/Debug -ls \&\& mv -f $(DESTDIR)|' "$NSPR_DIR"/pr/include/md/Makefile.in
+          sed -i.bak 's|$(includedir)$|$(includedir)/|' "$NSPR_DIR"/pr/include/md/Makefile.in
+          cat "$NSPR_DIR"/pr/include/md/Makefile.in
+          which nsinstall
           cd "$NSS_DIR" && ./build.sh -v
           echo done
           exit 1
