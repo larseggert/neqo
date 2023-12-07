@@ -57,6 +57,7 @@ jobs:
       - name: Install moztools (Windows)
         if: runner.os == 'Windows'
         run: |
+          which -a bash
           # curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
           # unzip moztools.zip
           # mv moztools/bin/nsinstall.exe /usr/bin
