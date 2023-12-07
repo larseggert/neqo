@@ -64,7 +64,7 @@ jobs:
           curl -L -o /usr/bin/nsinstall.py https://hg.mozilla.org/mozilla-central/raw-file/tip/config/nsinstall.py
           python3 -m pip install mozfile
           echo "#! $(which bash) -x" > /usr/bin/nsinstall
-          echp 'echo "$@"' >> /usr/bin/nsinstall
+          echo 'echo "$@"' >> /usr/bin/nsinstall
           echo 'python3 /usr/bin/nsinstall.py "$@"' >> /usr/bin/nsinstall
           chmod a+x /usr/bin/nsinstall
           cat /usr/bin/nsinstall
