@@ -64,9 +64,6 @@ jobs:
           # unzip moztools.zip
           # mv moztools/bin/nsinstall.exe /usr/bin
           # rm -r moztools.zip moztools
-          # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
-          rm /usr/bin/link.exe
-          echo "BASH=$SHELL" >> "$GITHUB_ENV"
           # python3 -m pip install git+https://github.com/nodejs/gyp-next
           # # python3 -m pip install packaging
           # echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
@@ -97,14 +94,17 @@ jobs:
       - name: Rewire NSS build.sh (Windows)
         if: runner.os == 'Windows'
         run: |
-          echo "GYP_MSVS_OVERRIDE_PATH=$VSINSTALLDIR" >> "$GITHUB_ENV"
-          echo "GYP_MSVS_VERSION=2022" >> "$GITHUB_ENV"
+          # echo "GYP_MSVS_OVERRIDE_PATH=$VSINSTALLDIR" >> "$GITHUB_ENV"
+          # echo "GYP_MSVS_VERSION=2022" >> "$GITHUB_ENV"
+          echo "BASH=$SHELL" >> "$GITHUB_ENV"
+          # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
+          rm /usr/bin/link.exe
           # find "$NSPR_DIR" -name Makefile.in -exec sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' -e 's|$(NSINSTALL) -t|install -p|g' {} \;
           # pushd "$NSPR_DIR" && hg diff && popd
           # sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           # sed -i.bak -e 's|$(NSINSTALL) -t|install|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           # cat "$NSPR_DIR"/pr/include/md/Makefile.in
-          rm /usr/bin/link.exe || true
+          # rm /usr/bin/link.exe || true
 
       - name: Build
         run: |
