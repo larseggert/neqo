@@ -265,7 +265,7 @@ fn build_bindings(base: &str, bindings: &Bindings, flags: &[String], gecko: bool
             builder = builder.clang_arg("-DANDROID");
         }
         if bindings.cplusplus {
-            builder = builder.clang_args(&["-x", "c++", "-std=c++11"]);
+            builder = builder.clang_args(&["-x", "c++", "-std=c++14"]);
         }
     }
 
