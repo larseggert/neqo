@@ -96,9 +96,9 @@ jobs:
       - name: Build
         run: |
           # "$NSS_DIR"/build.sh -v -Ddisable_tests=1 ||true
-          cargo +${{ matrix.rust-toolchain }} build -v --all-targets
+          cargo +${{ matrix.rust-toolchain }} build -v --all-targets || true
           find dist
-          # exit 1
+          exit 1
           echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
           echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
         env:
