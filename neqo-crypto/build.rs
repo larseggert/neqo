@@ -147,7 +147,6 @@ fn get_bash() -> PathBuf {
 fn build_nss(dir: PathBuf) {
     let mut build_nss = vec![
         String::from("./build.sh"),
-        String::from("-v"),
         String::from("-Ddisable_tests=1"),
     ];
     if is_debug() {
@@ -242,7 +241,6 @@ fn build_bindings(base: &str, bindings: &Bindings, flags: &[String], gecko: bool
     let header_path = PathBuf::from(BINDINGS_DIR).join(String::from(base) + suffix);
     let header = header_path.to_str().unwrap();
     let out = PathBuf::from(env::var("OUT_DIR").unwrap()).join(String::from(base) + ".rs");
-    println!("YEAH2");
 
     println!("cargo:rerun-if-changed={header}");
 
@@ -290,7 +288,6 @@ fn build_bindings(base: &str, bindings: &Bindings, flags: &[String], gecko: bool
     for v in &bindings.enums {
         builder = builder.constified_enum_module(v);
     }
-    println!("YEAH3");
 
     let bindings = builder.generate().expect("unable to generate bindings");
     bindings
@@ -304,7 +301,6 @@ fn setup_standalone() -> Vec<String> {
     println!("cargo:rerun-if-env-changed=NSS_DIR");
     let nss = nss_dir();
     build_nss(nss.clone());
-    println!("YEAH");
 
     // $NSS_DIR/../dist/
     let nssdist = nss.parent().unwrap().join("dist");
