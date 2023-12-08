@@ -94,8 +94,8 @@ jobs:
       - name: Rewire NSS build.sh (Windows)
         if: runner.os == 'Windows'
         run: |
-          # echo "GYP_MSVS_OVERRIDE_PATH=$VSINSTALLDIR" >> "$GITHUB_ENV"
-          # echo "GYP_MSVS_VERSION=2022" >> "$GITHUB_ENV"
+          echo "GYP_MSVS_OVERRIDE_PATH=$VSINSTALLDIR" >> "$GITHUB_ENV"
+          echo "GYP_MSVS_VERSION=2022" >> "$GITHUB_ENV"
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
           # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe
