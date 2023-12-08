@@ -90,16 +90,16 @@ jobs:
           echo "GYP_MSVS_OVERRIDE_PATH=$VSINSTALLDIR" >> "$GITHUB_ENV"
           echo "GYP_MSVS_VERSION=2022" >> "$GITHUB_ENV"
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
-          echo "LIBCLANG_PATH=C:\\Program Files\\LLVM\\bin" >> "$GITHUB_ENV"
+          # echo "LIBCLANG_PATH=C:\\Program Files\\LLVM\\bin" >> "$GITHUB_ENV"
           # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe
 
       - name: Build
         run: |
           # "$NSS_DIR"/build.sh -v -Ddisable_tests=1 ||true
-          cargo +${{ matrix.rust-toolchain }} build -v --all-targets || true
-          find dist
-          exit 1
+          cargo +${{ matrix.rust-toolchain }} build -v --all-targets
+          # find dist
+          # exit 1
           echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
           echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
         env:
