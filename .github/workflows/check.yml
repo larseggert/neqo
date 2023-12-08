@@ -59,7 +59,7 @@ jobs:
         run: |
           echo "C:\\msys64\\usr\\bin" >> $GITHUB_PATH
           echo "C:\\msys64\\mingw64\\bin" >> $GITHUB_PATH
-          /c/msys64/usr/bin/pacman -S --noconfirm nsinstall
+          /c/msys64/usr/bin/pacman -S --noconfirm nsinstall gyp
           # curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
           # unzip moztools.zip
           # mv moztools/bin/nsinstall.exe /usr/bin
@@ -67,9 +67,9 @@ jobs:
           # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
-          python3 -m pip install git+https://github.com/nodejs/gyp-next
-          # python3 -m pip install packaging
-          echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
+          # python3 -m pip install git+https://github.com/nodejs/gyp-next
+          # # python3 -m pip install packaging
+          # echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
 
       # - name: Install Rust tools
       #   run: cargo +${{ matrix.rust-toolchain }} binstall --no-confirm cargo-llvm-cov cargo-nextest
@@ -99,14 +99,15 @@ jobs:
         run: |
           echo "GYP_MSVS_OVERRIDE_PATH=$VSINSTALLDIR" >> "$GITHUB_ENV"
           echo "GYP_MSVS_VERSION=2022" >> "$GITHUB_ENV"
-          find "$NSPR_DIR" -name Makefile.in -exec sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' -e 's|$(NSINSTALL) -t|install -p|g' {} \;
-          pushd "$NSPR_DIR" && hg diff && popd
+          # find "$NSPR_DIR" -name Makefile.in -exec sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' -e 's|$(NSINSTALL) -t|install -p|g' {} \;
+          # pushd "$NSPR_DIR" && hg diff && popd
           # sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           # sed -i.bak -e 's|$(NSINSTALL) -t|install|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           # cat "$NSPR_DIR"/pr/include/md/Makefile.in
 
       - name: Build
         run: |
+          which -a link
           "$NSS_DIR"/build.sh -v -Ddisable_tests=1
           # cargo +${{ matrix.rust-toolchain }} build -v --all-targets || true
           find dist
