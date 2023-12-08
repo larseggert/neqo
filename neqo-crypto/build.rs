@@ -147,8 +147,6 @@ fn get_bash() -> PathBuf {
 fn build_nss(dir: PathBuf) {
     let mut build_nss = vec![
         String::from("./build.sh"),
-        String::from("-v"),
-        String::from("-g"),
         String::from("-Ddisable_tests=1"),
     ];
     if is_debug() {
@@ -229,13 +227,8 @@ fn static_link() {
 }
 
 fn get_includes(nsstarget: &Path, nssdist: &Path) -> Vec<PathBuf> {
+    let nsprinclude = nsstarget.join("include").join("nspr");
     let nssinclude = nssdist.join("public").join("nss");
-    let mut nsprinclude = nsstarget.join("include");
-    // If we're on Windows and in CI, don't add the nspr directory,
-    // since we're building/installing via NSS in a different way.
-    if env::consts::OS != "windows" || env::var("GITHUB_WORKFLOW").unwrap() != "CI" {
-        nsprinclude = nsprinclude.join("nspr");
-    }
     let includes = vec![nsprinclude, nssinclude];
     for i in &includes {
         println!("cargo:include={}", i.to_str().unwrap());
