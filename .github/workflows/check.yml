@@ -57,11 +57,10 @@ jobs:
       - name: Install moztools (Windows)
         if: runner.os == 'Windows'
         run: |
-          # curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
-          # unzip moztools.zip
-          # mv moztools/bin/nsinstall.exe /usr/bin
-          # rm -r moztools.zip moztools
-          pacman -S --noconfirm nsinstall
+          curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
+          unzip moztools.zip
+          mv moztools/bin/nsinstall.exe /usr/bin
+          rm -r moztools.zip moztools
           # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
