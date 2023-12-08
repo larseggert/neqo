@@ -59,14 +59,14 @@ jobs:
         run: |
           echo "C:\\msys64\\usr\\bin" >> $GITHUB_PATH
           echo "C:\\msys64\\mingw64\\bin" >> $GITHUB_PATH
-          /c/msys64/usr/bin/pacman -S --noconfirm nsinstall gyp python-six
+          /c/msys64/usr/bin/pacman -S --noconfirm nsinstall #gyp python-six
           # curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
           # unzip moztools.zip
           # mv moztools/bin/nsinstall.exe /usr/bin
           # rm -r moztools.zip moztools
-          # python3 -m pip install git+https://github.com/nodejs/gyp-next
-          # # python3 -m pip install packaging
-          # echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
+          python3 -m pip install git+https://github.com/nodejs/gyp-next
+          # python3 -m pip install packaging
+          echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
 
       # - name: Install Rust tools
       #   run: cargo +${{ matrix.rust-toolchain }} binstall --no-confirm cargo-llvm-cov cargo-nextest
@@ -108,8 +108,7 @@ jobs:
 
       - name: Build
         run: |
-          which -a link
-          "$NSS_DIR"/build.sh -v -Ddisable_tests=1
+          "$NSS_DIR"/build.sh -v -Ddisable_tests=1 ||true
           # cargo +${{ matrix.rust-toolchain }} build -v --all-targets || true
           find dist
           exit 1
