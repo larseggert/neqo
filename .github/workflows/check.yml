@@ -12,8 +12,6 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         rust-toolchain: [1.65.0] #, stable] #, beta]
     runs-on: ${{ matrix.os }}
-    env:
-      RUSTFLAGS: -C link-arg=-fuse-ld=lld
     defaults:
       run:
         shell: bash
