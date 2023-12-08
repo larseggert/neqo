@@ -20,11 +20,11 @@ jobs:
         shell: bash
 
     steps:
-      # - name: Install Rust
-      #   uses: dtolnay/rust-toolchain@master
-      #   with:
-      #     toolchain: ${{ matrix.rust-toolchain }}
-      #     components: rustfmt, clippy
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust-toolchain }}
+          components: rustfmt, clippy
 
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
@@ -45,34 +45,29 @@ jobs:
           # python3 -m pip install packaging
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
 
-      # - name: Install dependencies (Windows)
-      #   if: runner.os == 'Windows'
-      #   shell: pwsh
-      #   run: Set-ExecutionPolicy Unrestricted -Scope Process; iex (iwr "https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.ps1").Content
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Set-ExecutionPolicy Unrestricted -Scope Process; iex (iwr "https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.ps1").Content
 
       - name: Set up Windows build environment
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Install moztools (Windows)
+      - name: Use MSYS2 environment and install more dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
           echo "C:\\msys64\\usr\\bin" >> $GITHUB_PATH
           echo "C:\\msys64\\mingw64\\bin" >> $GITHUB_PATH
-          /c/msys64/usr/bin/pacman -S --noconfirm nsinstall #gyp python-six
-          # curl -L -o moztools.zip https://ftp.mozilla.org/pub/mozilla/libraries/win32/moztools-static.zip
-          # unzip moztools.zip
-          # mv moztools/bin/nsinstall.exe /usr/bin
-          # rm -r moztools.zip moztools
+          /c/msys64/usr/bin/pacman -S --noconfirm nsinstall
           python3 -m pip install git+https://github.com/nodejs/gyp-next
-          # python3 -m pip install packaging
           echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
 
-      # - name: Install Rust tools
-      #   run: cargo +${{ matrix.rust-toolchain }} binstall --no-confirm cargo-llvm-cov cargo-nextest
+      - name: Install Rust tools
+        run: cargo +${{ matrix.rust-toolchain }} binstall --no-confirm cargo-llvm-cov cargo-nextest
 
-      # - name: Checkout
-      #   uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       # This step might be removed if the distro included a recent enough
       # version of NSS.  Ubuntu 20.04 only has 3.49, which is far too old.
@@ -89,9 +84,7 @@ jobs:
           NSS_DIR: ${{ github.workspace }}/nss
           NSPR_DIR: ${{ github.workspace }}/nspr
 
-      # Ideally, we could just use the build.sh script that comes with NSS.
-      # The ugiest bit is really the plumbing needed to build mozpkix.
-      - name: Rewire NSS build.sh (Windows)
+      - name: Set up environment for NSS build.sh (Windows)
         if: runner.os == 'Windows'
         run: |
           echo "GYP_MSVS_OVERRIDE_PATH=$VSINSTALLDIR" >> "$GITHUB_ENV"
@@ -99,19 +92,13 @@ jobs:
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
           # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe
-          # find "$NSPR_DIR" -name Makefile.in -exec sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' -e 's|$(NSINSTALL) -t|install -p|g' {} \;
-          # pushd "$NSPR_DIR" && hg diff && popd
-          # sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' "$NSPR_DIR"/pr/include/md/Makefile.in
-          # sed -i.bak -e 's|$(NSINSTALL) -t|install|g' "$NSPR_DIR"/pr/include/md/Makefile.in
-          # cat "$NSPR_DIR"/pr/include/md/Makefile.in
-          # rm /usr/bin/link.exe || true
 
       - name: Build
         run: |
-          "$NSS_DIR"/build.sh -v -Ddisable_tests=1 ||true
-          # cargo +${{ matrix.rust-toolchain }} build -v --all-targets || true
+          # "$NSS_DIR"/build.sh -v -Ddisable_tests=1 ||true
+          cargo +${{ matrix.rust-toolchain }} build -v --all-targets
           find dist
-          exit 1
+          # exit 1
           echo "LD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
           echo "DYLD_LIBRARY_PATH=${{ github.workspace }}/dist/Debug/lib" >> "$GITHUB_ENV"
         env:
