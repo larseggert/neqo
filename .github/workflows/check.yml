@@ -90,6 +90,7 @@ jobs:
           echo "GYP_MSVS_OVERRIDE_PATH=$VSINSTALLDIR" >> "$GITHUB_ENV"
           echo "GYP_MSVS_VERSION=2022" >> "$GITHUB_ENV"
           echo "BASH=$SHELL" >> "$GITHUB_ENV"
+          echo "LIBCLANG_PATH=C:\\Program Files\\LLVM\\bin" >> "$GITHUB_ENV"
           # See https://github.com/ilammy/msvc-dev-cmd#name-conflicts-with-shell-bash
           rm /usr/bin/link.exe
 
