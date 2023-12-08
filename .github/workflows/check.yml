@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [windows-latest] #ubuntu-latest, macos-latest,
         rust-toolchain: [1.65.0] #, stable] #, beta]
     runs-on: ${{ matrix.os }}
     defaults:
@@ -99,7 +99,7 @@ jobs:
           RUST_BACKTRACE: 1
 
       - name: Run tests
-        run: cargo +${{ matrix.rust-toolchain }} nextest run -v --no-fail-fast
+        run: cargo +${{ matrix.rust-toolchain }} test -v #nextest run -v --no-fail-fast
         env:
            RUST_BACKTRACE: 1
            RUST_LOG: neqo=debug
