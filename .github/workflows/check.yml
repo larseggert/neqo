@@ -104,6 +104,7 @@ jobs:
           # sed -i.bak -e 's|$(NSINSTALL) -D|mkdir -p|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           # sed -i.bak -e 's|$(NSINSTALL) -t|install|g' "$NSPR_DIR"/pr/include/md/Makefile.in
           # cat "$NSPR_DIR"/pr/include/md/Makefile.in
+          rm /usr/bin/link.exe || true
 
       - name: Build
         run: |
