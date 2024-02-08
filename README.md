@@ -1,6 +1,7 @@
 # Neqo, an Implementation of QUIC written in Rust
 
 ![neqo logo](https://github.com/mozilla/neqo/raw/main/neqo.png "neqo logo")
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flarseggert%2Fneqo.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Flarseggert%2Fneqo?ref=badge_shield)
 
 To run test HTTP/3 programs (neqo-client and neqo-server):
 
@@ -95,3 +96,7 @@ Compile Gecko as usual with `./mach build`.
 
 Note: Using newer Neqo code with Gecko may also require changes (likely to `neqo_glue`) if
 something has changed.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flarseggert%2Fneqo.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Flarseggert%2Fneqo?ref=badge_large)
