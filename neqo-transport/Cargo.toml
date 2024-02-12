@@ -10,7 +10,7 @@ license.workspace = true
 
 [dependencies]
 # Sync with https://searchfox.org/mozilla-central/source/Cargo.lock 2024-02-08
-indexmap = "1.9"
+indexmap = "2.2"
 log = { version = "0.4", default-features = false }
 neqo-common = { path = "../neqo-common" }
 neqo-crypto = { path = "../neqo-crypto" }
