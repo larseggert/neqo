@@ -944,6 +944,7 @@ impl ::std::fmt::Display for LossRecovery {
 mod tests {
     use std::{
         cell::RefCell,
+        cmp::max,
         convert::TryInto,
         ops::{Deref, DerefMut, RangeInclusive},
         rc::Rc,
@@ -957,6 +958,7 @@ mod tests {
         LossRecovery, LossRecoverySpace, PacketNumberSpace, SendProfile, SentPacket, FAST_PTO_SCALE,
     };
     use crate::{
+        ackrate::PeerAckDelay,
         cc::CongestionControlAlgorithm,
         cid::{ConnectionId, ConnectionIdEntry},
         ecn::EcnCount,
@@ -973,8 +975,8 @@ mod tests {
 
     const ON_SENT_SIZE: usize = 100;
     /// An initial RTT for using with `setup_lr`.
-    const TEST_RTT: Duration = ms(80);
-    const TEST_RTTVAR: Duration = ms(40);
+    const TEST_RTT: Duration = ms(1000);
+    const TEST_RTTVAR: Duration = ms(500);
 
     struct Fixture {
         lr: LossRecovery,
@@ -1045,6 +1047,7 @@ mod tests {
                 ConnectionIdEntry::new(0, ConnectionId::from(&[1, 2, 3]), [0; 16]),
             );
             path.set_primary(true);
+            path.rtt_mut().set_initial(TEST_RTT);
             Self {
                 lr: LossRecovery::new(StatsCell::default(), FAST_PTO_SCALE),
                 path: Rc::new(RefCell::new(path)),
@@ -1325,7 +1328,8 @@ mod tests {
         // We want to declare PN 2 as acknowledged before we declare PN 1 as lost.
         // For this to work, we need PACING above to be less than 1/8 of an RTT.
         let pn1_sent_time = pn_time(1);
-        let pn1_loss_time = pn1_sent_time + (TEST_RTT * 9 / 8);
+        let pn1_loss_time =
+            pn1_sent_time + TEST_RTT + max(TEST_RTT / 8, PeerAckDelay::default().max());
         let pn2_ack_time = pn_time(2) + TEST_RTT;
         assert!(pn1_loss_time > pn2_ack_time);
 
