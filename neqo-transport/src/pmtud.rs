@@ -321,9 +321,9 @@ impl Pmtud {
 
     /// Returns the default PLPMTU for the given remote IP address.
     #[must_use]
-    pub const fn default_plpmtu(remote_ip: IpAddr) -> usize {
-        let search_table = Self::search_table(&remote_ip);
-        search_table[0] - Self::header_size(&remote_ip)
+    pub const fn default_plpmtu(remote_ip: &IpAddr) -> usize {
+        let search_table = Self::search_table(remote_ip);
+        search_table[0] - Self::header_size(remote_ip)
     }
 }
 

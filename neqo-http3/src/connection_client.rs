@@ -464,7 +464,7 @@ impl Http3Client {
                 .base_handler
                 .handle_state_change(&mut self.conn, &state);
             debug_assert_eq!(Ok(true), res);
-            return Err(Error::FatalError);
+            return Err(Error::Fatal);
         }
         if self.conn.zero_rtt_state() == ZeroRttState::Sending {
             self.base_handler
@@ -1398,9 +1398,9 @@ mod tests {
             .unwrap();
             let qpack = Rc::new(RefCell::new(QPackEncoder::new(
                 &QpackSettings {
-                    max_table_size_encoder: max_table_size,
-                    max_table_size_decoder: max_table_size,
-                    max_blocked_streams,
+                    table_size_encoder: max_table_size,
+                    table_size_decoder: max_table_size,
+                    blocked_streams: max_blocked_streams,
                 },
                 true,
             )));
@@ -1420,9 +1420,9 @@ mod tests {
         pub fn new_with_conn(conn: Connection) -> Self {
             let qpack = Rc::new(RefCell::new(QPackEncoder::new(
                 &QpackSettings {
-                    max_table_size_encoder: 128,
-                    max_table_size_decoder: 128,
-                    max_blocked_streams: 0,
+                    table_size_encoder: 128,
+                    table_size_decoder: 128,
+                    blocked_streams: 0,
                 },
                 true,
             )));
@@ -2144,7 +2144,7 @@ mod tests {
         let (mut client, mut server) = connect();
         server
             .conn
-            .stream_reset_send(server.control_stream_id.unwrap(), Error::HttpNoError.code())
+            .stream_reset_send(server.control_stream_id.unwrap(), Error::HttpNo.code())
             .unwrap();
         let out = server.conn.process_output(now());
         client.process(out.dgram(), now());
@@ -2158,7 +2158,7 @@ mod tests {
         let (mut client, mut server) = connect();
         server
             .conn
-            .stream_reset_send(server.encoder_stream_id.unwrap(), Error::HttpNoError.code())
+            .stream_reset_send(server.encoder_stream_id.unwrap(), Error::HttpNo.code())
             .unwrap();
         let out = server.conn.process_output(now());
         client.process(out.dgram(), now());
@@ -2172,7 +2172,7 @@ mod tests {
         let (mut client, mut server) = connect();
         server
             .conn
-            .stream_reset_send(server.decoder_stream_id.unwrap(), Error::HttpNoError.code())
+            .stream_reset_send(server.decoder_stream_id.unwrap(), Error::HttpNo.code())
             .unwrap();
         let out = server.conn.process_output(now());
         client.process(out.dgram(), now());
@@ -2186,7 +2186,7 @@ mod tests {
         let (mut client, mut server) = connect();
         server
             .conn
-            .stream_stop_sending(CLIENT_SIDE_CONTROL_STREAM_ID, Error::HttpNoError.code())
+            .stream_stop_sending(CLIENT_SIDE_CONTROL_STREAM_ID, Error::HttpNo.code())
             .unwrap();
         let out = server.conn.process_output(now());
         client.process(out.dgram(), now());
@@ -2200,7 +2200,7 @@ mod tests {
         let (mut client, mut server) = connect();
         server
             .conn
-            .stream_stop_sending(CLIENT_SIDE_ENCODER_STREAM_ID, Error::HttpNoError.code())
+            .stream_stop_sending(CLIENT_SIDE_ENCODER_STREAM_ID, Error::HttpNo.code())
             .unwrap();
         let out = server.conn.process_output(now());
         client.process(out.dgram(), now());
@@ -2214,7 +2214,7 @@ mod tests {
         let (mut client, mut server) = connect();
         server
             .conn
-            .stream_stop_sending(CLIENT_SIDE_DECODER_STREAM_ID, Error::HttpNoError.code())
+            .stream_stop_sending(CLIENT_SIDE_DECODER_STREAM_ID, Error::HttpNo.code())
             .unwrap();
         let out = server.conn.process_output(now());
         client.process(out.dgram(), now());
@@ -2941,7 +2941,7 @@ mod tests {
         fetch_with_two_data_frames(&buf, &hdr, &[0x0, 0x80, 0x0, 0x40, 0x0], &[0_u8; 16384]);
     }
 
-    // Test receiving STOP_SENDING with the HttpNoError error code.
+    // Test receiving STOP_SENDING with the HttpNo error code.
     #[test]
     fn stop_sending_early_response() {
         // Connect exchange headers and send a request. Also check if the correct header frame has
@@ -2953,7 +2953,7 @@ mod tests {
             Ok(()),
             server
                 .conn
-                .stream_stop_sending(request_stream_id, Error::HttpNoError.code())
+                .stream_stop_sending(request_stream_id, Error::HttpNo.code())
         );
 
         // send response - 200  Content-Length: 3
@@ -2973,7 +2973,7 @@ mod tests {
             match e {
                 Http3ClientEvent::StopSending { stream_id, error } => {
                     assert_eq!(stream_id, request_stream_id);
-                    assert_eq!(error, Error::HttpNoError.code());
+                    assert_eq!(error, Error::HttpNo.code());
                     // assert that we cannot send any more request data.
                     assert_eq!(
                         Err(Error::InvalidStreamId),
@@ -3203,7 +3203,7 @@ mod tests {
         client.close(now(), 0, "");
     }
 
-    // Server sends stop sending with code that is not HttpNoError.
+    // Server sends stop sending with code that is not HttpNo.
     // We have some events for that stream already in the client.events.
     // The events will be removed.
     #[test]
@@ -7025,7 +7025,7 @@ mod tests {
             DEFAULT_ALPN_H3,
             ConnectionParameters::default().max_streams(StreamType::UniDi, 0),
         ));
-        handshake_client_error(&mut client, &mut server, &Error::StreamLimitError);
+        handshake_client_error(&mut client, &mut server, &Error::StreamLimit);
     }
 
     /// 2 streams isn't enough for control and QPACK streams.
@@ -7036,7 +7036,7 @@ mod tests {
             DEFAULT_ALPN_H3,
             ConnectionParameters::default().max_streams(StreamType::UniDi, 2),
         ));
-        handshake_client_error(&mut client, &mut server, &Error::StreamLimitError);
+        handshake_client_error(&mut client, &mut server, &Error::StreamLimit);
     }
 
     fn do_malformed_response_test(headers: &[Header]) {
@@ -7252,7 +7252,7 @@ mod tests {
     fn manipulate_conrol_stream(client: &mut Http3Client, stream_id: StreamId) {
         assert_eq!(
             client
-                .cancel_fetch(stream_id, Error::HttpNoError.code())
+                .cancel_fetch(stream_id, Error::HttpNo.code())
                 .unwrap_err(),
             Error::InvalidStreamId
         );
@@ -7281,7 +7281,7 @@ mod tests {
         manipulate_conrol_stream(&mut client, server.encoder_stream_id.unwrap());
         manipulate_conrol_stream(&mut client, server.decoder_stream_id.unwrap());
         client
-            .cancel_fetch(request_stream_id, Error::HttpNoError.code())
+            .cancel_fetch(request_stream_id, Error::HttpNo.code())
             .unwrap();
     }
 

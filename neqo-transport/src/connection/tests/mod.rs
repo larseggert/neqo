@@ -551,7 +551,7 @@ fn induce_persistent_congestion(
 /// value could fail as a result of variations, so it's OK to just
 /// change this value, but it is good to first understand where the
 /// change came from.
-const POST_HANDSHAKE_CWND: usize = Pmtud::default_plpmtu(DEFAULT_ADDR.ip()) * CWND_INITIAL_PKTS;
+const POST_HANDSHAKE_CWND: usize = Pmtud::default_plpmtu(&DEFAULT_ADDR.ip()) * CWND_INITIAL_PKTS;
 
 /// Determine the number of packets required to fill the CWND.
 const fn cwnd_packets(data: usize, mtu: usize) -> usize {

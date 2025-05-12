@@ -352,7 +352,7 @@ impl ReceiverFlowControl<()> {
                 self.consumed,
                 self.max_allowed
             );
-            return Err(Error::FlowControlError);
+            return Err(Error::FlowControl);
         }
         self.consumed += count;
         Ok(())
@@ -463,7 +463,7 @@ impl ReceiverFlowControl<StreamId> {
 
         if consumed > self.max_allowed {
             qtrace!("Stream RX window exceeded: {consumed}");
-            return Err(Error::FlowControlError);
+            return Err(Error::FlowControl);
         }
         let new_consumed = consumed - self.consumed;
         self.consumed = consumed;
@@ -532,7 +532,7 @@ impl RemoteStreamLimit {
 
     pub fn is_new_stream(&self, stream_id: StreamId) -> Res<bool> {
         if !self.is_allowed(stream_id) {
-            return Err(Error::StreamLimitError);
+            return Err(Error::StreamLimit);
         }
         Ok(stream_id >= self.next_stream)
     }
@@ -884,11 +884,11 @@ mod test {
         // Exceed limits
         assert_eq!(
             fc[StreamType::BiDi].is_new_stream(StreamId::from(bidi + 8)),
-            Err(Error::StreamLimitError)
+            Err(Error::StreamLimit)
         );
         assert_eq!(
             fc[StreamType::UniDi].is_new_stream(StreamId::from(unidi + 4)),
-            Err(Error::StreamLimitError)
+            Err(Error::StreamLimit)
         );
 
         assert_eq!(fc[StreamType::BiDi].take_stream_id(), StreamId::from(bidi));
@@ -920,7 +920,7 @@ mod test {
         // 13 still exceeds limits
         assert_eq!(
             fc[StreamType::BiDi].is_new_stream(StreamId::from(bidi + 12)),
-            Err(Error::StreamLimitError)
+            Err(Error::StreamLimit)
         );
 
         fc[StreamType::UniDi].add_retired(1);
@@ -940,7 +940,7 @@ mod test {
         // 11 exceeds limits
         assert_eq!(
             fc[StreamType::UniDi].is_new_stream(StreamId::from(unidi + 8)),
-            Err(Error::StreamLimitError)
+            Err(Error::StreamLimit)
         );
     }
 

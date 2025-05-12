@@ -49,7 +49,7 @@ fn wt_session_close_client() {
     wt.cancel_session_client(wt_session.stream_id());
     wt.check_session_closed_event_server(
         &wt_session,
-        &SessionCloseReason::Error(Error::HttpNoError.code()),
+        &SessionCloseReason::Error(Error::HttpNo.code()),
     );
 }
 
@@ -61,7 +61,7 @@ fn wt_session_close_server() {
     wt.cancel_session_server(&wt_session);
     wt.check_session_closed_event_client(
         wt_session.stream_id(),
-        &SessionCloseReason::Error(Error::HttpNoError.code()),
+        &SessionCloseReason::Error(Error::HttpNo.code()),
         None,
     );
 }
@@ -89,12 +89,12 @@ fn wt_session_close_server_stop_sending() {
     let wt_session = wt.create_wt_session();
 
     wt_session
-        .stream_stop_sending(Error::HttpNoError.code())
+        .stream_stop_sending(Error::HttpNo.code())
         .unwrap();
     wt.exchange_packets();
     wt.check_session_closed_event_client(
         wt_session.stream_id(),
-        &SessionCloseReason::Error(Error::HttpNoError.code()),
+        &SessionCloseReason::Error(Error::HttpNo.code()),
         None,
     );
 }
@@ -104,13 +104,11 @@ fn wt_session_close_server_reset() {
     let mut wt = WtTest::new();
     let wt_session = wt.create_wt_session();
 
-    wt_session
-        .stream_reset_send(Error::HttpNoError.code())
-        .unwrap();
+    wt_session.stream_reset_send(Error::HttpNo.code()).unwrap();
     wt.exchange_packets();
     wt.check_session_closed_event_client(
         wt_session.stream_id(),
-        &SessionCloseReason::Error(Error::HttpNoError.code()),
+        &SessionCloseReason::Error(Error::HttpNo.code()),
         None,
     );
 }

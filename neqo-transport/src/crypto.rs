@@ -211,7 +211,7 @@ impl Crypto {
                 Err(self
                     .tls
                     .alert()
-                    .map_or(Error::CryptoError(e), |a| Error::CryptoAlert(*a)))
+                    .map_or(Error::Crypto(e), |a| Error::CryptoAlert(*a)))
             }
         }
     }
@@ -235,9 +235,9 @@ impl Crypto {
                 self.tls.read_secret(Epoch::ZeroRtt),
             ),
         };
-        let secret = secret.ok_or(Error::InternalError)?;
+        let secret = secret.ok_or(Error::Internal)?;
         self.states
-            .set_0rtt_keys(version, dir, &secret, cipher.ok_or(Error::InternalError)?)?;
+            .set_0rtt_keys(version, dir, &secret, cipher.ok_or(Error::Internal)?)?;
         Ok(true)
     }
 
@@ -270,12 +270,12 @@ impl Crypto {
         let read_secret = self
             .tls
             .read_secret(Epoch::Handshake)
-            .ok_or(Error::InternalError)?;
+            .ok_or(Error::Internal)?;
         let cipher = match self.tls.info() {
             None => self.tls.preinfo()?.cipher_suite(),
             Some(info) => Some(info.cipher_suite()),
         }
-        .ok_or(Error::InternalError)?;
+        .ok_or(Error::Internal)?;
         self.states
             .set_handshake_keys(self.version, &write_secret, &read_secret, cipher)?;
         qdebug!("[{self}] Handshake keys installed");
@@ -299,7 +299,7 @@ impl Crypto {
         let read_secret = self
             .tls
             .read_secret(Epoch::ApplicationData)
-            .ok_or(Error::InternalError)?;
+            .ok_or(Error::Internal)?;
         self.states
             .set_application_read_key(version, &read_secret, expire_0rtt)?;
         qdebug!("[{self}] application read keys installed");
@@ -1112,7 +1112,7 @@ impl CryptoStates {
         // received an acknowledgement for a packet in the current phase.
         // Also, skip this if we are waiting for read keys on the existing
         // key update to be rolled over.
-        let write = &self.app_write.as_ref().ok_or(Error::InternalError)?.dx;
+        let write = &self.app_write.as_ref().ok_or(Error::Internal)?.dx;
         if write.can_update(largest_acknowledged) && self.read_update_time.is_none() {
             // This call additionally checks that we don't advance to the next
             // epoch while a key update is in progress.
@@ -1134,8 +1134,8 @@ impl CryptoStates {
         // ahead of the read keys.  If we initiated the key update, the write keys
         // will already be ahead.
         debug_assert!(self.read_update_time.is_none());
-        let write = &self.app_write.as_ref().ok_or(Error::InternalError)?;
-        let read = &self.app_read.as_ref().ok_or(Error::InternalError)?;
+        let write = &self.app_write.as_ref().ok_or(Error::Internal)?;
+        let read = &self.app_read.as_ref().ok_or(Error::Internal)?;
         if write.epoch() == read.epoch() {
             qdebug!("[{self}] Update write keys to epoch={}", write.epoch() + 1);
             self.app_write = Some(write.next()?);
@@ -1207,7 +1207,7 @@ impl CryptoStates {
                     qtrace!("[{self}] Rotating read keys");
                     mem::swap(&mut self.app_read, &mut self.app_read_next);
                     self.app_read_next =
-                        Some(self.app_read.as_ref().ok_or(Error::InternalError)?.next()?);
+                        Some(self.app_read.as_ref().ok_or(Error::Internal)?.next()?);
                 }
                 self.read_update_time = None;
             }
@@ -1230,8 +1230,8 @@ impl CryptoStates {
         // We only need to do the check while we are waiting for read keys to be updated.
         if self.read_update_time.is_some() {
             qtrace!("[{self}] Checking for PN overlap");
-            let next_dx = &mut self.app_read_next.as_mut().ok_or(Error::InternalError)?.dx;
-            next_dx.continuation(&self.app_read.as_ref().ok_or(Error::InternalError)?.dx)?;
+            let next_dx = &mut self.app_read_next.as_mut().ok_or(Error::Internal)?.dx;
+            next_dx.continuation(&self.app_read.as_ref().ok_or(Error::Internal)?.dx)?;
         }
         Ok(())
     }
@@ -1392,7 +1392,7 @@ impl CryptoStreams {
     }
 
     pub fn inbound_frame(&mut self, space: PacketNumberSpace, offset: u64, data: &[u8]) -> Res<()> {
-        let rx = &mut self.get_mut(space).ok_or(Error::InternalError)?.rx;
+        let rx = &mut self.get_mut(space).ok_or(Error::Internal)?.rx;
         rx.inbound_frame(offset, data);
         if rx.received() - rx.retired() <= Self::BUFFER_LIMIT {
             Ok(())

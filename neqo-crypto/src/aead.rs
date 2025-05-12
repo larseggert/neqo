@@ -69,6 +69,7 @@ impl RealAead {
     }
 
     #[must_use]
+    #[expect(clippy::unused_self, reason = "Future-proofing.")]
     pub const fn expansion(&self) -> usize {
         16
     }

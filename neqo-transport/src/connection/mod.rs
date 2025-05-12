@@ -781,7 +781,7 @@ impl Connection {
         }
         self.paths
             .primary()
-            .ok_or(Error::InternalError)?
+            .ok_or(Error::Internal)?
             .borrow_mut()
             .rtt_mut()
             .set_initial(rtt);
@@ -1445,7 +1445,7 @@ impl Connection {
                     if versions.is_empty()
                         || versions.contains(&self.version().wire_version())
                         || versions.contains(&0)
-                        || &packet.scid() != self.odcid().ok_or(Error::InternalError)?
+                        || &packet.scid() != self.odcid().ok_or(Error::Internal)?
                         || matches!(self.address_validation, AddressValidationInfo::Retry { .. })
                     {
                         // Ignore VersionNegotiation packets that contain the current version.
@@ -1914,8 +1914,8 @@ impl Connection {
     /// there are not enough connection IDs available to use.
     pub fn migrate(
         &mut self,
-        local: Option<SocketAddr>,
-        remote: Option<SocketAddr>,
+        local: Option<&SocketAddr>,
+        remote: Option<&SocketAddr>,
         force: bool,
         now: Instant,
     ) -> Res<()> {
@@ -1936,8 +1936,9 @@ impl Connection {
         }
 
         let path = self.paths.primary().ok_or(Error::InvalidMigration)?;
-        let local = local.unwrap_or_else(|| *path.borrow().local_address());
-        let remote = remote.unwrap_or_else(|| *path.borrow().remote_address());
+        let pathref = path.borrow();
+        let local = local.unwrap_or_else(|| pathref.local_address());
+        let remote = remote.unwrap_or_else(|| pathref.remote_address());
 
         if mem::discriminant(&local.ip()) != mem::discriminant(&remote.ip()) {
             // Can't mix address families.
@@ -1952,14 +1953,14 @@ impl Connection {
             // address is unspecified.
             return Err(Error::InvalidMigration);
         }
-
         let path = self.paths.find_path(
-            &local,
-            &remote,
+            local,
+            remote,
             &self.conn_params,
             now,
             &mut self.stats.borrow_mut(),
         );
+        drop(pathref);
         self.ensure_permanent(&path, now)?;
         qinfo!(
             "[{self}] Migrate to {} probe {}",
@@ -2012,7 +2013,7 @@ impl Connection {
                     return Ok(());
                 }
 
-                if self.migrate(None, Some(remote), false, now).is_err() {
+                if self.migrate(None, Some(&remote), false, now).is_err() {
                     qwarn!("[{self}] Ignoring bad preferred address: {remote}");
                 }
             } else {
@@ -2075,7 +2076,7 @@ impl Connection {
                         // than reuse a connection ID.
                         let res = if path.borrow().is_temporary() {
                             qerror!("[{self}] Attempting to close with a temporary path");
-                            Err(Error::InternalError)
+                            Err(Error::Internal)
                         } else {
                             self.output_path(&path, now, Some(&details))
                         };
@@ -2482,7 +2483,7 @@ impl Connection {
                 aead_expansion,
                 self.paths
                     .primary()
-                    .ok_or(Error::InternalError)?
+                    .ok_or(Error::Internal)?
                     .borrow()
                     .pmtud(),
             );
@@ -2527,7 +2528,7 @@ impl Connection {
                 .crypto
                 .states
                 .tx_mut(self.version, epoch)
-                .ok_or(Error::InternalError)?;
+                .ok_or(Error::Internal)?;
             encoder = builder.build(tx)?;
             self.crypto.states.auto_update()?;
 
@@ -2703,7 +2704,7 @@ impl Connection {
         self.validate_versions()?;
         {
             let tps = self.tps.borrow();
-            let remote = tps.remote.as_ref().ok_or(Error::TransportParameterError)?;
+            let remote = tps.remote.as_ref().ok_or(Error::TransportParameter)?;
 
             // If the peer provided a preferred address, then we have to be a client
             // and they have to be using a non-empty connection ID.
@@ -2715,12 +2716,12 @@ impl Connection {
                         .ok_or(Error::UnknownConnectionId)?
                         .is_empty())
             {
-                return Err(Error::TransportParameterError);
+                return Err(Error::TransportParameter);
             }
 
             let reset_token = remote.get_bytes(StatelessResetToken).map_or_else(
                 || Ok(ConnectionIdEntry::random_srt()),
-                |token| <[u8; 16]>::try_from(token).map_err(|_| Error::TransportParameterError),
+                |token| <[u8; 16]>::try_from(token).map_err(|_| Error::TransportParameter),
             )?;
             let path = self.paths.primary().ok_or(Error::NoAvailablePath)?;
             path.borrow_mut().set_reset_token(reset_token);
@@ -2729,7 +2730,7 @@ impl Connection {
             let min_ad = if remote.has_value(MinAckDelay) {
                 let min_ad = Duration::from_micros(remote.get_integer(MinAckDelay));
                 if min_ad > max_ad {
-                    return Err(Error::TransportParameterError);
+                    return Err(Error::TransportParameter);
                 }
                 Some(min_ad)
             } else {
@@ -2748,7 +2749,7 @@ impl Connection {
 
     fn validate_cids(&self) -> Res<()> {
         let tph = self.tps.borrow();
-        let remote_tps = tph.remote.as_ref().ok_or(Error::TransportParameterError)?;
+        let remote_tps = tph.remote.as_ref().ok_or(Error::TransportParameter)?;
 
         let tp = remote_tps.get_bytes(InitialSourceConnectionId);
         if self
@@ -2805,7 +2806,7 @@ impl Connection {
     /// Validate the `version_negotiation` transport parameter from the peer.
     fn validate_versions(&self) -> Res<()> {
         let tph = self.tps.borrow();
-        let remote_tps = tph.remote.as_ref().ok_or(Error::TransportParameterError)?;
+        let remote_tps = tph.remote.as_ref().ok_or(Error::TransportParameter)?;
         // `current` and `other` are the value from the peer's transport parameters.
         // We're checking that these match our expectations.
         if let Some((current, other)) = remote_tps.get_versions() {
@@ -2914,7 +2915,7 @@ impl Connection {
             }
             _ => {
                 qerror!("Crypto state should not be new or failed after successful handshake");
-                return Err(Error::CryptoError(neqo_crypto::Error::InternalError));
+                return Err(Error::Crypto(neqo_crypto::Error::Internal));
             }
         }
 
@@ -2939,7 +2940,7 @@ impl Connection {
         if self.conn_params.pmtud_enabled() {
             self.paths
                 .primary()
-                .ok_or(Error::InternalError)?
+                .ok_or(Error::Internal)?
                 .borrow_mut()
                 .pmtud_mut()
                 .start(now, &mut self.stats.borrow_mut());
@@ -3078,12 +3079,12 @@ impl Connection {
                     // Use a transport error here because we want to send
                     // NO_ERROR in this case.
                     (
-                        Error::PeerApplicationError(error_code.code()),
+                        Error::PeerApplication(error_code.code()),
                         FrameType::ConnectionCloseApplication,
                     )
                 } else {
                     (
-                        Error::PeerError(error_code.code()),
+                        Error::Peer(error_code.code()),
                         FrameType::ConnectionCloseTransport,
                     )
                 };
@@ -3282,7 +3283,7 @@ impl Connection {
                 .crypto
                 .tls
                 .info()
-                .ok_or(Error::InternalError)?
+                .ok_or(Error::Internal)?
                 .early_data_accepted()
             {
                 ZeroRttState::AcceptedClient
@@ -3300,12 +3301,7 @@ impl Connection {
         self.set_state(State::Connected, now);
         self.create_resumption_token(now);
         self.saved_datagrams.make_available(Epoch::ApplicationData);
-        self.stats.borrow_mut().resumed = self
-            .crypto
-            .tls
-            .info()
-            .ok_or(Error::InternalError)?
-            .resumed();
+        self.stats.borrow_mut().resumed = self.crypto.tls.info().ok_or(Error::Internal)?.resumed();
         if self.role == Role::Server {
             self.state_signaling.handshake_done();
             self.set_confirmed(now)?;

@@ -350,7 +350,7 @@ fn version_negotiation_downgrade() {
         &mut client,
         &mut server,
         Error::VersionNegotiation,
-        Error::PeerError(Error::VersionNegotiation.code()),
+        Error::Peer(Error::VersionNegotiation.code()),
     );
 }
 
@@ -407,7 +407,7 @@ fn invalid_current_version_client() {
     connect_fail(
         &mut client,
         &mut server,
-        Error::PeerError(Error::CryptoAlert(47).code()),
+        Error::Peer(Error::CryptoAlert(47).code()),
         Error::CryptoAlert(47),
     );
 }
@@ -440,7 +440,7 @@ fn invalid_current_version_server() {
         &mut client,
         &mut server,
         Error::CryptoAlert(47),
-        Error::PeerError(Error::CryptoAlert(47).code()),
+        Error::Peer(Error::CryptoAlert(47).code()),
     );
 }
 
@@ -465,7 +465,7 @@ fn no_compatible_version() {
     connect_fail(
         &mut client,
         &mut server,
-        Error::PeerError(Error::CryptoAlert(47).code()),
+        Error::Peer(Error::CryptoAlert(47).code()),
         Error::CryptoAlert(47),
     );
 }

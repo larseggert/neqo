@@ -208,7 +208,7 @@ impl QuicParameters {
                 };
                 v6
             });
-            Some(PreferredAddress::new(v4, v6))
+            Some(PreferredAddress::new(v4.as_ref(), v6.as_ref()))
         }
     }
 

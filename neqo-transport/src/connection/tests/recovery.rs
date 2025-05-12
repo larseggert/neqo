@@ -457,7 +457,7 @@ fn handshake_ack_pto() {
     let mut server = default_server();
     // This is a greasing transport parameter, and large enough that the
     // server needs to send two Handshake packets.
-    let big = TransportParameter::Bytes(vec![0; Pmtud::default_plpmtu(DEFAULT_ADDR.ip())]);
+    let big = TransportParameter::Bytes(vec![0; Pmtud::default_plpmtu(&DEFAULT_ADDR.ip())]);
     server
         .set_local_tparam(TestTransportParameter, big)
         .unwrap();
