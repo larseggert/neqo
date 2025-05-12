@@ -56,11 +56,11 @@ const fn loopback() -> SocketAddr {
     SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 443)
 }
 
-fn change_path(d: &Datagram, a: SocketAddr) -> Datagram {
+fn change_path(d: &Datagram, a: &SocketAddr) -> Datagram {
     Datagram::new(a, a, d.tos(), &d[..])
 }
 
-const fn new_port(a: SocketAddr) -> SocketAddr {
+const fn new_port(a: &SocketAddr) -> SocketAddr {
     let (port, _) = a.port().overflowing_add(410);
     SocketAddr::new(a.ip(), port)
 }
@@ -69,7 +69,7 @@ fn assert_path_challenge(
     c: &Connection,
     d: &Datagram,
     before: &FrameStats,
-    dst: SocketAddr,
+    dst: &SocketAddr,
     padded: bool,
 ) {
     let after = c.stats().frame_tx;
@@ -91,7 +91,7 @@ fn assert_path_response(c: &Connection, d: &Datagram, before: &FrameStats) {
 }
 
 fn local_address(c: &Connection) -> SocketAddr {
-    c.paths.primary().unwrap().borrow().local_address()
+    *c.paths.primary().unwrap().borrow().local_address()
 }
 
 fn rebind(
@@ -113,7 +113,7 @@ fn rebind(
     assert_path_challenge(server, &s1, &before, c1_new.source(), false);
 
     // Restore the original source address, so to the client it looks like the path has not changed.
-    let s1_reb = Datagram::new(s1.source(), local_address(client), s1.tos(), &s1[..]);
+    let s1_reb = Datagram::new(s1.source(), &local_address(client), s1.tos(), &s1[..]);
 
     // The client should respond to the PATH_CHALLENGE, without changing paths.
     let before = client.stats().frame_tx;
@@ -128,7 +128,7 @@ fn rebind(
     assert_path_challenge(server, &s2, &before, c2_new.source(), true);
 
     // Restore the original source address, so to the client it looks like the path has not changed.
-    let s2_reb = Datagram::new(s2.source(), local_address(client), s2.tos(), &s2[..]);
+    let s2_reb = Datagram::new(s2.source(), &local_address(client), s2.tos(), &s2[..]);
 
     // The client should respond to the PATH_CHALLENGE, without changing paths.
     let before = client.stats().frame_tx;
@@ -154,7 +154,7 @@ fn rebind(
     assert_eq!(s4.destination(), c3_new.source());
 
     // Restore the original source address, so to the client it looks like the path has not changed.
-    let s4_reb = Datagram::new(s4.source(), local_address(client), s4.tos(), &s4[..]);
+    let s4_reb = Datagram::new(s4.source(), &local_address(client), s4.tos(), &s4[..]);
 
     // The client should process the ACK and go idle.
     let delay = client.process(Some(s4_reb), now).callback();
@@ -202,7 +202,8 @@ fn rebind(
                     }
                     // Restore the original source address, so to the client it looks like
                     // the path has not changed.
-                    let sx_r = Datagram::new(sx.source(), local_address(client), sx.tos(), &sx[..]);
+                    let sx_r =
+                        Datagram::new(sx.source(), &local_address(client), sx.tos(), &sx[..]);
                     let before = client.stats().frame_tx;
                     let cx = client.process(Some(sx_r), now).dgram().unwrap();
                     let after = client.stats().frame_tx;
@@ -237,7 +238,7 @@ fn inc_port(port: u16, i: usize) -> u16 {
         .0
 }
 
-fn inc_addr(ip: IpAddr, i: usize) -> IpAddr {
+fn inc_addr(ip: &IpAddr, i: usize) -> IpAddr {
     let inc: u8 = i.overflowing_mul(11).0.try_into().unwrap();
     match ip {
         IpAddr::V4(ip) => IpAddr::V4(Ipv4Addr::from(
@@ -251,7 +252,7 @@ fn inc_addr(ip: IpAddr, i: usize) -> IpAddr {
 
 fn change_source_port(d: &Datagram, i: usize) -> Datagram {
     Datagram::new(
-        SocketAddr::new(d.source().ip(), inc_port(d.source().port(), i)),
+        &SocketAddr::new(d.source().ip(), inc_port(d.source().port(), i)),
         d.destination(),
         d.tos(),
         &d[..],
@@ -260,7 +261,10 @@ fn change_source_port(d: &Datagram, i: usize) -> Datagram {
 
 fn change_source_address_and_port(d: &Datagram, i: usize) -> Datagram {
     Datagram::new(
-        SocketAddr::new(inc_addr(d.source().ip(), i), inc_port(d.source().port(), i)),
+        &SocketAddr::new(
+            inc_addr(&d.source().ip(), i),
+            inc_port(d.source().port(), i),
+        ),
         d.destination(),
         d.tos(),
         &d[..],
@@ -425,7 +429,7 @@ fn migrate_immediate() {
     let now = now();
 
     client
-        .migrate(Some(DEFAULT_ADDR_V4), Some(DEFAULT_ADDR_V4), true, now)
+        .migrate(Some(*DEFAULT_ADDR_V4), Some(*DEFAULT_ADDR_V4), true, now)
         .unwrap();
 
     let client1 = send_something(&mut client, now);
@@ -468,7 +472,7 @@ fn migrate_rtt() {
     let now = connect_rtt_idle(&mut client, &mut server, RTT);
 
     client
-        .migrate(Some(DEFAULT_ADDR_V4), Some(DEFAULT_ADDR_V4), true, now)
+        .migrate(Some(*DEFAULT_ADDR_V4), Some(*DEFAULT_ADDR_V4), true, now)
         .unwrap();
     // The RTT might be increased for the new path, so allow a little flexibility.
     let rtt = client.paths.rtt();
@@ -484,7 +488,7 @@ fn migrate_immediate_fail() {
     let mut now = now();
 
     client
-        .migrate(Some(DEFAULT_ADDR_V4), Some(DEFAULT_ADDR_V4), true, now)
+        .migrate(Some(*DEFAULT_ADDR_V4), Some(*DEFAULT_ADDR_V4), true, now)
         .unwrap();
 
     let probe = client.process_output(now).dgram().unwrap();
@@ -536,7 +540,7 @@ fn migrate_same() {
     let now = now();
 
     client
-        .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), true, now)
+        .migrate(Some(*DEFAULT_ADDR), Some(*DEFAULT_ADDR), true, now)
         .unwrap();
 
     let probe = client.process_output(now).dgram().unwrap();
@@ -564,7 +568,7 @@ fn migrate_same_fail() {
     let mut now = now();
 
     client
-        .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), true, now)
+        .migrate(Some(*DEFAULT_ADDR), Some(*DEFAULT_ADDR), true, now)
         .unwrap();
 
     let probe = client.process_output(now).dgram().unwrap();
@@ -623,7 +627,7 @@ fn migration(mut client: Connection) {
     let now = now();
 
     client
-        .migrate(Some(DEFAULT_ADDR_V4), Some(DEFAULT_ADDR_V4), false, now)
+        .migrate(Some(*DEFAULT_ADDR_V4), Some(*DEFAULT_ADDR_V4), false, now)
         .unwrap();
 
     let probe = client.process_output(now).dgram().unwrap();
@@ -715,7 +719,7 @@ fn fast_handshake(client: &mut Connection, server: &mut Connection) -> Option<Da
     server.process(dgram, now()).dgram()
 }
 
-fn preferred_address(hs_client: SocketAddr, hs_server: SocketAddr, preferred: SocketAddr) {
+fn preferred_address(hs_client: &SocketAddr, hs_server: &SocketAddr, preferred: &SocketAddr) {
     let mtu = Pmtud::default_plpmtu(hs_client.ip());
     let assert_orig_path = |d: &Datagram, full_mtu: bool| {
         assert_eq!(
@@ -752,8 +756,8 @@ fn preferred_address(hs_client: SocketAddr, hs_server: SocketAddr, preferred: So
     let mut client = zero_len_cid_client(hs_client, hs_server);
     client.set_qlog(log);
     let spa = match preferred {
-        SocketAddr::V6(v6) => PreferredAddress::new(None, Some(v6)),
-        SocketAddr::V4(v4) => PreferredAddress::new(Some(v4), None),
+        SocketAddr::V6(v6) => PreferredAddress::new(None, Some(*v6)),
+        SocketAddr::V4(v4) => PreferredAddress::new(Some(*v4), None),
     };
     let mut server = new_server(ConnectionParameters::default().preferred_address(spa));
 
@@ -806,29 +810,29 @@ fn preferred_address(hs_client: SocketAddr, hs_server: SocketAddr, preferred: So
 #[test]
 fn preferred_address_new_port() {
     let a = DEFAULT_ADDR;
-    preferred_address(a, a, new_port(a));
+    preferred_address(a, a, &new_port(a));
 }
 
 /// Migration works for a new address too.
 #[test]
 fn preferred_address_new_address() {
-    let mut preferred = DEFAULT_ADDR;
+    let mut preferred = *DEFAULT_ADDR;
     preferred.set_ip(IpAddr::V6(Ipv6Addr::new(0xfe80, 0, 0, 0, 0, 0, 0, 2)));
-    preferred_address(DEFAULT_ADDR, DEFAULT_ADDR, preferred);
+    preferred_address(DEFAULT_ADDR, DEFAULT_ADDR, &preferred);
 }
 
 /// Migration works for IPv4 addresses.
 #[test]
 fn preferred_address_new_port_v4() {
     let a = DEFAULT_ADDR_V4;
-    preferred_address(a, a, new_port(a));
+    preferred_address(a, a, &new_port(a));
 }
 
 /// Migrating to a loopback address is OK if we started there.
 #[test]
 fn preferred_address_loopback() {
-    let a = loopback();
-    preferred_address(a, a, new_port(a));
+    let a = &loopback();
+    preferred_address(a, a, &new_port(a));
 }
 
 fn expect_no_migration(client: &mut Connection, server: &mut Connection) {
@@ -860,7 +864,7 @@ fn preferred_address_ignore_loopback() {
 /// A preferred address in the wrong address family is ignored.
 #[test]
 fn preferred_address_ignore_different_family() {
-    preferred_address_ignored(PreferredAddress::new_any(Some(DEFAULT_ADDR_V4), None));
+    preferred_address_ignored(PreferredAddress::new_any(Some(*DEFAULT_ADDR_V4), None));
 }
 
 /// Disabling preferred addresses at the client means that it ignores a perfectly
@@ -868,7 +872,7 @@ fn preferred_address_ignore_different_family() {
 #[test]
 fn preferred_address_disabled_client() {
     let mut client = new_client(ConnectionParameters::default().disable_preferred_address());
-    let mut preferred = DEFAULT_ADDR;
+    let mut preferred = *DEFAULT_ADDR;
     preferred.set_ip(IpAddr::V6(Ipv6Addr::new(0xfe80, 0, 0, 0, 0, 0, 0, 2)));
     let spa = PreferredAddress::new_any(None, Some(preferred));
     let mut server = new_server(ConnectionParameters::default().preferred_address(spa));
@@ -943,33 +947,33 @@ fn preferred_address_client() {
 fn migration_invalid_state() {
     let mut client = default_client();
     assert!(client
-        .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), false, now())
+        .migrate(Some(*DEFAULT_ADDR), Some(*DEFAULT_ADDR), false, now())
         .is_err());
 
     let mut server = default_server();
     assert!(server
-        .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), false, now())
+        .migrate(Some(*DEFAULT_ADDR), Some(*DEFAULT_ADDR), false, now())
         .is_err());
     connect_force_idle(&mut client, &mut server);
 
     assert!(server
-        .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), false, now())
+        .migrate(Some(*DEFAULT_ADDR), Some(*DEFAULT_ADDR), false, now())
         .is_err());
 
     client.close(now(), 0, "closing");
     assert!(client
-        .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), false, now())
+        .migrate(Some(*DEFAULT_ADDR), Some(*DEFAULT_ADDR), false, now())
         .is_err());
     let close = client.process_output(now()).dgram();
 
     let dgram = server.process(close, now()).dgram();
     assert!(server
-        .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), false, now())
+        .migrate(Some(*DEFAULT_ADDR), Some(*DEFAULT_ADDR), false, now())
         .is_err());
 
     client.process_input(dgram.unwrap(), now());
     assert!(client
-        .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), false, now())
+        .migrate(Some(*DEFAULT_ADDR), Some(*DEFAULT_ADDR), false, now())
         .is_err());
 }
 
@@ -980,7 +984,7 @@ fn migration_disabled() {
     connect(&mut client, &mut server);
     assert_eq!(
         client
-            .migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR), true, now())
+            .migrate(Some(*DEFAULT_ADDR), Some(*DEFAULT_ADDR), true, now())
             .unwrap_err(),
         Error::InvalidMigration
     );
@@ -1003,32 +1007,32 @@ fn migration_invalid_address() {
     cant_migrate(None, None);
 
     // Providing a zero port number isn't valid.
-    let mut zero_port = DEFAULT_ADDR;
+    let mut zero_port = *DEFAULT_ADDR;
     zero_port.set_port(0);
     cant_migrate(None, Some(zero_port));
     cant_migrate(Some(zero_port), None);
 
     // An unspecified remote address is bad.
-    let mut remote_unspecified = DEFAULT_ADDR;
+    let mut remote_unspecified = *DEFAULT_ADDR;
     remote_unspecified.set_ip(IpAddr::V6(Ipv6Addr::from(0)));
     cant_migrate(None, Some(remote_unspecified));
 
     // Mixed address families is bad.
-    cant_migrate(Some(DEFAULT_ADDR), Some(DEFAULT_ADDR_V4));
-    cant_migrate(Some(DEFAULT_ADDR_V4), Some(DEFAULT_ADDR));
+    cant_migrate(Some(*DEFAULT_ADDR), Some(*DEFAULT_ADDR_V4));
+    cant_migrate(Some(*DEFAULT_ADDR_V4), Some(*DEFAULT_ADDR));
 
     // Loopback to non-loopback is bad.
-    cant_migrate(Some(DEFAULT_ADDR), Some(loopback()));
-    cant_migrate(Some(loopback()), Some(DEFAULT_ADDR));
+    cant_migrate(Some(*DEFAULT_ADDR), Some(loopback()));
+    cant_migrate(Some(loopback()), Some(*DEFAULT_ADDR));
     assert_eq!(
         client
-            .migrate(Some(DEFAULT_ADDR), Some(loopback()), true, now())
+            .migrate(Some(*DEFAULT_ADDR), Some(loopback()), true, now())
             .unwrap_err(),
         Error::InvalidMigration
     );
     assert_eq!(
         client
-            .migrate(Some(loopback()), Some(DEFAULT_ADDR), true, now())
+            .migrate(Some(loopback()), Some(*DEFAULT_ADDR), true, now())
             .unwrap_err(),
         Error::InvalidMigration
     );
@@ -1112,7 +1116,7 @@ fn retire_prior_to_migration_failure() {
     let original_cid = ConnectionId::from(get_cid(&send_something(&mut client, now())));
 
     client
-        .migrate(Some(DEFAULT_ADDR_V4), Some(DEFAULT_ADDR_V4), false, now())
+        .migrate(Some(*DEFAULT_ADDR_V4), Some(*DEFAULT_ADDR_V4), false, now())
         .unwrap();
 
     // The client now probes the new path.
@@ -1167,7 +1171,7 @@ fn retire_prior_to_migration_success() {
     let original_cid = ConnectionId::from(get_cid(&send_something(&mut client, now())));
 
     client
-        .migrate(Some(DEFAULT_ADDR_V4), Some(DEFAULT_ADDR_V4), false, now())
+        .migrate(Some(*DEFAULT_ADDR_V4), Some(*DEFAULT_ADDR_V4), false, now())
         .unwrap();
 
     // The client now probes the new path.

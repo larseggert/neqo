@@ -398,7 +398,7 @@ trait Client {
 }
 
 struct Runner<'a, H: Handler> {
-    local_addr: SocketAddr,
+    local_addr: &'a SocketAddr,
     socket: &'a mut crate::udp::Socket,
     client: H::Client,
     handler: H,
@@ -409,7 +409,7 @@ struct Runner<'a, H: Handler> {
 
 impl<'a, H: Handler> Runner<'a, H> {
     fn new(
-        local_addr: SocketAddr,
+        local_addr: &'a SocketAddr,
         socket: &'a mut crate::udp::Socket,
         client: H::Client,
         handler: H,
@@ -606,22 +606,23 @@ pub async fn client(mut args: Args) -> Res<()> {
             first = false;
 
             token = if args.shared.alpn == "h3" {
-                let client = http3::create_client(&args, real_local, remote_addr, &hostname, token)
-                    .expect("failed to create client");
+                let client =
+                    http3::create_client(&args, &real_local, &remote_addr, &hostname, token)
+                        .expect("failed to create client");
 
                 let handler = http3::Handler::new(to_request, &args);
 
-                Runner::new(real_local, &mut socket, client, handler, &args)
+                Runner::new(&real_local, &mut socket, client, handler, &args)
                     .run()
                     .await?
             } else {
                 let client =
-                    http09::create_client(&args, real_local, remote_addr, &hostname, token)
+                    http09::create_client(&args, &real_local, &remote_addr, &hostname, token)
                         .expect("failed to create client");
 
                 let handler = http09::Handler::new(to_request, &args);
 
-                Runner::new(real_local, &mut socket, client, handler, &args)
+                Runner::new(&real_local, &mut socket, client, handler, &args)
                     .run()
                     .await?
             };
