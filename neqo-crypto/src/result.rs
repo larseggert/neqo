@@ -48,7 +48,7 @@ fn result_helper(rv: ssl::SECStatus, allow_blocked: bool) -> Res<bool> {
         || unsafe { PR_ErrorToString(code, PR_LANGUAGE_I_DEFAULT) },
         "...",
     );
-    Err(Error::NssError { name, code, desc })
+    Err(Error::Nss { name, code, desc })
 }
 
 #[cfg(test)]
@@ -78,7 +78,7 @@ mod tests {
         let r = result(ssl::SECFailure);
         assert!(r.is_err());
         match r.unwrap_err() {
-            Error::NssError { name, code, desc } => {
+            Error::Nss { name, code, desc } => {
                 assert_eq!(name, "SSL_ERROR_BAD_MAC_READ");
                 assert_eq!(code, -12273);
                 assert_eq!(
@@ -99,7 +99,7 @@ mod tests {
         let r = result(ssl::SECFailure);
         assert!(r.is_err());
         match r.unwrap_err() {
-            Error::NssError { name, code, .. } => {
+            Error::Nss { name, code, .. } => {
                 assert_eq!(name, "UNKNOWN_ERROR");
                 assert_eq!(code, 0);
                 // Note that we don't test |desc| here because that comes from
@@ -118,7 +118,7 @@ mod tests {
         let r = result(ssl::SECFailure);
         assert!(r.is_err());
         match r.unwrap_err() {
-            Error::NssError { name, code, desc } => {
+            Error::Nss { name, code, desc } => {
                 assert_eq!(name, "PR_WOULD_BLOCK_ERROR");
                 assert_eq!(code, -5998);
                 assert_eq!(desc, "The operation would have blocked");

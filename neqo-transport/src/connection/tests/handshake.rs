@@ -141,7 +141,7 @@ fn handshake_failed_authentication() {
     let out = server.process(out.dgram(), now());
     assert!(out.as_dgram_ref().is_some());
     assert_error(&client, &CloseReason::Transport(Error::CryptoAlert(44)));
-    assert_error(&server, &CloseReason::Transport(Error::PeerError(300)));
+    assert_error(&server, &CloseReason::Transport(Error::Peer(300)));
 }
 
 #[test]
@@ -843,7 +843,8 @@ fn anti_amplification() {
 
     // With a gigantic transport parameter, the server is unable to complete
     // the handshake within the amplification limit.
-    let very_big = TransportParameter::Bytes(vec![0; Pmtud::default_plpmtu(DEFAULT_ADDR.ip()) * 3]);
+    let very_big =
+        TransportParameter::Bytes(vec![0; Pmtud::default_plpmtu(&DEFAULT_ADDR.ip()) * 3]);
     server
         .set_local_tparam(TestTransportParameter, very_big)
         .unwrap();
@@ -1022,7 +1023,7 @@ fn ech_retry() {
     server.process_input(dgram.unwrap(), now());
     assert_eq!(
         server.state().error(),
-        Some(&CloseReason::Transport(Error::PeerError(0x100 + 121)))
+        Some(&CloseReason::Transport(Error::Peer(0x100 + 121)))
     );
 
     let Some(CloseReason::Transport(Error::EchRetry(updated_config))) = client.state().error()
@@ -1085,13 +1086,13 @@ fn ech_retry_fallback_rejected() {
     server.process_input(dgram.unwrap(), now());
     assert_eq!(
         server.state().error(),
-        Some(&CloseReason::Transport(Error::PeerError(298)))
+        Some(&CloseReason::Transport(Error::Peer(298)))
     ); // A bad_certificate alert.
 }
 
 #[test]
 fn bad_min_ack_delay() {
-    const EXPECTED_ERROR: CloseReason = CloseReason::Transport(Error::TransportParameterError);
+    const EXPECTED_ERROR: CloseReason = CloseReason::Transport(Error::TransportParameter);
     let mut server = default_server();
     let max_ad = u64::try_from(DEFAULT_LOCAL_ACK_DELAY.as_micros()).unwrap();
     server
@@ -1113,8 +1114,8 @@ fn bad_min_ack_delay() {
     server.process_input(dgram.unwrap(), now());
     assert_eq!(
         server.state().error(),
-        Some(&CloseReason::Transport(Error::PeerError(
-            Error::TransportParameterError.code()
+        Some(&CloseReason::Transport(Error::Peer(
+            Error::TransportParameter.code()
         )))
     );
 }

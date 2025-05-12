@@ -26,7 +26,7 @@ use crate::{
 };
 
 // FIXME: The 27 here is a magic constant that the original code also (implicitly) had.
-const DATAGRAM_LEN_MTU: usize = Pmtud::default_plpmtu(DEFAULT_ADDR.ip()) - 27;
+const DATAGRAM_LEN_MTU: usize = Pmtud::default_plpmtu(&DEFAULT_ADDR.ip()) - 27;
 const DATA_MTU: &[u8] = &[1; DATAGRAM_LEN_MTU];
 const DATA_BIGGER_THAN_MTU: &[u8] = &[0; 2 * DATAGRAM_LEN_MTU];
 const_assert!(DATA_BIGGER_THAN_MTU.len() > DATAGRAM_LEN_MTU);

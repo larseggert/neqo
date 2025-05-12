@@ -63,7 +63,7 @@ fn damage_version() {
 }
 
 fn assert_bad_data<T>(res: Result<T, Error>) {
-    if let Err(Error::NssError { name, .. }) = res {
+    if let Err(Error::Nss { name, .. }) = res {
         assert_eq!(name, "SEC_ERROR_BAD_DATA");
     }
 }

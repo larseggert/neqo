@@ -417,7 +417,7 @@ impl PacketBuilder {
         if self.len() > self.limit {
             qwarn!("Packet contents are more than the limit");
             debug_assert!(false);
-            return Err(Error::InternalError);
+            return Err(Error::Internal);
         }
 
         self.pad_for_crypto(crypto);
@@ -442,7 +442,7 @@ impl PacketBuilder {
         let ciphertext = crypto.encrypt(self.pn, self.header.clone(), self.encoder.as_mut())?;
         let offset = SAMPLE_OFFSET - self.offsets.pn.len();
         if offset + SAMPLE_SIZE > ciphertext.len() {
-            return Err(Error::InternalError);
+            return Err(Error::Internal);
         }
         let sample = &ciphertext[offset..offset + SAMPLE_SIZE];
         let mask = crypto.compute_mask(sample)?;
@@ -895,7 +895,7 @@ impl<'a> PublicPacket<'a> {
             let (key_phase, pn, header) = self.decrypt_header(rx)?;
             qtrace!("[{rx}] decoded header: {header:?}");
             let Some(rx) = crypto.rx(version, epoch, key_phase) else {
-                return Err(Error::DecryptError);
+                return Err(Error::Decrypt);
             };
             let version = rx.version(); // Version fixup; see above.
             let d = rx.decrypt(pn, header, self.data)?;

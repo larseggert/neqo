@@ -481,7 +481,7 @@ impl RecvStreamState {
         };
 
         if !final_size_ok {
-            return Err(Error::FinalSizeError);
+            return Err(Error::FinalSize);
         }
 
         let new_bytes_consumed = fc.set_consumed(consumed)?;
@@ -1648,11 +1648,8 @@ mod tests {
             .unwrap();
         assert!(!session_fc.borrow().frame_needed());
 
-        s.reset(
-            Error::NoError.code(),
-            u64::try_from(SESSION_WINDOW).unwrap(),
-        )
-        .unwrap();
+        s.reset(Error::No.code(), u64::try_from(SESSION_WINDOW).unwrap())
+            .unwrap();
         assert!(session_fc.borrow().frame_needed());
     }
 
@@ -1813,7 +1810,7 @@ mod tests {
         // Receiving frame past the flow control will cause an error.
         assert_eq!(
             s.inbound_stream_frame(false, 0, &[0; SW_US * 3 / 4 + 1]),
-            Err(Error::FlowControlError)
+            Err(Error::FlowControl)
         );
     }
 
@@ -1999,7 +1996,7 @@ mod tests {
         // Receiving frame past the final size of a stream will return an error.
         assert_eq!(
             s.inbound_stream_frame(true, SW / 4, &[0; SW_US / 4 + 1]),
-            Err(Error::FinalSizeError)
+            Err(Error::FinalSize)
         );
         check_fc(&fc.borrow(), SW / 2, 0);
         check_fc(s.fc().unwrap(), SW / 2, 0);
@@ -2055,7 +2052,7 @@ mod tests {
         // Receiving frame past the final size of a stream will return an error.
         assert_eq!(
             s.inbound_stream_frame(true, SW / 4, &[0; SW_US / 4 + 1]),
-            Err(Error::FinalSizeError)
+            Err(Error::FinalSize)
         );
         check_fc(&fc.borrow(), SW / 2, 0);
         check_fc(s.fc().unwrap(), SW / 2, 0);
@@ -2122,7 +2119,7 @@ mod tests {
         check_fc(&fc.borrow(), SW / 2, 0);
         check_fc(s.fc().unwrap(), SW / 2, 0);
 
-        s.stop_sending(Error::NoError.code());
+        s.stop_sending(Error::No.code());
         // All data will de retired
         check_fc(&fc.borrow(), SW / 2, SW / 2);
         check_fc(s.fc().unwrap(), SW / 2, SW / 2);
@@ -2142,7 +2139,7 @@ mod tests {
         // Receiving frame past the final size of a stream will return an error.
         assert_eq!(
             s.inbound_stream_frame(true, SW / 4, &[0; SW_US / 4 + 1]),
-            Err(Error::FinalSizeError)
+            Err(Error::FinalSize)
         );
         check_fc(&fc.borrow(), SW / 2, SW / 2);
         check_fc(s.fc().unwrap(), SW / 2, SW / 2);
@@ -2163,7 +2160,7 @@ mod tests {
         check_fc(&fc.borrow(), SW / 2, 0);
         check_fc(s.fc().unwrap(), SW / 2, 0);
 
-        s.stop_sending(Error::NoError.code());
+        s.stop_sending(Error::No.code());
         // All data will de retired
         check_fc(&fc.borrow(), SW / 2, SW / 2);
         check_fc(s.fc().unwrap(), SW / 2, SW / 2);
@@ -2177,7 +2174,7 @@ mod tests {
         // Receiving data past the flow control limit will cause an error.
         assert_eq!(
             s.inbound_stream_frame(false, 0, &[0; SW_US * 3 / 4 + 1]),
-            Err(Error::FlowControlError)
+            Err(Error::FlowControl)
         );
 
         // The stream can still receive duplicate data without a fin bit.
@@ -2200,7 +2197,7 @@ mod tests {
         // Receiving frame past the final size of a stream will return an error.
         assert_eq!(
             s.inbound_stream_frame(true, SW / 2, &[0; 21]),
-            Err(Error::FinalSizeError)
+            Err(Error::FinalSize)
         );
         check_fc(&fc.borrow(), SW / 2 + 20, SW / 2 + 20);
         check_fc(s.fc().unwrap(), SW / 2 + 20, SW / 2 + 20);
@@ -2221,7 +2218,7 @@ mod tests {
         check_fc(&fc.borrow(), SW / 2, 0);
         check_fc(s.fc().unwrap(), SW / 2, 0);
 
-        s.stop_sending(Error::NoError.code());
+        s.stop_sending(Error::No.code());
         check_fc(&fc.borrow(), SW / 2, SW / 2);
         check_fc(s.fc().unwrap(), SW / 2, SW / 2);
 
@@ -2238,7 +2235,7 @@ mod tests {
         // Receiving data past the flow control limit will cause an error.
         assert_eq!(
             s.inbound_stream_frame(false, 0, &[0; SW_US * 3 / 4 + 1]),
-            Err(Error::FlowControlError)
+            Err(Error::FlowControl)
         );
 
         // The stream can still receive duplicate data without a fin bit.

@@ -102,7 +102,7 @@ impl HpKey {
                 &raw mut secret,
             )
         }?;
-        let key = SymKey::from_ptr(secret).or(Err(Error::HkdfError))?;
+        let key = SymKey::from_ptr(secret).or(Err(Error::Hkdf))?;
 
         let res = match cipher {
             TLS_AES_128_GCM_SHA256 | TLS_AES_256_GCM_SHA384 => {
