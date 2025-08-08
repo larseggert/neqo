@@ -31,7 +31,9 @@
           - imagemagick*
           - kerneloops
           - language-*
+          - libgdk-pixbuf
           - libreoffice*
+          - libxcb1
           - lpr
           - modemmanager
           - mythes*
