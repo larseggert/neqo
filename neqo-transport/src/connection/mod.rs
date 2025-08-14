@@ -936,7 +936,7 @@ impl Connection {
     pub fn authenticated(&mut self, status: AuthenticationStatus, now: Instant) {
         qdebug!("[{self}] Authenticated {status:?}");
         self.crypto.tls_mut().authenticated(status);
-        let res = self.handshake(now, self.version, PacketNumberSpace::Handshake, None);
+        let res = self.handshake(now, PacketNumberSpace::Handshake, None);
         self.absorb_error(now, res);
         self.process_saved(now);
     }
@@ -2016,8 +2016,8 @@ impl Connection {
             // The server knows the final version if it has remote transport parameters.
             self.tps.borrow().remote_handshake().is_some()
         } else {
-            // The client knows the final version if it has handshake keys.
-            self.crypto.has_keys()
+            // The client knows the final version if it has received any CRYPTO frame.
+            self.stats.borrow().frame_rx.crypto > 0
         }
     }
 
@@ -2853,7 +2853,7 @@ impl Connection {
             now,
         );
 
-        self.handshake(now, self.version, PacketNumberSpace::Initial, None)?;
+        self.handshake(now, PacketNumberSpace::Initial, None)?;
         self.set_state(State::WaitInitial, now);
         self.zero_rtt_state = if self.crypto.enable_0rtt(self.version, self.role)? {
             qdebug!("[{self}] Enabled 0-RTT");
@@ -3072,29 +3072,36 @@ impl Connection {
         Ok(())
     }
 
-    fn compatible_upgrade(&mut self, packet_version: Version) -> Res<()> {
+    /// Commit to a particular version.
+    ///
+    /// `packet_version` is set to `Some` when the client is calling,
+    /// because that is what determines the version.
+    /// For a server, the version is taken from the transport parameters.
+    fn compatible_upgrade(&mut self, packet_version: Option<Version>) -> Res<()> {
         if !matches!(self.state, State::WaitInitial | State::WaitVersion) {
             return Ok(());
         }
 
-        if self.role == Role::Client {
-            self.confirm_version(packet_version)?;
-        } else if self.tps.borrow().remote_handshake().is_some() {
+        debug_assert!(self.has_version());
+        debug_assert_eq!(self.role == Role::Client, packet_version.is_some());
+        let version = if let Some(version) = packet_version {
+            version
+        } else {
             let version = self.tps.borrow().version();
             let dcid = self
                 .original_destination_cid
                 .as_ref()
                 .ok_or(Error::ProtocolViolation)?;
             self.crypto.states_mut().init_server(version, dcid)?;
-            self.confirm_version(version)?;
-        }
+            version
+        };
+        self.confirm_version(version)?;
         Ok(())
     }
 
     fn handshake(
         &mut self,
         now: Instant,
-        packet_version: Version,
         space: PacketNumberSpace,
         data: Option<&[u8]>,
     ) -> Res<()> {
@@ -3130,10 +3137,12 @@ impl Connection {
         // There is a chance that this could be called less often, but getting the
         // conditions right is a little tricky, so call whenever CRYPTO data is used.
         if try_update {
-            self.compatible_upgrade(packet_version)?;
             // We have transport parameters, it's go time.
             if self.tps.borrow().remote_handshake().is_some() {
                 self.set_initial_limits();
+                if self.role == Role::Server {
+                    self.compatible_upgrade(None)?;
+                }
             }
             if self.crypto.install_keys(self.role)? {
                 self.saved_datagrams.make_available(Epoch::Handshake);
@@ -3217,11 +3226,15 @@ impl Connection {
                 self.crypto
                     .streams_mut()
                     .inbound_frame(space, offset, data)?;
+
+                if self.role == Role::Client && space == PacketNumberSpace::Initial {
+                    self.compatible_upgrade(Some(packet_version))?;
+                }
+
                 if self.crypto.streams().data_ready(space) {
                     let mut buf = Vec::new();
-                    let read = self.crypto.streams_mut().read_to_end(space, &mut buf);
-                    qdebug!("Read {read:?} bytes");
-                    self.handshake(now, packet_version, space, Some(&buf))?;
+                    let _read = self.crypto.streams_mut().read_to_end(space, &mut buf);
+                    self.handshake(now, space, Some(&buf))?;
                     self.create_resumption_token(now);
                 } else {
                     // If we get a useless CRYPTO frame send outstanding CRYPTO frames and 0-RTT

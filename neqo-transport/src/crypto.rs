@@ -238,11 +238,6 @@ impl Crypto {
         Ok(true)
     }
 
-    /// Return if the handshake has proceeded to the point that there are keys.
-    pub fn has_keys(&self) -> bool {
-        self.states.handshake.is_some() || self.states.app_read.is_some()
-    }
-
     /// Lock in a compatible upgrade.
     pub fn confirm_version(&mut self, confirmed: Version) -> Res<()> {
         self.states.confirm_version(self.version, confirmed)?;
