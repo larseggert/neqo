@@ -527,7 +527,7 @@ fn reorder_handshake() {
     const RTT: Duration = Duration::from_millis(100);
     // TODO: Figure out why this test is failing when randomized packet number require two bytes of
     // space. See below.
-    let mut client = new_client(ConnectionParameters::default().randomize_ci_pn(false));
+    let mut client = new_client(ConnectionParameters::default());
     let mut server = default_server();
     let mut now = now();
 
