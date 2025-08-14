@@ -435,11 +435,10 @@ impl PtoState {
     }
 
     pub fn pto(&mut self, space: PacketNumberSpace, probe: PacketNumberSpaceSet) {
-        debug_assert!(probe.contains(space));
-        self.space = space;
+        self.space = min(space, self.space);
         self.count += 1;
         self.packets = MAX_PTO_PACKET_COUNT;
-        self.probe = probe;
+        self.probe |= probe;
     }
 
     pub const fn count(&self) -> usize {
@@ -454,20 +453,16 @@ impl PtoState {
     /// This takes a packet from the supply if one remains, or returns `None`.
     pub fn send_profile(&mut self, mtu: usize) -> Option<SendProfile> {
         (self.packets > 0).then(|| {
-            // For the handshake, disable the probing after the first.
+            self.packets -= 1;
+            // For the handshake, remove the current space from probing after the first.
             // Probing forces the inclusion of frames, even when there is nothing to send.
             // We do want to send subsequent packets if there is something there,
             // but, if we force a probe, we end up sending useless packets with just PING.
-            let probe = if self.packets == MAX_PTO_PACKET_COUNT
-                || self.space == PacketNumberSpace::ApplicationData
-            {
-                self.probe
-            } else {
-                self.probe - self.space
-            };
+            if self.space != PacketNumberSpace::ApplicationData {
+                self.probe -= self.space;
+            }
             // This is a PTO, so ignore the limit.
-            self.packets -= 1;
-            SendProfile::new_pto(self.space, mtu, probe)
+            SendProfile::new_pto(self.space, mtu, self.probe)
         })
     }
 }

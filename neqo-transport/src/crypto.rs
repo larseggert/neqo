@@ -188,12 +188,13 @@ impl Crypto {
         data: Option<&[u8]>,
     ) -> Res<&HandshakeState> {
         let input = data.map(|d| {
-            qtrace!("Handshake record received {d:0x?} ");
-            Record {
+            let rec = Record {
                 ct: TLS_CT_HANDSHAKE,
                 epoch: space.into(),
                 data: d.to_vec(),
-            }
+            };
+            qtrace!("Handshake record received {rec:?} ");
+            rec
         });
 
         match self.tls.handshake_raw(now, input) {
@@ -235,6 +236,11 @@ impl Crypto {
         self.states
             .set_0rtt_keys(version, dir, &secret, cipher.ok_or(Error::Internal)?)?;
         Ok(true)
+    }
+
+    /// Return if the handshake has proceeded to the point that there are keys.
+    pub fn has_keys(&self) -> bool {
+        self.states.handshake.is_some() || self.states.app_read.is_some()
     }
 
     /// Lock in a compatible upgrade.
@@ -990,7 +996,7 @@ impl CryptoStates {
 
         let min_pn = if randomize_ci_pn {
             let r = random::<2>();
-            packet::Number::from(r[0] & r[1]) + 1
+            packet::Number::from(r[0] & r[1]) + 100
         } else {
             0
         };
