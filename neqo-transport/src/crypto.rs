@@ -991,7 +991,7 @@ impl CryptoStates {
 
         let min_pn = if randomize_ci_pn {
             let r = random::<2>();
-            packet::Number::from(r[0] & r[1]) + 100
+            packet::Number::from(r[0] & r[1]) + 256
         } else {
             0
         };
@@ -1011,6 +1011,7 @@ impl CryptoStates {
                     "[{self}] Continue packet numbers for initial after retry (write is {:?})",
                     prev.rx.used_pn,
                 );
+                initial.rx.continuation(&prev.rx)?;
                 initial.tx.continuation(&prev.tx)?;
             }
             self.initials[*v] = Some(initial);
@@ -1044,6 +1045,7 @@ impl CryptoStates {
                 let next = self.initials[confirmed]
                     .as_mut()
                     .ok_or(Error::VersionNegotiation)?;
+                next.rx.continuation(&prev.rx)?;
                 next.tx.continuation(&prev.tx)?;
                 self.initials[orig] = Some(prev);
             }

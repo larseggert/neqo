@@ -18,8 +18,8 @@ use neqo_crypto::{
 #[cfg(not(feature = "disable-encryption"))]
 use test_fixture::datagram;
 use test_fixture::{
-    assertions, assertions::assert_coalesced_0rtt, damage_ech_config, fixture_init, now,
-    split_datagram, DEFAULT_ADDR,
+    assertions::{self, assert_coalesced_0rtt, assert_initial, assert_version},
+    damage_ech_config, fixture_init, now, split_datagram, DEFAULT_ADDR,
 };
 
 use super::{
@@ -525,8 +525,6 @@ fn coalesce_05rtt() {
 #[test]
 fn reorder_handshake() {
     const RTT: Duration = Duration::from_millis(100);
-    // TODO: Figure out why this test is failing when randomized packet number require two bytes of
-    // space. See below.
     let mut client = new_client(ConnectionParameters::default());
     let mut server = default_server();
     let mut now = now();
@@ -544,7 +542,7 @@ fn reorder_handshake() {
     // It can only send another Initial packet.
     now += RTT + RTT / 2; // With multi-packet MLKEM flights, client needs more time here.
     let dgram = client.process(Some(s_handshake), now).dgram();
-    assertions::assert_initial(dgram.as_ref().unwrap(), false);
+    assert_initial(dgram.as_ref().unwrap(), false);
     assert_eq!(client.stats().saved_datagrams, 1);
     assert_eq!(client.stats().packets_rx, 0);
 
@@ -565,9 +563,6 @@ fn reorder_handshake() {
     // That will have been processed by the client.
     assert!((0..=1).contains(&client.stats().packets_rx));
 
-    // TODO: After this call, with single-byte packet numbers, the client has Handshake keys and can
-    // process saved packets. With two-byte packet numbers, it somehow doesn't have Handshake keys
-    // yet.
     client.process_input(s_initial_2, now);
     // Each saved packet should now be "received" again.
     assert!((3..=5).contains(&client.stats().packets_rx));
@@ -588,6 +583,55 @@ fn reorder_handshake() {
     client.process_input(s3.unwrap(), now);
     assert_eq!(*client.state(), State::Confirmed);
     assert_eq!(client.paths.rtt(), RTT);
+}
+
+/// When a compatible version upgrade occurs, the server needs to handle
+/// Initial packets from both versions.  Check that it doesn't drop them,
+/// which would be recoverable, but wasteful.
+#[test]
+fn interleave_versions() {
+    let mut client = new_client(ConnectionParameters::default());
+    let mut server = default_server();
+    let mut now = now();
+
+    let c1 = client.process_output(now).dgram();
+    let c2 = client.process_output(now).dgram();
+    assert!(c1.is_some() && c2.is_some());
+
+    now += AT_LEAST_PTO;
+    let cspare = client.process_output(now).dgram();
+    assert_version(cspare.as_ref().unwrap(), Version::Version1.wire_version());
+    assert_initial(cspare.as_ref().unwrap(), false);
+
+    server.process_input(c1.unwrap(), now);
+    let s1 = server.process(c2, now).dgram().unwrap();
+    let s2 = server.process_output(now).dgram().unwrap();
+
+    client.process_input(s1, now);
+    client.process_input(s2, now);
+    maybe_authenticate(&mut client);
+    let chandshake = client.process_output(now).dgram();
+    assert_version(
+        chandshake.as_ref().unwrap(),
+        Version::Version2.wire_version(),
+    );
+
+    // Now send in the v2 and v1 packets out of order.
+    // Both should be accepted, even though the version is now set to v2.
+    assert!(server.has_version());
+    assert_eq!(server.version(), Version::Version2);
+
+    let before = server.stats();
+    server.process_input(chandshake.unwrap(), now);
+    let after = server.stats();
+    assert!(before.packets_rx < after.packets_rx); // Some number of packets went in.
+    assert_eq!(before.dropped_rx, after.dropped_rx); // None were dropped.
+
+    let before = server.stats();
+    server.process_input(cspare.unwrap(), now);
+    let after = server.stats();
+    assert!(before.packets_rx < after.packets_rx); // Some number of packets went in.
+    assert_eq!(before.dropped_rx + 1, after.dropped_rx); // This packet was padded, so we drop 1.
 }
 
 #[test]
@@ -742,7 +786,7 @@ fn extra_initial_hs() {
                 client.process_output(now).dgram()
             }
         };
-        assertions::assert_initial(c_init.as_ref().unwrap(), false);
+        assert_initial(c_init.as_ref().unwrap(), false);
         now += DEFAULT_RTT / 10;
     }
 
@@ -753,7 +797,7 @@ fn extra_initial_hs() {
     // Until PTO, where another Initial can be used to complete the handshake.
     now += client.process_output(now).callback();
     let c_init = client.process_output(now).dgram();
-    assertions::assert_initial(c_init.as_ref().unwrap(), false);
+    assert_initial(c_init.as_ref().unwrap(), false);
     now += DEFAULT_RTT / 2;
     let s_init = server.process(c_init, now).dgram();
     let s_init_2 = server.process_output(now).dgram();
@@ -1147,7 +1191,7 @@ fn only_server_initial() {
     // The client sends an Initial ACK.
     assert_eq!(client.stats().frame_tx.ack, 0);
     let probe = client.process(Some(server_initial1), now).dgram();
-    assertions::assert_initial(&probe.unwrap(), false);
+    assert_initial(&probe.unwrap(), false);
     assert_eq!(client.stats().dropped_rx, 1);
     assert_eq!(client.stats().frame_tx.ack, 1);
 
@@ -1156,7 +1200,7 @@ fn only_server_initial() {
     assert_eq!(client.stats().frame_tx.ack, 1);
     let discarded = client.stats().dropped_rx;
     let probe = client.process(Some(server_initial2), now).dgram();
-    assertions::assert_initial(&probe.unwrap(), false);
+    assert_initial(&probe.unwrap(), false);
     assert_eq!(client.stats().frame_tx.ack, 2);
     assert_eq!(client.stats().dropped_rx, discarded);
 
@@ -1236,7 +1280,7 @@ fn implicit_rtt_server() {
     client.process_input(dgram, now);
     let dgram = client.process(dgram2, now).dgram();
     let (initial, handshake) = split_datagram(dgram.as_ref().unwrap());
-    assertions::assert_initial(&initial, false);
+    assert_initial(&initial, false);
     assertions::assert_handshake(handshake.as_ref().unwrap());
     now += RTT / 2;
     server.process_input(initial, now);
