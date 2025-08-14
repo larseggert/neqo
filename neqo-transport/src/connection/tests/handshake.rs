@@ -589,8 +589,11 @@ fn reorder_handshake() {
 /// Initial packets from both versions.  Check that it doesn't drop them,
 /// which would be recoverable, but wasteful.
 #[test]
-fn interleave_versions() {
-    let mut client = new_client(ConnectionParameters::default());
+fn interleave_versions_server() {
+    let mut client = new_client(ConnectionParameters::default().versions(
+        Version::Version1,
+        vec![Version::Version2, Version::Version1],
+    ));
     let mut server = default_server();
     let mut now = now();
 
@@ -632,6 +635,68 @@ fn interleave_versions() {
     let after = server.stats();
     assert!(before.packets_rx < after.packets_rx); // Some number of packets went in.
     assert_eq!(before.dropped_rx + 1, after.dropped_rx); // This packet was padded, so we drop 1.
+
+    let done = server.process_output(now).dgram();
+    assert_eq!(*server.state(), State::Confirmed);
+    client.process_input(done.unwrap(), now);
+    assert_eq!(*client.state(), State::Confirmed);
+}
+
+/// When a compatible version upgrade occurs, the client also needs to handle
+/// Initial packets from both versions.
+#[test]
+fn interleave_versions_client() {
+    let mut client = new_client(ConnectionParameters::default().versions(
+        Version::Version1,
+        vec![Version::Version2, Version::Version1],
+    ));
+    let mut server = default_server();
+    let now = now();
+
+    let c1 = client.process_output(now).dgram();
+    let c2 = client.process_output(now).dgram();
+    assert!(c1.is_some() && c2.is_some());
+
+    // The server will ACK the packet, but that's it.
+    let s1 = server.process(c1, now).dgram();
+    assert_initial(s1.as_ref().unwrap(), false);
+    assert_version(s1.as_ref().unwrap(), Version::Version1.wire_version());
+    assert!(!server.has_version());
+
+    // Once it has all the packets the server can choose a version.
+    let s2 = server.process(c2, now).dgram();
+    assert_initial(s2.as_ref().unwrap(), false);
+    assert_version(s2.as_ref().unwrap(), Version::Version2.wire_version());
+    assert!(server.has_version());
+
+    // Receiving the first packet (no CRYPTO) doesn't set the version.
+    client.process_input(s1.unwrap(), now);
+    let client_stats = client.stats();
+    assert_eq!(client_stats.packets_rx, 1); // Just an Initial packet for now.
+    assert_eq!(client_stats.frame_rx.crypto, 0); // No CRYPTO
+    assert!(!client.has_version());
+
+    // The second does.
+    client.process_input(s2.unwrap(), now);
+    assert!(client.has_version());
+    assert_eq!(client.version(), Version::Version2);
+
+    // Let the server finish its handshake (one packet is not enough).
+    let s3 = server.process_output(now).dgram();
+    client.process_input(s3.unwrap(), now);
+
+    // The client finishes with v2 packets.
+    maybe_authenticate(&mut client);
+    let chandshake = client.process_output(now).dgram();
+    assert_version(
+        chandshake.as_ref().unwrap(),
+        Version::Version2.wire_version(),
+    );
+
+    let done = server.process(chandshake, now).dgram();
+    assert_eq!(*server.state(), State::Confirmed);
+    client.process_input(done.unwrap(), now);
+    assert_eq!(*client.state(), State::Confirmed);
 }
 
 #[test]
