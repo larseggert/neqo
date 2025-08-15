@@ -279,6 +279,11 @@ impl Crypto {
         Ok(true)
     }
 
+    #[must_use]
+    pub const fn has_handshake_keys(&self) -> bool {
+        self.states.handshake.is_some() || self.states.app_write.is_some()
+    }
+
     fn maybe_install_application_write_key(&mut self, version: Version) -> Res<()> {
         qtrace!("[{self}] Attempt to install application write key");
         if let Some(secret) = self.tls.write_secret(Epoch::ApplicationData) {
@@ -1031,7 +1036,12 @@ impl CryptoStates {
     /// This is maybe slightly inefficient in the first case, because we might
     /// not need the send keys if the packet is subsequently discarded, but
     /// the overall effort is small enough to write off.
-    pub fn init_server(&mut self, version: Version, dcid: &[u8], randomize_first_pn: bool) -> Res<()> {
+    pub fn init_server(
+        &mut self,
+        version: Version,
+        dcid: &[u8],
+        randomize_first_pn: bool,
+    ) -> Res<()> {
         if self.initials[version].is_none() {
             self.init(&[version], Role::Server, dcid, randomize_first_pn)?;
         }

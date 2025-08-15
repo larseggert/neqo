@@ -936,7 +936,7 @@ impl Connection {
     pub fn authenticated(&mut self, status: AuthenticationStatus, now: Instant) {
         qdebug!("[{self}] Authenticated {status:?}");
         self.crypto.tls_mut().authenticated(status);
-        let res = self.handshake(now, PacketNumberSpace::Handshake, None);
+        let res = self.handshake(now, PacketNumberSpace::Handshake, self.version, None);
         self.absorb_error(now, res);
         self.process_saved(now);
     }
@@ -2015,16 +2015,6 @@ impl Connection {
         }
     }
 
-    fn has_version(&self) -> bool {
-        if self.role == Role::Server {
-            // The server knows the final version if it has remote transport parameters.
-            self.tps.borrow().remote_handshake().is_some()
-        } else {
-            // The client knows the final version if it has received any CRYPTO frame.
-            self.stats.borrow().frame_rx.crypto > 0
-        }
-    }
-
     /// Migrate to the provided path.
     /// Either local or remote address (but not both) may be provided as `None` to have
     /// the address from the current primary path used.
@@ -2505,7 +2495,9 @@ impl Connection {
 
             #[cfg(test)]
             if let Some(w) = &mut self.test_frame_writer {
-                w.write_frames(builder);
+                if !builder.is_full() {
+                    w.write_frames(builder);
+                }
             }
         }
 
@@ -2857,7 +2849,7 @@ impl Connection {
             now,
         );
 
-        self.handshake(now, PacketNumberSpace::Initial, None)?;
+        self.handshake(now, PacketNumberSpace::Initial, self.version, None)?;
         self.set_state(State::WaitInitial, now);
         self.zero_rtt_state = if self.crypto.enable_0rtt(self.version, self.role)? {
             qdebug!("[{self}] Enabled 0-RTT");
@@ -3067,13 +3059,8 @@ impl Connection {
         }
     }
 
-    fn confirm_version(&mut self, v: Version) -> Res<()> {
-        if self.version != v {
-            qdebug!("[{self}] Compatible upgrade {:?} ==> {v:?}", self.version);
-        }
-        self.crypto.confirm_version(v)?;
-        self.version = v;
-        Ok(())
+    const fn has_version(&self) -> bool {
+        self.crypto.has_handshake_keys()
     }
 
     /// Commit to a particular version.
@@ -3081,15 +3068,13 @@ impl Connection {
     /// `packet_version` is set to `Some` when the client is calling,
     /// because that is what determines the version.
     /// For a server, the version is taken from the transport parameters.
-    fn compatible_upgrade(&mut self, packet_version: Option<Version>) -> Res<()> {
+    fn compatible_upgrade(&mut self, packet_version: Version) -> Res<()> {
         if !matches!(self.state, State::WaitInitial | State::WaitVersion) {
             return Ok(());
         }
 
-        debug_assert!(self.has_version());
-        debug_assert_eq!(self.role == Role::Client, packet_version.is_some());
-        let version = if let Some(version) = packet_version {
-            version
+        let v = if self.role == Role::Client {
+            packet_version
         } else {
             let version = self.tps.borrow().version();
             let dcid = self
@@ -3100,7 +3085,13 @@ impl Connection {
             self.crypto.states_mut().init_server(version, dcid, false)?;
             version
         };
-        self.confirm_version(version)?;
+
+        // OK, it's all confirmed.
+        if self.version != v {
+            qdebug!("[{self}] Compatible upgrade {:?} ==> {v:?}", self.version);
+            self.version = v;
+        }
+        self.crypto.confirm_version(v)?;
         Ok(())
     }
 
@@ -3108,6 +3099,7 @@ impl Connection {
         &mut self,
         now: Instant,
         space: PacketNumberSpace,
+        packet_version: Version,
         data: Option<&[u8]>,
     ) -> Res<()> {
         qtrace!(
@@ -3145,9 +3137,9 @@ impl Connection {
             // We have transport parameters, it's go time.
             if self.tps.borrow().remote_handshake().is_some() {
                 self.set_initial_limits();
-                if self.role == Role::Server {
-                    self.compatible_upgrade(None)?;
-                }
+            }
+            if self.crypto.tls().has_secret(Epoch::Handshake) {
+                self.compatible_upgrade(packet_version)?;
             }
             if self.crypto.install_keys(self.role)? {
                 self.saved_datagrams.make_available(Epoch::Handshake);
@@ -3232,14 +3224,20 @@ impl Connection {
                     .streams_mut()
                     .inbound_frame(space, offset, data)?;
 
-                if self.role == Role::Client && space == PacketNumberSpace::Initial {
-                    self.compatible_upgrade(Some(packet_version))?;
-                }
+                /*  if self.role == Role::Client
+                    && space == PacketNumberSpace::Initial
+                    && packet_version != self.version
+                {
+                    // If the server has switched versions, switch to that version.
+                    // This is an assumption, but very often a good one.
+                    // This function checks the state and does nothing if we have a version.
+                    self.compatible_upgrade(packet_version, now)?;
+                } */
 
                 if self.crypto.streams().data_ready(space) {
                     let mut buf = Vec::new();
                     let _read = self.crypto.streams_mut().read_to_end(space, &mut buf);
-                    self.handshake(now, space, Some(&buf))?;
+                    self.handshake(now, space, packet_version, Some(&buf))?;
                     self.create_resumption_token(now);
                 } else {
                     // If we get a useless CRYPTO frame send outstanding CRYPTO frames and 0-RTT
