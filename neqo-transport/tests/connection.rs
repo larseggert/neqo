@@ -88,7 +88,7 @@ fn reorder_server_initial() {
         client_default_params()
             .versions(Version::Version1, vec![Version::Version1])
             .mlkem(false)
-            .randomize_ci_pn(false),
+            .randomize_first_pn(false),
     );
     let mut server = default_server();
 
@@ -320,15 +320,15 @@ fn handshake_mlkem768x25519() {
 
 #[test]
 fn client_initial_packet_number() {
-    // Check that the initial packet number is randomized (i.e, > 0) if the `randomize_ci_pn`
+    // Check that the initial packet number is randomized (i.e, > 0) if the `randomize_first_pn`
     // connection parameter is set, and that it is zero when not.
-    for randomize_ci_pn in [true, false] {
+    for randomize in [true, false] {
         // This test needs to decrypt the CI, so turn off MLKEM.
         let mut client = new_client(
             client_default_params()
                 .versions(Version::Version1, vec![Version::Version1])
                 .mlkem(false)
-                .randomize_ci_pn(randomize_ci_pn),
+                .randomize_first_pn(randomize),
         );
 
         let client_initial = client.process_output(now());
@@ -336,6 +336,46 @@ fn client_initial_packet_number() {
             decode_initial_header(client_initial.as_dgram_ref().unwrap(), Role::Client).unwrap();
         let (_, hp) = initial_aead_and_hp(client_dcid, Role::Client);
         let (_, pn) = header_protection::remove(&hp, protected_header, payload);
-        assert!(randomize_ci_pn && pn > 0 || !randomize_ci_pn && pn == 0);
+        assert!(
+            randomize && pn > 0 || !randomize && pn == 0,
+            "randomize {randomize} = {pn}"
+        );
+    }
+}
+
+#[test]
+fn server_initial_packet_number() {
+    // Check that the initial packet number is randomized (i.e, > 0) if the `randomize_first_pn`
+    // connection parameter is set, and that it is zero when not.
+    for randomize in [true, false] {
+        // This test needs to decrypt the CI, so turn off MLKEM.
+        let mut client = new_client(
+            client_default_params()
+                .versions(Version::Version1, vec![Version::Version1])
+                .mlkem(false),
+        );
+        let mut server = new_server(
+            DEFAULT_ALPN,
+            server_default_params()
+                .versions(Version::Version1, vec![Version::Version1])
+                .randomize_first_pn(randomize),
+        );
+
+        let client_initial = client.process_output(now()).dgram();
+        let (_protected_header, client_dcid, _scid, _payload) =
+            decode_initial_header(client_initial.as_ref().unwrap(), Role::Client).unwrap();
+
+        let (_, hp) = initial_aead_and_hp(client_dcid, Role::Server);
+
+        let server_initial = server.process(client_initial, now()).dgram();
+        let (protected_header, _dcid, _scid, payload) =
+            decode_initial_header(server_initial.as_ref().unwrap(), Role::Server).unwrap();
+
+        let (_, pn) = header_protection::remove(&hp, protected_header, payload);
+        println!();
+        assert!(
+            randomize && pn > 0 || !randomize && pn == 0,
+            "randomize {randomize} = {pn}"
+        );
     }
 }

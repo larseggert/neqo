@@ -93,7 +93,7 @@ fn ticket_rtt(rtt: Duration) -> Duration {
         client_default_params()
             .versions(Version::Version1, vec![Version::Version1])
             .mlkem(false)
-            .randomize_ci_pn(false),
+            .randomize_first_pn(false),
     );
     let mut server = default_server();
     let mut now = now();

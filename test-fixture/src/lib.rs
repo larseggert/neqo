@@ -219,7 +219,7 @@ pub fn new_client(params: ConnectionParameters) -> Connection {
 pub fn server_default_params() -> ConnectionParameters {
     ConnectionParameters::default()
         .ack_ratio(255)
-        .randomize_ci_pn(false)
+        .randomize_first_pn(false)
 }
 
 /// Create a transport server with default configuration.

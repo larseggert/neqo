@@ -100,8 +100,8 @@ pub struct ConnectionParameters {
     sni_slicing: bool,
     /// Whether to enable mlkem768nistp256-sha256.
     mlkem: bool,
-    /// Whether to randomize the initial packet number.
-    randomize_ci_pn: bool,
+    /// Whether to randomize the packet number of the first Initial packet.
+    randomize_first_pn: bool,
 }
 
 impl Default for ConnectionParameters {
@@ -132,7 +132,7 @@ impl Default for ConnectionParameters {
             pmtud_iface_mtu: true,
             sni_slicing: true,
             mlkem: true,
-            randomize_ci_pn: true,
+            randomize_first_pn: true,
         }
     }
 }
@@ -427,13 +427,13 @@ impl ConnectionParameters {
     }
 
     #[must_use]
-    pub const fn randomize_ci_pn_enabled(&self) -> bool {
-        self.randomize_ci_pn
+    pub const fn randomize_first_pn_enabled(&self) -> bool {
+        self.randomize_first_pn
     }
 
     #[must_use]
-    pub const fn randomize_ci_pn(mut self, randomize_ci_pn: bool) -> Self {
-        self.randomize_ci_pn = randomize_ci_pn;
+    pub const fn randomize_first_pn(mut self, randomize_first_pn: bool) -> Self {
+        self.randomize_first_pn = randomize_first_pn;
         self
     }
 

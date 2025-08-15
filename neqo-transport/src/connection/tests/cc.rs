@@ -61,7 +61,7 @@ enum CongestionSignal {
 fn cc_slow_start_to_cong_avoidance_recovery_period(congestion_signal: CongestionSignal) {
     // This test needs to calculate largest_acked, which is difficult if packet number
     // randomization is enabled.
-    let mut client = new_client(client_default_params().randomize_ci_pn(false));
+    let mut client = new_client(client_default_params().randomize_first_pn(false));
     let mut server = default_server();
     let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
 

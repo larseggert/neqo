@@ -388,7 +388,7 @@ impl Connection {
         now: Instant,
     ) -> Res<Self> {
         let dcid = ConnectionId::generate_initial();
-        let randomize_ci_pn = conn_params.randomize_ci_pn_enabled();
+        let randomize_first_pn = conn_params.randomize_first_pn_enabled();
         let mut c = Self::new(
             Role::Client,
             Agent::from(Client::new(server_name.into(), conn_params.is_greasing())?),
@@ -400,7 +400,7 @@ impl Connection {
             c.conn_params.get_versions().compatible(),
             Role::Client,
             &dcid,
-            randomize_ci_pn,
+            randomize_first_pn,
         )?;
         c.original_destination_cid = Some(dcid);
         let path = Path::temporary(
@@ -1536,7 +1536,7 @@ impl Connection {
                 self.crypto.states_mut().init_server(
                     version,
                     &dcid,
-                    self.conn_params.randomize_ci_pn_enabled(),
+                    self.conn_params.randomize_first_pn_enabled(),
                 )?;
                 self.original_destination_cid = Some(dcid);
                 self.set_state(State::WaitInitial, now);

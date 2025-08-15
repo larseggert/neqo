@@ -439,8 +439,11 @@ fn vn_after_retry() {
 fn mitm_retry() {
     // This test decrypts packets and hence does not work with MLKEM and packet number randomization
     // enabled.
-    let mut client =
-        test_fixture::new_client(client_default_params().mlkem(false).randomize_ci_pn(false));
+    let mut client = test_fixture::new_client(
+        client_default_params()
+            .mlkem(false)
+            .randomize_first_pn(false),
+    );
     let mut retry_server = default_server();
     retry_server.set_validation(ValidateAddress::Always);
     let mut server = default_server();

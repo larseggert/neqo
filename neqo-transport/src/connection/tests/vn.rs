@@ -547,7 +547,7 @@ fn server_initial_versions() {
                 Version::Version1,
                 vec![Version::Version2, Version::Version1],
             )
-            .randomize_ci_pn(true),
+            .randomize_first_pn(true),
     );
     let mut server = new_server(
         server_default_params()
@@ -555,7 +555,7 @@ fn server_initial_versions() {
                 Version::Version1,
                 vec![Version::Version2, Version::Version1],
             )
-            .randomize_ci_pn(true),
+            .randomize_first_pn(true),
     );
     let now = now();
 
@@ -598,7 +598,7 @@ fn client_initial_versions() {
                 Version::Version1,
                 vec![Version::Version2, Version::Version1],
             )
-            .randomize_ci_pn(true),
+            .randomize_first_pn(true),
     );
     let mut server = new_server(
         server_default_params()
@@ -606,7 +606,7 @@ fn client_initial_versions() {
                 Version::Version1,
                 vec![Version::Version2, Version::Version1],
             )
-            .randomize_ci_pn(true),
+            .randomize_first_pn(true),
     );
     let mut now = now();
 

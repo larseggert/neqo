@@ -139,7 +139,7 @@ fn zero_len_cid_client(local_addr: SocketAddr, remote_addr: SocketAddr) -> Conne
 }
 
 pub fn server_default_params() -> ConnectionParameters {
-    ConnectionParameters::default().randomize_ci_pn(false)
+    ConnectionParameters::default().randomize_first_pn(false)
 }
 
 pub fn new_server(params: ConnectionParameters) -> Connection {

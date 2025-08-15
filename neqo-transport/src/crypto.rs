@@ -976,7 +976,7 @@ impl CryptoStates {
         versions: V,
         role: Role,
         dcid: &[u8],
-        randomize_ci_pn: bool,
+        randomize_first_pn: bool,
     ) -> Res<()>
     where
         V: IntoIterator<Item = &'v Version>,
@@ -989,7 +989,7 @@ impl CryptoStates {
             Role::Server => (SERVER_INITIAL_LABEL, CLIENT_INITIAL_LABEL),
         };
 
-        let min_pn = if randomize_ci_pn {
+        let min_pn = if randomize_first_pn {
             let r = random::<4>();
             let pn = packet::Number::from;
             // A 16 bit starting packet number with the low 5 bits uniformly random.
@@ -1031,9 +1031,9 @@ impl CryptoStates {
     /// This is maybe slightly inefficient in the first case, because we might
     /// not need the send keys if the packet is subsequently discarded, but
     /// the overall effort is small enough to write off.
-    pub fn init_server(&mut self, version: Version, dcid: &[u8], randomize_ci_pn: bool) -> Res<()> {
+    pub fn init_server(&mut self, version: Version, dcid: &[u8], randomize_first_pn: bool) -> Res<()> {
         if self.initials[version].is_none() {
-            self.init(&[version], Role::Server, dcid, randomize_ci_pn)?;
+            self.init(&[version], Role::Server, dcid, randomize_first_pn)?;
         }
         Ok(())
     }
