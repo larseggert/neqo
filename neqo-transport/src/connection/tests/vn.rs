@@ -7,17 +7,22 @@
 use std::time::Duration;
 
 use neqo_common::{event::Provider as _, Decoder, Dscp, Encoder};
-use test_fixture::{assertions, datagram, now};
+use test_fixture::{
+    assertions::{self, assert_initial, assert_version},
+    datagram, now, split_datagram,
+};
 
 use super::{
     super::{CloseReason, ConnectionEvent, Output, State, ZeroRttState},
-    connect, connect_fail, default_client, default_server, exchange_ticket, new_client, new_server,
-    send_something,
+    client_default_params, connect, connect_fail, default_client, default_server, exchange_ticket,
+    new_client, new_server, send_something, server_default_params,
 };
 use crate::{
-    packet::PACKET_BIT_LONG,
+    connection::{test_internal, tests::AT_LEAST_PTO},
+    frame::FrameType,
+    packet::{self, PACKET_BIT_LONG},
     tparams::{TransportParameter, TransportParameterId::*},
-    ConnectionParameters, Error, Stats, Version, MIN_INITIAL_PACKET_SIZE,
+    Error, Stats, Version, MIN_INITIAL_PACKET_SIZE,
 };
 
 // The expected PTO duration after the first Initial is sent.
@@ -252,18 +257,20 @@ fn compatible_upgrade() {
 /// packets in version 1.  Both client and server need to handle that gracefully.
 #[test]
 fn compatible_upgrade_large_initial() {
-    let params = ConnectionParameters::default().versions(
+    let mut client = new_client(client_default_params().versions(
         Version::Version1,
         vec![Version::Version2, Version::Version1],
-    );
-    let mut client = new_client(params.clone());
+    ));
     client
         .set_local_tparam(
             TestTransportParameter,
             TransportParameter::Bytes(vec![0; 2048]),
         )
         .unwrap();
-    let mut server = new_server(params);
+    let mut server = new_server(server_default_params().versions(
+        Version::Version1,
+        vec![Version::Version2, Version::Version1],
+    ));
 
     // Client Initial should take 2 packets.
     // Each should elicit a Version 1 ACK from the server.
@@ -274,7 +281,7 @@ fn compatible_upgrade_large_initial() {
     let dgram = server.process(dgram2, now()).dgram();
     assert!(dgram.is_some());
     // The following uses the Version from *outside* this crate.
-    assertions::assert_version(dgram.as_ref().unwrap(), Version::Version1.wire_version());
+    assert_version(dgram.as_ref().unwrap(), Version::Version1.wire_version());
     client.process_input(dgram.unwrap(), now());
 
     connect(&mut client, &mut server);
@@ -298,11 +305,11 @@ fn compatible_upgrade_large_initial() {
 /// This one starts with version 1 and stays there.
 #[test]
 fn compatible_no_upgrade() {
-    let mut client = new_client(ConnectionParameters::default().versions(
+    let mut client = new_client(client_default_params().versions(
         Version::Version1,
         vec![Version::Version2, Version::Version1],
     ));
-    let mut server = new_server(ConnectionParameters::default().versions(
+    let mut server = new_server(server_default_params().versions(
         Version::Version1,
         vec![Version::Version1, Version::Version2],
     ));
@@ -316,11 +323,11 @@ fn compatible_no_upgrade() {
 /// This one starts with version 2 and downgrades to version 1.
 #[test]
 fn compatible_downgrade() {
-    let mut client = new_client(ConnectionParameters::default().versions(
+    let mut client = new_client(client_default_params().versions(
         Version::Version2,
         vec![Version::Version2, Version::Version1],
     ));
-    let mut server = new_server(ConnectionParameters::default().versions(
+    let mut server = new_server(server_default_params().versions(
         Version::Version2,
         vec![Version::Version1, Version::Version2],
     ));
@@ -341,8 +348,7 @@ fn version_negotiation_downgrade() {
     // protects Initial packets with the version in its configuration.
     // When a server `Connection` is created by a `Server`, the configuration is set
     // to match the version of the packet it first receives.  This replicates that.
-    let mut server =
-        new_server(ConnectionParameters::default().versions(DOWNGRADE, Version::all()));
+    let mut server = new_server(server_default_params().versions(DOWNGRADE, Version::all()));
 
     // Start the handshake and spoof a VN packet.
     let initial = client.process_output(now()).dgram().unwrap();
@@ -363,9 +369,9 @@ fn version_negotiation_downgrade() {
 #[test]
 fn invalid_server_version() {
     let mut client =
-        new_client(ConnectionParameters::default().versions(Version::Version1, Version::all()));
+        new_client(client_default_params().versions(Version::Version1, Version::all()));
     let mut server =
-        new_server(ConnectionParameters::default().versions(Version::Version2, Version::all()));
+        new_server(server_default_params().versions(Version::Version2, Version::all()));
 
     let dgram = client.process_output(now()).dgram();
     let dgram2 = client.process_output(now()).dgram();
@@ -425,9 +431,8 @@ fn invalid_current_version_server() {
     const OTHER_VERSION: Version = Version::Draft29;
 
     let mut client = default_client();
-    let mut server = new_server(
-        ConnectionParameters::default().versions(Version::default(), vec![Version::default()]),
-    );
+    let mut server =
+        new_server(server_default_params().versions(Version::default(), vec![Version::default()]));
 
     assert!(!Version::default().is_compatible(OTHER_VERSION));
     server
@@ -478,14 +483,13 @@ fn no_compatible_version() {
 #[test]
 fn compatible_upgrade_0rtt_rejected() {
     // This is the baseline configuration where v1 is attempted and v2 preferred.
-    let prefer_v2 = ConnectionParameters::default().versions(
+    let prefer_v2 = client_default_params().versions(
         Version::Version1,
         vec![Version::Version2, Version::Version1],
     );
     let mut client = new_client(prefer_v2.clone());
     // The server will start with this so that the client resumes with v1.
-    let just_v1 =
-        ConnectionParameters::default().versions(Version::Version1, vec![Version::Version1]);
+    let just_v1 = server_default_params().versions(Version::Version1, vec![Version::Version1]);
     let mut server = new_server(just_v1);
 
     connect(&mut client, &mut server);
@@ -493,14 +497,17 @@ fn compatible_upgrade_0rtt_rejected() {
     let token = exchange_ticket(&mut client, &mut server, now());
 
     // Now upgrade the server to the preferred configuration.
-    let mut client = new_client(prefer_v2.clone());
-    let mut server = new_server(prefer_v2);
+    let mut client = new_client(prefer_v2);
+    let mut server = new_server(server_default_params().versions(
+        Version::Version1,
+        vec![Version::Version2, Version::Version1],
+    ));
     client.enable_resumption(now(), token).unwrap();
 
     // Create a packet with 0-RTT from the client.
     let initial = send_something(&mut client, now());
     let initial2 = send_something(&mut client, now());
-    assertions::assert_version(&initial, Version::Version1.wire_version());
+    assert_version(&initial, Version::Version1.wire_version());
     assertions::assert_coalesced_0rtt(&initial2);
     server.process_input(initial, now());
     server.process_input(initial2, now());
@@ -525,4 +532,136 @@ fn compatible_upgrade_0rtt_rejected() {
         matches!(e, ConnectionEvent::ZeroRttRejected)
     }));
     assert_eq!(client.zero_rtt_state(), ZeroRttState::Rejected);
+}
+
+/// When the server confirms a new version the client will switch to using v2.
+/// If the client has sent a v1 packet with a packet number larger
+/// than 255 AND the server has acknowledged that packet,
+/// the client might send a v2 Initial packet with a truncated packet number.
+/// The server could fail to process that packet if it is not tracking
+/// packet receipt correctly.
+#[test]
+fn server_initial_versions() {
+    let mut client = new_client(
+        client_default_params()
+            .versions(
+                Version::Version1,
+                vec![Version::Version2, Version::Version1],
+            )
+            .randomize_first_pn(true),
+    );
+    let mut server = new_server(
+        server_default_params()
+            .versions(
+                Version::Version1,
+                vec![Version::Version2, Version::Version1],
+            )
+            .randomize_first_pn(true),
+    );
+    let now = now();
+
+    // Two handshake packets.
+    let c1 = client.process_output(now).dgram();
+    let c2 = client.process_output(now).dgram();
+    assert!(c1.is_some() && c2.is_some());
+
+    // Processing the first produces a v1 ACK.
+    let s1 = server.process(c1, now).dgram();
+    assert_version(s1.as_ref().unwrap(), Version::Version1.wire_version());
+    // The second confirms the use of v2.
+    let s2 = server.process(c2, now).dgram();
+    assert_version(s2.as_ref().unwrap(), Version::Version2.wire_version());
+
+    // Feeding the client just the Initial packets will force it to ACK.
+    // This should have a truncated packet number (if randomized enough).
+    client.process_input(s1.unwrap(), now);
+    let (s2_init, _s2_hs) = split_datagram(&s2.unwrap());
+    client.process_input(s2_init, now);
+    let c3 = client.process_output(now).dgram();
+    assert_initial(c3.as_ref().unwrap(), false);
+
+    // The server should be able to decrypt and process that packet.
+    // To avoid having Initial padding fouling the drop count,
+    // split the datagram so that it only includes the Initial packet.
+    let (c3_init, _padding) = split_datagram(&c3.unwrap());
+    let before = server.stats();
+    server.process_input(c3_init, now);
+    let after = server.stats();
+    assert_eq!(before.packets_rx + 1, after.packets_rx);
+    assert_eq!(before.dropped_rx, after.dropped_rx);
+}
+
+/// When the server confirms a new version it switches to sending v2 packets.
+/// If the client has sent a v1 packet with a packet number larger
+/// than 255 AND the server has acknowledged that packet,
+/// the client might send a v2 Initial packet with a truncated packet number.
+/// The client could fail to process that packet if it is not tracking
+/// packet receipt correctly.
+#[test]
+fn client_initial_versions() {
+    pub struct CryptoWriter {}
+
+    impl test_internal::FrameWriter for CryptoWriter {
+        fn write_frames(&mut self, builder: &mut packet::Builder<&mut Vec<u8>>) {
+            // A first byte of 2 is the byte that indicates a ServerHello.
+            builder.encode_varint(FrameType::Crypto);
+            builder.encode_varint(0_u64); // Offset
+            builder.encode_varint(1_u64); // Length
+            builder.encode_byte(2);
+        }
+    }
+
+    let mut client = new_client(
+        client_default_params()
+            .versions(
+                Version::Version1,
+                vec![Version::Version2, Version::Version1],
+            )
+            .randomize_first_pn(true),
+    );
+    let mut server = new_server(
+        server_default_params()
+            .versions(
+                Version::Version1,
+                vec![Version::Version2, Version::Version1],
+            )
+            .randomize_first_pn(true),
+    );
+    let mut now = now();
+
+    // Two handshake packets.
+    let c1 = client.process_output(now).dgram();
+    let c2 = client.process_output(now).dgram();
+    assert!(c1.is_some() && c2.is_some());
+
+    // Processing the first produces a v1 ACK.
+    // But we also need to force the client to send an ACK for this packet.
+    // We can do that with a forced CRYPTO frame.
+    server.test_frame_writer = Some(Box::new(CryptoWriter {}));
+    let s1 = server.process(c1, now).dgram();
+    server.test_frame_writer = None;
+    assert_version(s1.as_ref().unwrap(), Version::Version1.wire_version());
+
+    // Receiving the ACK then letting a PTO lapse means that the client
+    // sends the handshake again, with an ACK for the server.
+    client.process_input(s1.unwrap(), now);
+    now += AT_LEAST_PTO;
+    let c3 = client.process_output(now).dgram();
+    server.process_input(c3.unwrap(), now);
+
+    // Let the server have the second client packet (it shouldn't need it).
+    // The response should be a v2 packet with a truncated packet number.
+    // We can't really test that though.
+    let s2 = server.process(c2, now).dgram();
+    assert_version(s2.as_ref().unwrap(), Version::Version2.wire_version());
+
+    // The client should be able to decrypt and process that packet.
+    // To avoid having Initial padding fouling the drop count,
+    // split the datagram so that it only includes the Initial packet.
+    let (s2_init, _padding) = split_datagram(&s2.unwrap());
+    let before = client.stats();
+    client.process_input(s2_init, now);
+    let after = client.stats();
+    assert_eq!(before.packets_rx + 1, after.packets_rx);
+    assert_eq!(before.dropped_rx, after.dropped_rx);
 }

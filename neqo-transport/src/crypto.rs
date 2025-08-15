@@ -188,12 +188,13 @@ impl Crypto {
         data: Option<&[u8]>,
     ) -> Res<&HandshakeState> {
         let input = data.map(|d| {
-            qtrace!("Handshake record received {d:0x?} ");
-            Record {
+            let rec = Record {
                 ct: TLS_CT_HANDSHAKE,
                 epoch: space.into(),
                 data: d.to_vec(),
-            }
+            };
+            qtrace!("Handshake record received {rec:?} ");
+            rec
         });
 
         match self.tls.handshake_raw(now, input) {
@@ -276,6 +277,11 @@ impl Crypto {
             .set_handshake_keys(self.version, &write_secret, &read_secret, cipher)?;
         qdebug!("[{self}] Handshake keys installed");
         Ok(true)
+    }
+
+    #[must_use]
+    pub const fn has_handshake_keys(&self) -> bool {
+        self.states.handshake.is_some() || self.states.app_write.is_some()
     }
 
     fn maybe_install_application_write_key(&mut self, version: Version) -> Res<()> {
@@ -919,10 +925,33 @@ impl CryptoStates {
     }
 
     pub fn rx_hp(&mut self, version: Version, epoch: Epoch) -> Option<&mut CryptoDxState> {
-        if epoch == Epoch::ApplicationData {
-            self.app_read.as_mut().map(|ar| &mut ar.dx)
-        } else {
-            self.rx(version, epoch, false)
+        match epoch {
+            Epoch::ApplicationData => self.app_read.as_mut().map(|ar| &mut ar.dx),
+            Epoch::Initial => {
+                // When removing header protection, there might be multiple Initial
+                // keys in use.  The `used_pn` range tracks what has been received.
+                // But if the version changes, the version we select might have
+                // a value of 0, rather than the actual value.
+                // That can cause packet number recovery to fail.
+                // To avoid that, tweak the end of the value we return.
+                if self.initials[version]
+                    .as_ref()
+                    .is_some_and(|dx| dx.rx.next_pn() == 0)
+                {
+                    if let Some(other) = self.initials.iter().find_map(|(k, v)| {
+                        v.as_ref().is_some_and(|z| z.rx.next_pn() > 0).then_some(k)
+                    }) {
+                        if let Some(mut next) = self.initials[version].take() {
+                            if let Some(prev) = self.initials[other].as_ref().map(|dx| &dx.rx) {
+                                _ = next.rx.continuation(prev);
+                            }
+                            self.initials[version] = Some(next);
+                        }
+                    }
+                }
+                self.rx(version, epoch, false)
+            }
+            _ => self.rx(version, epoch, false),
         }
     }
 
@@ -975,7 +1004,7 @@ impl CryptoStates {
         versions: V,
         role: Role,
         dcid: &[u8],
-        randomize_ci_pn: bool,
+        randomize_first_pn: bool,
     ) -> Res<()>
     where
         V: IntoIterator<Item = &'v Version>,
@@ -988,9 +1017,15 @@ impl CryptoStates {
             Role::Server => (SERVER_INITIAL_LABEL, CLIENT_INITIAL_LABEL),
         };
 
-        let min_pn = if randomize_ci_pn {
-            let r = random::<2>();
-            packet::Number::from(r[0] & r[1]) + 1
+        let min_pn = if randomize_first_pn {
+            let r = random::<4>();
+            let pn = packet::Number::from;
+            // A 16 bit starting packet number with the low 5 bits uniformly random.
+            // Then maybe add up to 256 to occasionally nudge into a second byte
+            // for both varint and packet number encodings.
+            // And a small offset to ensure that the value is always non-zero.
+            // TODO: change the 300 offset to be 1.
+            (pn(r[0]) & 0x1f) + (pn(r[1]) + pn(r[2]) + pn(r[3])).saturating_sub(512) + 300
         } else {
             0
         };
@@ -1010,6 +1045,7 @@ impl CryptoStates {
                     "[{self}] Continue packet numbers for initial after retry (write is {:?})",
                     prev.rx.used_pn,
                 );
+                initial.rx.continuation(&prev.rx)?;
                 initial.tx.continuation(&prev.tx)?;
             }
             self.initials[*v] = Some(initial);
@@ -1023,12 +1059,14 @@ impl CryptoStates {
     /// This is maybe slightly inefficient in the first case, because we might
     /// not need the send keys if the packet is subsequently discarded, but
     /// the overall effort is small enough to write off.
-    pub fn init_server(&mut self, version: Version, dcid: &[u8]) -> Res<()> {
+    pub fn init_server(
+        &mut self,
+        version: Version,
+        dcid: &[u8],
+        randomize_first_pn: bool,
+    ) -> Res<()> {
         if self.initials[version].is_none() {
-            // We are not randomizing the server initial packet number, since we don't ship the
-            // server as a product, and doing so means more changes to the current tests to handle
-            // that (or disable it there).
-            self.init(&[version], Role::Server, dcid, false)?;
+            self.init(&[version], Role::Server, dcid, randomize_first_pn)?;
         }
         Ok(())
     }
@@ -1043,6 +1081,7 @@ impl CryptoStates {
                 let next = self.initials[confirmed]
                     .as_mut()
                     .ok_or(Error::VersionNegotiation)?;
+                next.rx.continuation(&prev.rx)?;
                 next.tx.continuation(&prev.tx)?;
                 self.initials[orig] = Some(prev);
             }

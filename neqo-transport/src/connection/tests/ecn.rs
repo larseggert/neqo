@@ -15,14 +15,15 @@ use test_fixture::{
 
 use crate::{
     connection::tests::{
-        assert_path_challenge_min_len, connect_force_idle, connect_force_idle_with_modifier,
-        default_client, default_server, handshake_with_modifier, migration::get_cid, new_client,
-        new_server, send_and_receive, send_something, send_something_with_modifier,
-        send_with_modifier_and_receive, DEFAULT_RTT,
+        assert_path_challenge_min_len, client_default_params, connect_force_idle,
+        connect_force_idle_with_modifier, default_client, default_server, handshake_with_modifier,
+        migration::get_cid, new_client, new_server, send_and_receive, send_something,
+        send_something_with_modifier, send_with_modifier_and_receive, server_default_params,
+        DEFAULT_RTT,
     },
     ecn, packet,
     path::MAX_PATH_PROBES,
-    ConnectionEvent, ConnectionId, ConnectionParameters, Output, StreamType,
+    ConnectionEvent, ConnectionId, Output, StreamType,
 };
 
 fn assert_ecn_enabled(tos: Tos) {
@@ -81,7 +82,7 @@ fn handshake_delay_with_ecn_blackhole() {
     let start = now();
     // `handshake_with_modifier` with-multi packet Intial flights will throw off the RTT calculation
     // below.
-    let mut client = new_client(ConnectionParameters::default().mlkem(false));
+    let mut client = new_client(client_default_params().mlkem(false));
     let mut server = default_server();
     let finish = handshake_with_modifier(
         &mut client,
@@ -104,7 +105,7 @@ fn handshake_delay_with_ecn_blackhole() {
 #[test]
 fn request_response_delay_after_handshake_with_ecn_blackhole() {
     let mut now = now();
-    let mut client = new_client(ConnectionParameters::default().mlkem(false));
+    let mut client = new_client(client_default_params().mlkem(false));
     let mut server = default_server();
     now = handshake_with_modifier(
         &mut client,
@@ -350,8 +351,8 @@ pub fn migration_with_modifiers(
     burst: usize,
 ) -> (Tos, Tos, bool) {
     fixture_init();
-    let mut client = new_client(ConnectionParameters::default().max_streams(StreamType::UniDi, 64));
-    let mut server = new_server(ConnectionParameters::default().max_streams(StreamType::UniDi, 64));
+    let mut client = new_client(client_default_params().max_streams(StreamType::UniDi, 64));
+    let mut server = new_server(server_default_params().max_streams(StreamType::UniDi, 64));
 
     connect_force_idle_with_modifier(&mut client, &mut server, orig_path_modifier);
     let mut now = now();

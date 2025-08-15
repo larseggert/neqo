@@ -18,15 +18,16 @@ use neqo_crypto::{
 #[cfg(not(feature = "disable-encryption"))]
 use test_fixture::datagram;
 use test_fixture::{
-    assertions, assertions::assert_coalesced_0rtt, damage_ech_config, fixture_init, now,
-    split_datagram, DEFAULT_ADDR,
+    assertions::{self, assert_coalesced_0rtt, assert_initial, assert_version},
+    damage_ech_config, fixture_init, now, split_datagram, DEFAULT_ADDR,
 };
 
 use super::{
     super::{Connection, Output, State},
-    assert_error, connect, connect_force_idle, connect_with_rtt, default_client, default_server,
-    get_tokens, handshake, maybe_authenticate, resumed_server, send_something, zero_len_cid_client,
-    CountingConnectionIdGenerator, AT_LEAST_PTO, DEFAULT_RTT, DEFAULT_STREAM_DATA,
+    assert_error, client_default_params, connect, connect_force_idle, connect_with_rtt,
+    default_client, default_server, get_tokens, handshake, maybe_authenticate, resumed_server,
+    send_something, server_default_params, zero_len_cid_client, CountingConnectionIdGenerator,
+    AT_LEAST_PTO, DEFAULT_RTT, DEFAULT_STREAM_DATA,
 };
 use crate::{
     connection::{
@@ -46,7 +47,7 @@ const ECH_PUBLIC_NAME: &str = "public.example";
 
 fn full_handshake(pmtud: bool) {
     qdebug!("---- client: generate CH");
-    let mut client = new_client(ConnectionParameters::default().pmtud(pmtud));
+    let mut client = new_client(client_default_params().pmtud(pmtud));
     let out = client.process_output(now());
     let out2 = client.process_output(now());
     assert!(out.as_dgram_ref().is_some() && out2.as_dgram_ref().is_some());
@@ -54,7 +55,7 @@ fn full_handshake(pmtud: bool) {
     assert_eq!(out2.as_dgram_ref().unwrap().len(), client.plpmtu());
 
     qdebug!("---- server: CH -> SH, EE, CERT, CV, FIN");
-    let mut server = new_server(ConnectionParameters::default().pmtud(pmtud));
+    let mut server = new_server(server_default_params().pmtud(pmtud));
     server.process_input(out.dgram().unwrap(), now());
     let out = server.process(out2.dgram(), now());
     assert!(out.as_dgram_ref().is_some());
@@ -154,7 +155,7 @@ fn no_alpn() {
         Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
         DEFAULT_ADDR,
         DEFAULT_ADDR,
-        ConnectionParameters::default(),
+        client_default_params(),
         now(),
     )
     .unwrap();
@@ -230,13 +231,13 @@ fn dup_server_flight1() {
 #[test]
 fn crypto_frame_split() {
     // This test has its own logic for generating large CRYPTO frames, so turn off MLKEM.
-    let mut client = new_client(ConnectionParameters::default().mlkem(false));
+    let mut client = new_client(client_default_params().mlkem(false));
 
     let mut server = Connection::new_server(
         test_fixture::LONG_CERT_KEYS,
         test_fixture::DEFAULT_ALPN,
         Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-        ConnectionParameters::default(),
+        server_default_params(),
     )
     .expect("create a server");
 
@@ -335,7 +336,7 @@ fn send_05rtt() {
 #[test]
 fn reorder_05rtt() {
     // This test makes too many assumptions about single-packet PTOs for multi-packet MLKEM flights
-    let mut client = new_client(ConnectionParameters::default().mlkem(false));
+    let mut client = new_client(client_default_params().mlkem(false));
     let mut server = default_server();
 
     let c1 = client.process_output(now()).dgram();
@@ -398,7 +399,7 @@ fn reorder_05rtt_with_0rtt() {
     let token = get_tokens(&mut client).pop().unwrap();
     // This test makes too many assumptions about what's in the packets to work with multi-packet
     // MLKEM flights.
-    let mut client = new_client(ConnectionParameters::default().mlkem(false));
+    let mut client = new_client(client_default_params().mlkem(false));
     client.enable_resumption(now, token).unwrap();
     let mut server = resumed_server(&client);
 
@@ -525,9 +526,7 @@ fn coalesce_05rtt() {
 #[test]
 fn reorder_handshake() {
     const RTT: Duration = Duration::from_millis(100);
-    // TODO: Figure out why this test is failing when randomized packet number require two bytes of
-    // space. See below.
-    let mut client = new_client(ConnectionParameters::default().randomize_ci_pn(false));
+    let mut client = new_client(client_default_params());
     let mut server = default_server();
     let mut now = now();
 
@@ -544,7 +543,7 @@ fn reorder_handshake() {
     // It can only send another Initial packet.
     now += RTT + RTT / 2; // With multi-packet MLKEM flights, client needs more time here.
     let dgram = client.process(Some(s_handshake), now).dgram();
-    assertions::assert_initial(dgram.as_ref().unwrap(), false);
+    assert_initial(dgram.as_ref().unwrap(), false);
     assert_eq!(client.stats().saved_datagrams, 1);
     assert_eq!(client.stats().packets_rx, 0);
 
@@ -561,14 +560,13 @@ fn reorder_handshake() {
     now += RTT / 2;
     client.process_input(s_handshake_2, now);
     assert_eq!(client.stats().saved_datagrams, 2);
-    assert_eq!(client.stats().packets_rx, 0);
+    // There's a chance that the second datagram contained a little bit of an Initial packet.
+    // That will have been processed by the client.
+    assert!((0..=1).contains(&client.stats().packets_rx));
 
-    // TODO: After this call, with single-byte packet numbers, the client has Handshake keys and can
-    // process saved packets. With two-byte packet numbers, it somehow doesn't have Handshake keys
-    // yet.
     client.process_input(s_initial_2, now);
     // Each saved packet should now be "received" again.
-    assert_eq!(client.stats().packets_rx, 3);
+    assert!((3..=5).contains(&client.stats().packets_rx));
     maybe_authenticate(&mut client);
     let c3 = client.process_output(now).dgram();
     assert!(c3.is_some());
@@ -586,6 +584,120 @@ fn reorder_handshake() {
     client.process_input(s3.unwrap(), now);
     assert_eq!(*client.state(), State::Confirmed);
     assert_eq!(client.paths.rtt(), RTT);
+}
+
+/// When a compatible version upgrade occurs, the server needs to handle
+/// Initial packets from both versions.  Check that it doesn't drop them,
+/// which would be recoverable, but wasteful.
+#[test]
+fn interleave_versions_server() {
+    let mut client = new_client(client_default_params().versions(
+        Version::Version1,
+        vec![Version::Version2, Version::Version1],
+    ));
+    let mut server = default_server();
+    let mut now = now();
+
+    let c1 = client.process_output(now).dgram();
+    let c2 = client.process_output(now).dgram();
+    assert!(c1.is_some() && c2.is_some());
+
+    now += AT_LEAST_PTO;
+    let cspare = client.process_output(now).dgram();
+    assert_version(cspare.as_ref().unwrap(), Version::Version1.wire_version());
+    assert_initial(cspare.as_ref().unwrap(), false);
+
+    server.process_input(c1.unwrap(), now);
+    let s1 = server.process(c2, now).dgram().unwrap();
+    let s2 = server.process_output(now).dgram().unwrap();
+
+    client.process_input(s1, now);
+    client.process_input(s2, now);
+    maybe_authenticate(&mut client);
+    let chandshake = client.process_output(now).dgram();
+    assert_version(
+        chandshake.as_ref().unwrap(),
+        Version::Version2.wire_version(),
+    );
+
+    // Now send in the v2 and v1 packets out of order.
+    // Both should be accepted, even though the version is now set to v2.
+    assert!(server.has_version());
+    assert_eq!(server.version(), Version::Version2);
+
+    let before = server.stats();
+    server.process_input(chandshake.unwrap(), now);
+    let after = server.stats();
+    assert!(before.packets_rx < after.packets_rx); // Some number of packets went in.
+    assert_eq!(before.dropped_rx, after.dropped_rx); // None were dropped.
+
+    let before = server.stats();
+    server.process_input(cspare.unwrap(), now);
+    let after = server.stats();
+    assert!(before.packets_rx < after.packets_rx); // Some number of packets went in.
+    assert_eq!(before.dropped_rx + 1, after.dropped_rx); // This packet was padded, so we drop 1.
+
+    let done = server.process_output(now).dgram();
+    assert_eq!(*server.state(), State::Confirmed);
+    client.process_input(done.unwrap(), now);
+    assert_eq!(*client.state(), State::Confirmed);
+}
+
+/// When a compatible version upgrade occurs, the client also needs to handle
+/// Initial packets from both versions.
+#[test]
+fn interleave_versions_client() {
+    let mut client = new_client(client_default_params().versions(
+        Version::Version1,
+        vec![Version::Version2, Version::Version1],
+    ));
+    let mut server = default_server();
+    let now = now();
+
+    let c1 = client.process_output(now).dgram();
+    let c2 = client.process_output(now).dgram();
+    assert!(c1.is_some() && c2.is_some());
+
+    // The server will ACK the packet, but that's it.
+    let s1 = server.process(c1, now).dgram();
+    assert_initial(s1.as_ref().unwrap(), false);
+    assert_version(s1.as_ref().unwrap(), Version::Version1.wire_version());
+    assert!(!server.has_version());
+
+    // Once it has all the packets the server can choose a version.
+    let s2 = server.process(c2, now).dgram();
+    assert_initial(s2.as_ref().unwrap(), false);
+    assert_version(s2.as_ref().unwrap(), Version::Version2.wire_version());
+    assert!(server.has_version());
+
+    // Receiving the first packet (no CRYPTO) doesn't set the version.
+    client.process_input(s1.unwrap(), now);
+    let client_stats = client.stats();
+    assert_eq!(client_stats.packets_rx, 1); // Just an Initial packet for now.
+    assert_eq!(client_stats.frame_rx.crypto, 0); // No CRYPTO
+    assert!(!client.has_version());
+
+    // The second does.
+    client.process_input(s2.unwrap(), now);
+    assert!(client.has_version());
+    assert_eq!(client.version(), Version::Version2);
+
+    // Let the server finish its handshake (one packet is not enough).
+    let s3 = server.process_output(now).dgram();
+    client.process_input(s3.unwrap(), now);
+
+    // The client finishes with v2 packets.
+    maybe_authenticate(&mut client);
+    let chandshake = client.process_output(now).dgram();
+    assert_version(
+        chandshake.as_ref().unwrap(),
+        Version::Version2.wire_version(),
+    );
+
+    let done = server.process(chandshake, now).dgram();
+    assert_eq!(*server.state(), State::Confirmed);
+    client.process_input(done.unwrap(), now);
+    assert_eq!(*client.state(), State::Confirmed);
 }
 
 #[test]
@@ -740,7 +852,7 @@ fn extra_initial_hs() {
                 client.process_output(now).dgram()
             }
         };
-        assertions::assert_initial(c_init.as_ref().unwrap(), false);
+        assert_initial(c_init.as_ref().unwrap(), false);
         now += DEFAULT_RTT / 10;
     }
 
@@ -751,7 +863,7 @@ fn extra_initial_hs() {
     // Until PTO, where another Initial can be used to complete the handshake.
     now += client.process_output(now).callback();
     let c_init = client.process_output(now).dgram();
-    assertions::assert_initial(c_init.as_ref().unwrap(), false);
+    assert_initial(c_init.as_ref().unwrap(), false);
     now += DEFAULT_RTT / 2;
     let s_init = server.process(c_init, now).dgram();
     let s_init_2 = server.process_output(now).dgram();
@@ -803,7 +915,7 @@ fn connect_one_version() {
             Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
             DEFAULT_ADDR,
             DEFAULT_ADDR,
-            ConnectionParameters::default().versions(version, vec![version]),
+            client_default_params().versions(version, vec![version]),
             now(),
         )
         .unwrap();
@@ -811,7 +923,7 @@ fn connect_one_version() {
             test_fixture::DEFAULT_KEYS,
             test_fixture::DEFAULT_ALPN,
             Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-            ConnectionParameters::default().versions(version, vec![version]),
+            server_default_params().versions(version, vec![version]),
         )
         .unwrap();
         connect_force_idle(&mut client, &mut server);
@@ -828,7 +940,7 @@ fn connect_one_version() {
 #[test]
 fn anti_amplification() {
     // This test has its own logic for generating large CRYPTO frames, so turn off MLKEM.
-    let mut client = new_client(ConnectionParameters::default().mlkem(false));
+    let mut client = new_client(client_default_params().mlkem(false));
     let mut server = default_server();
     let mut now = now();
 
@@ -1145,7 +1257,7 @@ fn only_server_initial() {
     // The client sends an Initial ACK.
     assert_eq!(client.stats().frame_tx.ack, 0);
     let probe = client.process(Some(server_initial1), now).dgram();
-    assertions::assert_initial(&probe.unwrap(), false);
+    assert_initial(&probe.unwrap(), false);
     assert_eq!(client.stats().dropped_rx, 1);
     assert_eq!(client.stats().frame_tx.ack, 1);
 
@@ -1154,7 +1266,7 @@ fn only_server_initial() {
     assert_eq!(client.stats().frame_tx.ack, 1);
     let discarded = client.stats().dropped_rx;
     let probe = client.process(Some(server_initial2), now).dgram();
-    assertions::assert_initial(&probe.unwrap(), false);
+    assert_initial(&probe.unwrap(), false);
     assert_eq!(client.stats().frame_tx.ack, 2);
     assert_eq!(client.stats().dropped_rx, discarded);
 
@@ -1234,7 +1346,7 @@ fn implicit_rtt_server() {
     client.process_input(dgram, now);
     let dgram = client.process(dgram2, now).dgram();
     let (initial, handshake) = split_datagram(dgram.as_ref().unwrap());
-    assertions::assert_initial(&initial, false);
+    assert_initial(&initial, false);
     assertions::assert_handshake(handshake.as_ref().unwrap());
     now += RTT / 2;
     server.process_input(initial, now);
@@ -1253,7 +1365,7 @@ fn emit_authentication_needed_once() {
         test_fixture::DEFAULT_ALPN,
         Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
         // TODO: Why is this needed to avoind the 5ms pacing delay?
-        ConnectionParameters::default().pacing(false),
+        server_default_params().pacing(false),
     )
     .expect("create a server");
 
@@ -1305,7 +1417,7 @@ fn emit_authentication_needed_once() {
 fn client_initial_retransmits_identical() {
     let mut now = now();
     // TODO: With pacing on, why does the delay callback return by 5ms and then PTO after 295ms?
-    let mut client = new_client(ConnectionParameters::default().pacing(false));
+    let mut client = new_client(client_default_params().pacing(false));
 
     // Force the client to retransmit its Initial flight a number of times and make sure the
     // retranmissions are identical to the original. Also, verify the PTO durations.
@@ -1330,15 +1442,14 @@ fn client_initial_retransmits_identical() {
 #[test]
 fn server_initial_retransmits_identical() {
     let mut now = now();
-    // We need to calculate largest_acked below, which is difficult is packet number randomization
-    // in enabled.
-    let mut client = new_client(ConnectionParameters::default().randomize_ci_pn(false));
+    // We calculate largest_acked, which is difficult with packet number randomization.
+    let mut client = new_client(client_default_params().randomize_first_pn(false));
     let mut ci = client.process_output(now).dgram();
     let mut ci2 = client.process_output(now).dgram();
 
     // Force the server to retransmit its Initial flight a number of times and make sure the
     // retranmissions are identical to the original. Also, verify the PTO durations.
-    let mut server = new_server(ConnectionParameters::default().pacing(false));
+    let mut server = new_server(server_default_params().pacing(false));
     let mut total_ptos = Duration::from_secs(0);
     for i in 1..=3 {
         println!("==== iteration {i} ====");
@@ -1382,8 +1493,8 @@ fn grease_quic_bit_transport_parameter() {
 
     for client_grease in [true, false] {
         for server_grease in [true, false] {
-            let mut client = new_client(ConnectionParameters::default().grease(client_grease));
-            let mut server = new_server(ConnectionParameters::default().grease(server_grease));
+            let mut client = new_client(client_default_params().grease(client_grease));
+            let mut server = new_server(server_default_params().grease(server_grease));
 
             connect(&mut client, &mut server);
 

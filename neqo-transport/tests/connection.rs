@@ -8,13 +8,11 @@ mod common;
 use common::assert_dscp;
 use neqo_common::{Datagram, Decoder, Encoder, Role};
 use neqo_crypto::Aead;
-use neqo_transport::{
-    CloseReason, ConnectionParameters, Error, State, StreamType, Version, MIN_INITIAL_PACKET_SIZE,
-};
+use neqo_transport::{CloseReason, Error, State, StreamType, Version, MIN_INITIAL_PACKET_SIZE};
 use test_fixture::{
-    default_client, default_server,
+    client_default_params, default_client, default_server,
     header_protection::{self, decode_initial_header, initial_aead_and_hp},
-    new_client, new_server, now, split_datagram, DEFAULT_ALPN,
+    new_client, new_server, now, server_default_params, split_datagram, DEFAULT_ALPN,
 };
 
 #[test]
@@ -47,8 +45,8 @@ fn truncate_long_packet() {
     let now = now();
 
     // This test needs to alter the server handshake, so turn off MLKEM.
-    let mut client = new_client(ConnectionParameters::default().mlkem(false));
-    let mut server = new_server(DEFAULT_ALPN, ConnectionParameters::default().mlkem(false));
+    let mut client = new_client(client_default_params().mlkem(false));
+    let mut server = new_server(DEFAULT_ALPN, server_default_params().mlkem(false));
 
     let out = client.process_output(now).dgram().unwrap();
     let out = server.process(Some(out), now);
@@ -87,10 +85,10 @@ fn reorder_server_initial() {
 
     // This test needs to decrypt the CI, so turn off MLKEM and packet number randomization.
     let mut client = new_client(
-        ConnectionParameters::default()
+        client_default_params()
             .versions(Version::Version1, vec![Version::Version1])
             .mlkem(false)
-            .randomize_ci_pn(false),
+            .randomize_first_pn(false),
     );
     let mut server = default_server();
 
@@ -189,9 +187,8 @@ fn set_payload(server_packet: Option<&Datagram>, client_dcid: &[u8], payload: &[
 /// Test that the stack treats a packet without any frames as a protocol violation.
 #[test]
 fn packet_without_frames() {
-    let mut client = new_client(
-        ConnectionParameters::default().versions(Version::Version1, vec![Version::Version1]),
-    );
+    let mut client =
+        new_client(client_default_params().versions(Version::Version1, vec![Version::Version1]));
     let mut server = default_server();
 
     let client_initial = client.process_output(now());
@@ -211,9 +208,8 @@ fn packet_without_frames() {
 /// Test that the stack permits a packet containing only padding.
 #[test]
 fn packet_with_only_padding() {
-    let mut client = new_client(
-        ConnectionParameters::default().versions(Version::Version1, vec![Version::Version1]),
-    );
+    let mut client =
+        new_client(client_default_params().versions(Version::Version1, vec![Version::Version1]));
     let mut server = default_server();
 
     let client_initial = client.process_output(now());
@@ -228,12 +224,11 @@ fn packet_with_only_padding() {
 }
 
 /// Overflow the crypto buffer.
-#[expect(clippy::similar_names, reason = "scid simiar to dcic.")]
+#[expect(clippy::similar_names, reason = "scid simiar to dcid.")]
 #[test]
 fn overflow_crypto() {
-    let mut client = new_client(
-        ConnectionParameters::default().versions(Version::Version1, vec![Version::Version1]),
-    );
+    let mut client =
+        new_client(client_default_params().versions(Version::Version1, vec![Version::Version1]));
     let mut server = default_server();
 
     let client_initial = client.process_output(now()).dgram();
@@ -288,7 +283,7 @@ fn overflow_crypto() {
             packet,
         );
         client.process_input(dgram, now());
-        if let State::Closing { error, .. } = client.state() {
+        if let State::Closing { error, .. } | State::Closed(error) = client.state() {
             assert!(
                 matches!(error, CloseReason::Transport(Error::CryptoBufferExceeded)),
                 "the connection need to abort on crypto buffer"
@@ -297,7 +292,7 @@ fn overflow_crypto() {
             return;
         }
     }
-    panic!("Was not able to overflow the crypto buffer");
+    panic!("unable to overflow the crypto buffer: {:?}", client.state());
 }
 
 #[test]
@@ -325,15 +320,15 @@ fn handshake_mlkem768x25519() {
 
 #[test]
 fn client_initial_packet_number() {
-    // Check that the initial packet number is randomized (i.e, > 0) if the `randomize_ci_pn`
+    // Check that the initial packet number is randomized (i.e, > 0) if the `randomize_first_pn`
     // connection parameter is set, and that it is zero when not.
-    for randomize_ci_pn in [true, false] {
+    for randomize in [true, false] {
         // This test needs to decrypt the CI, so turn off MLKEM.
         let mut client = new_client(
-            ConnectionParameters::default()
+            client_default_params()
                 .versions(Version::Version1, vec![Version::Version1])
                 .mlkem(false)
-                .randomize_ci_pn(randomize_ci_pn),
+                .randomize_first_pn(randomize),
         );
 
         let client_initial = client.process_output(now());
@@ -341,6 +336,46 @@ fn client_initial_packet_number() {
             decode_initial_header(client_initial.as_dgram_ref().unwrap(), Role::Client).unwrap();
         let (_, hp) = initial_aead_and_hp(client_dcid, Role::Client);
         let (_, pn) = header_protection::remove(&hp, protected_header, payload);
-        assert!(randomize_ci_pn && pn > 0 || !randomize_ci_pn && pn == 0);
+        assert!(
+            randomize && pn > 0 || !randomize && pn == 0,
+            "randomize {randomize} = {pn}"
+        );
+    }
+}
+
+#[test]
+fn server_initial_packet_number() {
+    // Check that the initial packet number is randomized (i.e, > 0) if the `randomize_first_pn`
+    // connection parameter is set, and that it is zero when not.
+    for randomize in [true, false] {
+        // This test needs to decrypt the CI, so turn off MLKEM.
+        let mut client = new_client(
+            client_default_params()
+                .versions(Version::Version1, vec![Version::Version1])
+                .mlkem(false),
+        );
+        let mut server = new_server(
+            DEFAULT_ALPN,
+            server_default_params()
+                .versions(Version::Version1, vec![Version::Version1])
+                .randomize_first_pn(randomize),
+        );
+
+        let client_initial = client.process_output(now()).dgram();
+        let (_protected_header, client_dcid, _scid, _payload) =
+            decode_initial_header(client_initial.as_ref().unwrap(), Role::Client).unwrap();
+
+        let (_, hp) = initial_aead_and_hp(client_dcid, Role::Server);
+
+        let server_initial = server.process(client_initial, now()).dgram();
+        let (protected_header, _dcid, _scid, payload) =
+            decode_initial_header(server_initial.as_ref().unwrap(), Role::Server).unwrap();
+
+        let (_, pn) = header_protection::remove(&hp, protected_header, payload);
+        println!();
+        assert!(
+            randomize && pn > 0 || !randomize && pn == 0,
+            "randomize {randomize} = {pn}"
+        );
     }
 }

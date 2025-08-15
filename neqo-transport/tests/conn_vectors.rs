@@ -10,10 +10,8 @@
 
 use std::{cell::RefCell, rc::Rc};
 
-use neqo_transport::{
-    Connection, ConnectionParameters, RandomConnectionIdGenerator, State, Version,
-};
-use test_fixture::{datagram, now};
+use neqo_transport::{Connection, RandomConnectionIdGenerator, State, Version};
+use test_fixture::{datagram, now, server_default_params, DEFAULT_ALPN, DEFAULT_KEYS};
 
 const INITIAL_PACKET_V2: &[u8] = &[
     0xd7, 0x6b, 0x33, 0x43, 0xcf, 0x08, 0x83, 0x94, 0xc8, 0xf0, 0x3e, 0x51, 0x57, 0x08, 0x00, 0x00,
@@ -252,10 +250,10 @@ const INITIAL_PACKET_29: &[u8] = &[
 fn make_server(v: Version) -> Connection {
     test_fixture::fixture_init();
     Connection::new_server(
-        test_fixture::DEFAULT_KEYS,
-        test_fixture::DEFAULT_ALPN,
+        DEFAULT_KEYS,
+        DEFAULT_ALPN,
         Rc::new(RefCell::new(RandomConnectionIdGenerator::new(5))),
-        ConnectionParameters::default().versions(v, vec![v]),
+        server_default_params().versions(v, vec![v]),
     )
     .expect("create a default server")
 }
