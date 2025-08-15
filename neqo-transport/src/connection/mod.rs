@@ -2378,11 +2378,6 @@ impl Connection {
 
         self.streams
             .write_frames(TransmissionPriority::Low, builder, tokens, frame_stats);
-
-        #[cfg(test)]
-        if let Some(w) = &mut self.test_frame_writer {
-            w.write_frames(builder);
-        }
     }
 
     // Maybe send a probe.  Return true if the packet was ack-eliciting.
@@ -2506,6 +2501,11 @@ impl Connection {
                     &mut tokens,
                     stats,
                 );
+            }
+
+            #[cfg(test)]
+            if let Some(w) = &mut self.test_frame_writer {
+                w.write_frames(builder);
             }
         }
 

@@ -186,7 +186,18 @@ pub fn rttvar_after_n_updates(n: usize, rtt: Duration) -> Duration {
 }
 
 /// This inserts a PING frame into packets.
-struct PingWriter {}
+pub struct PingWriter {}
+
+impl PingWriter {
+    #[expect(
+        clippy::unnecessary_wraps,
+        clippy::new_ret_no_self,
+        reason = "test_frame_writer takes this type"
+    )]
+    pub fn new() -> Option<Box<dyn test_internal::FrameWriter>> {
+        Some(Box::new(Self {}))
+    }
+}
 
 impl test_internal::FrameWriter for PingWriter {
     fn write_frames(&mut self, builder: &mut packet::Builder<&mut Vec<u8>>) {
@@ -228,7 +239,7 @@ fn handshake_with_modifier(
             && (a.role() == Role::Client && *a.state() == State::Connected
                 || (a.role() == Role::Server && *b.state() == State::Connected));
         if should_ping {
-            a.test_frame_writer = Some(Box::new(PingWriter {}));
+            a.test_frame_writer = PingWriter::new();
         }
         let output = a.process(input, now).dgram();
         if should_ping {

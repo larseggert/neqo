@@ -18,8 +18,9 @@ use super::{
     new_client, new_server, send_something, server_default_params,
 };
 use crate::{
-    connection::tests::AT_LEAST_PTO,
-    packet::PACKET_BIT_LONG,
+    connection::{test_internal, tests::AT_LEAST_PTO},
+    frame::FrameType,
+    packet::{self, PACKET_BIT_LONG},
     tparams::{TransportParameter, TransportParameterId::*},
     Error, Stats, Version, MIN_INITIAL_PACKET_SIZE,
 };
@@ -590,8 +591,26 @@ fn server_initial_versions() {
     assert_eq!(before.dropped_rx, after.dropped_rx);
 }
 
+/// When the server confirms a new version it switches to sending v2 packets.
+/// If the client has sent a v1 packet with a packet number larger
+/// than 255 AND the server has acknowledged that packet,
+/// the client might send a v2 Initial packet with a truncated packet number.
+/// The client could fail to process that packet if it is not tracking
+/// packet receipt correctly.
 #[test]
 fn client_initial_versions() {
+    pub struct CryptoWriter {}
+
+    impl test_internal::FrameWriter for CryptoWriter {
+        fn write_frames(&mut self, builder: &mut packet::Builder<&mut Vec<u8>>) {
+            // A first byte of 2 is the byte that indicates a ServerHello.
+            builder.encode_varint(FrameType::Crypto);
+            builder.encode_varint(0_u64); // Offset
+            builder.encode_varint(1_u64); // Length
+            builder.encode_byte(2);
+        }
+    }
+
     let mut client = new_client(
         client_default_params()
             .versions(
@@ -616,7 +635,11 @@ fn client_initial_versions() {
     assert!(c1.is_some() && c2.is_some());
 
     // Processing the first produces a v1 ACK.
+    // But we also need to force the client to send an ACK for this packet.
+    // We can do that with a forced CRYPTO frame.
+    server.test_frame_writer = Some(Box::new(CryptoWriter {}));
     let s1 = server.process(c1, now).dgram();
+    server.test_frame_writer = None;
     assert_version(s1.as_ref().unwrap(), Version::Version1.wire_version());
 
     // Receiving the ACK then letting a PTO lapse means that the client
@@ -626,8 +649,9 @@ fn client_initial_versions() {
     let c3 = client.process_output(now).dgram();
     server.process_input(c3.unwrap(), now);
 
-    // Letting the server have the second client packet results in a v2 handshake.
-    // With a truncated packet number (which this doesn't check for, sorry).
+    // Let the server have the second client packet (it shouldn't need it).
+    // The response should be a v2 packet with a truncated packet number.
+    // We can't really test that though.
     let s2 = server.process(c2, now).dgram();
     assert_version(s2.as_ref().unwrap(), Version::Version2.wire_version());
 
