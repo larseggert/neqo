@@ -19,9 +19,9 @@ use neqo_transport::{
     Version, MIN_INITIAL_PACKET_SIZE,
 };
 use test_fixture::{
-    assertions, datagram, default_client,
+    assertions, client_default_params, datagram, default_client,
     header_protection::{self, decode_initial_header, initial_aead_and_hp},
-    new_client, now, split_datagram, CountingConnectionIdGenerator,
+    new_client, now, server_default_params, split_datagram, CountingConnectionIdGenerator,
 };
 
 /// Take a pair of connections in any state and complete the handshake.
@@ -63,10 +63,8 @@ fn single_client() {
 #[test]
 fn connect_single_version_both() {
     fn connect_one_version(version: Version) {
-        let params = ConnectionParameters::default().versions(version, vec![version]);
-        let mut server = new_server(params.clone());
-
-        let mut client = new_client(params);
+        let mut server = new_server(server_default_params().versions(version, vec![version]));
+        let mut client = new_client(client_default_params().versions(version, vec![version]));
         let server_conn = connect(&mut client, &mut server);
         assert_eq!(client.version(), version);
         assert_eq!(server_conn.borrow().version(), version);
@@ -83,8 +81,7 @@ fn connect_single_version_client() {
     fn connect_one_version(version: Version) {
         let mut server = default_server();
 
-        let mut client =
-            new_client(ConnectionParameters::default().versions(version, vec![version]));
+        let mut client = new_client(client_default_params().versions(version, vec![version]));
         let server_conn = connect(&mut client, &mut server);
         assert_eq!(client.version(), version);
         assert_eq!(server_conn.borrow().version(), version);
@@ -99,8 +96,7 @@ fn connect_single_version_client() {
 #[test]
 fn connect_single_version_server() {
     fn connect_one_version(version: Version) {
-        let mut server =
-            new_server(ConnectionParameters::default().versions(version, vec![version]));
+        let mut server = new_server(server_default_params().versions(version, vec![version]));
 
         let mut client = default_client();
 
@@ -428,11 +424,7 @@ fn new_token_different_port() {
 #[test]
 fn bad_client_initial() {
     // This test needs to decrypt the CI; turn off MLKEM and random client initial packet numbers.
-    let mut client = new_client(
-        ConnectionParameters::default()
-            .mlkem(false)
-            .randomize_ci_pn(false),
-    );
+    let mut client = new_client(client_default_params().mlkem(false).randomize_ci_pn(false));
     let mut server = default_server();
 
     let dgram = client.process_output(now()).dgram().expect("a datagram");
@@ -525,11 +517,7 @@ fn bad_client_initial() {
 #[test]
 fn bad_client_initial_connection_close() {
     // This test needs to decrypt the CI; turn off MLKEM and random client initial packet numbers.
-    let mut client = new_client(
-        ConnectionParameters::default()
-            .mlkem(false)
-            .randomize_ci_pn(false),
-    );
+    let mut client = new_client(client_default_params().mlkem(false).randomize_ci_pn(false));
     let mut server = default_server();
 
     let dgram = client.process_output(now()).dgram().expect("a datagram");
@@ -632,8 +620,7 @@ fn version_negotiation() {
     assert_ne!(VN_VERSION, Version::default());
     assert!(!Version::default().is_compatible(VN_VERSION));
 
-    let mut server =
-        new_server(ConnectionParameters::default().versions(VN_VERSION, vec![VN_VERSION]));
+    let mut server = new_server(server_default_params().versions(VN_VERSION, vec![VN_VERSION]));
     let mut client = default_client();
 
     // `connect()` runs a fixed exchange, so manually run the Version Negotiation.
@@ -659,13 +646,12 @@ fn version_negotiation_and_compatible() {
     assert!(!ORIG_VERSION.is_compatible(COMPAT_VERSION));
     assert!(VN_VERSION.is_compatible(COMPAT_VERSION));
 
-    let mut server = new_server(
-        ConnectionParameters::default().versions(VN_VERSION, vec![COMPAT_VERSION, VN_VERSION]),
-    );
+    let mut server =
+        new_server(server_default_params().versions(VN_VERSION, vec![COMPAT_VERSION, VN_VERSION]));
     // Note that the order of versions at the client only determines what it tries first.
     // The server will pick between VN_VERSION and COMPAT_VERSION.
     let mut client = new_client(
-        ConnectionParameters::default()
+        client_default_params()
             .versions(ORIG_VERSION, vec![ORIG_VERSION, VN_VERSION, COMPAT_VERSION]),
     );
 
@@ -715,7 +701,7 @@ fn compatible_upgrade_resumption_and_vn() {
     const COMPAT_VERSION: Version = Version::Version2;
     const RESUMPTION_VERSION: Version = Version::Draft29;
 
-    let client_params = ConnectionParameters::default().versions(
+    let client_params = client_default_params().versions(
         ORIG_VERSION,
         vec![COMPAT_VERSION, ORIG_VERSION, RESUMPTION_VERSION],
     );
@@ -734,9 +720,8 @@ fn compatible_upgrade_resumption_and_vn() {
 
     // This new server will reject the ticket, but it will also generate a VN packet.
     let mut client = new_client(client_params);
-    let mut server = new_server(
-        ConnectionParameters::default().versions(RESUMPTION_VERSION, vec![RESUMPTION_VERSION]),
-    );
+    let mut server =
+        new_server(server_default_params().versions(RESUMPTION_VERSION, vec![RESUMPTION_VERSION]));
     client.enable_resumption(now(), ticket).unwrap();
 
     // The version negotiation exchange.
@@ -789,7 +774,7 @@ fn max_streams() {
         test_fixture::anti_replay(),
         Box::new(AllowZeroRtt {}),
         Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-        ConnectionParameters::default()
+        server_default_params()
             .max_streams(StreamType::BiDi, MAX_STREAMS)
             .max_streams(StreamType::UniDi, MAX_STREAMS),
     )
@@ -812,7 +797,7 @@ fn max_streams_default() {
         test_fixture::anti_replay(),
         Box::new(AllowZeroRtt {}),
         Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-        ConnectionParameters::default(),
+        server_default_params(),
     )
     .expect("should create a server");
 
@@ -845,7 +830,7 @@ fn max_streams_after_0rtt_rejection() {
         test_fixture::anti_replay(),
         Box::new(RejectZeroRtt {}),
         Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-        ConnectionParameters::default()
+        server_default_params()
             .max_streams(StreamType::BiDi, MAX_STREAMS_BIDI)
             .max_streams(StreamType::UniDi, MAX_STREAMS_UNIDI),
     )

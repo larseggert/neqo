@@ -14,14 +14,14 @@ use test_fixture::{
 
 use super::{
     super::{CloseReason, ConnectionEvent, Output, State, ZeroRttState},
-    connect, connect_fail, default_client, default_server, exchange_ticket, new_client, new_server,
-    send_something,
+    client_default_params, connect, connect_fail, default_client, default_server, exchange_ticket,
+    new_client, new_server, send_something, server_default_params,
 };
 use crate::{
     connection::tests::AT_LEAST_PTO,
     packet::PACKET_BIT_LONG,
     tparams::{TransportParameter, TransportParameterId::*},
-    ConnectionParameters, Error, Stats, Version, MIN_INITIAL_PACKET_SIZE,
+    Error, Stats, Version, MIN_INITIAL_PACKET_SIZE,
 };
 
 // The expected PTO duration after the first Initial is sent.
@@ -256,18 +256,20 @@ fn compatible_upgrade() {
 /// packets in version 1.  Both client and server need to handle that gracefully.
 #[test]
 fn compatible_upgrade_large_initial() {
-    let params = ConnectionParameters::default().versions(
+    let mut client = new_client(client_default_params().versions(
         Version::Version1,
         vec![Version::Version2, Version::Version1],
-    );
-    let mut client = new_client(params.clone());
+    ));
     client
         .set_local_tparam(
             TestTransportParameter,
             TransportParameter::Bytes(vec![0; 2048]),
         )
         .unwrap();
-    let mut server = new_server(params);
+    let mut server = new_server(server_default_params().versions(
+        Version::Version1,
+        vec![Version::Version2, Version::Version1],
+    ));
 
     // Client Initial should take 2 packets.
     // Each should elicit a Version 1 ACK from the server.
@@ -302,11 +304,11 @@ fn compatible_upgrade_large_initial() {
 /// This one starts with version 1 and stays there.
 #[test]
 fn compatible_no_upgrade() {
-    let mut client = new_client(ConnectionParameters::default().versions(
+    let mut client = new_client(client_default_params().versions(
         Version::Version1,
         vec![Version::Version2, Version::Version1],
     ));
-    let mut server = new_server(ConnectionParameters::default().versions(
+    let mut server = new_server(server_default_params().versions(
         Version::Version1,
         vec![Version::Version1, Version::Version2],
     ));
@@ -320,11 +322,11 @@ fn compatible_no_upgrade() {
 /// This one starts with version 2 and downgrades to version 1.
 #[test]
 fn compatible_downgrade() {
-    let mut client = new_client(ConnectionParameters::default().versions(
+    let mut client = new_client(client_default_params().versions(
         Version::Version2,
         vec![Version::Version2, Version::Version1],
     ));
-    let mut server = new_server(ConnectionParameters::default().versions(
+    let mut server = new_server(server_default_params().versions(
         Version::Version2,
         vec![Version::Version1, Version::Version2],
     ));
@@ -345,8 +347,7 @@ fn version_negotiation_downgrade() {
     // protects Initial packets with the version in its configuration.
     // When a server `Connection` is created by a `Server`, the configuration is set
     // to match the version of the packet it first receives.  This replicates that.
-    let mut server =
-        new_server(ConnectionParameters::default().versions(DOWNGRADE, Version::all()));
+    let mut server = new_server(server_default_params().versions(DOWNGRADE, Version::all()));
 
     // Start the handshake and spoof a VN packet.
     let initial = client.process_output(now()).dgram().unwrap();
@@ -367,9 +368,9 @@ fn version_negotiation_downgrade() {
 #[test]
 fn invalid_server_version() {
     let mut client =
-        new_client(ConnectionParameters::default().versions(Version::Version1, Version::all()));
+        new_client(client_default_params().versions(Version::Version1, Version::all()));
     let mut server =
-        new_server(ConnectionParameters::default().versions(Version::Version2, Version::all()));
+        new_server(server_default_params().versions(Version::Version2, Version::all()));
 
     let dgram = client.process_output(now()).dgram();
     let dgram2 = client.process_output(now()).dgram();
@@ -429,9 +430,8 @@ fn invalid_current_version_server() {
     const OTHER_VERSION: Version = Version::Draft29;
 
     let mut client = default_client();
-    let mut server = new_server(
-        ConnectionParameters::default().versions(Version::default(), vec![Version::default()]),
-    );
+    let mut server =
+        new_server(server_default_params().versions(Version::default(), vec![Version::default()]));
 
     assert!(!Version::default().is_compatible(OTHER_VERSION));
     server
@@ -482,14 +482,13 @@ fn no_compatible_version() {
 #[test]
 fn compatible_upgrade_0rtt_rejected() {
     // This is the baseline configuration where v1 is attempted and v2 preferred.
-    let prefer_v2 = ConnectionParameters::default().versions(
+    let prefer_v2 = client_default_params().versions(
         Version::Version1,
         vec![Version::Version2, Version::Version1],
     );
     let mut client = new_client(prefer_v2.clone());
     // The server will start with this so that the client resumes with v1.
-    let just_v1 =
-        ConnectionParameters::default().versions(Version::Version1, vec![Version::Version1]);
+    let just_v1 = server_default_params().versions(Version::Version1, vec![Version::Version1]);
     let mut server = new_server(just_v1);
 
     connect(&mut client, &mut server);
@@ -497,8 +496,11 @@ fn compatible_upgrade_0rtt_rejected() {
     let token = exchange_ticket(&mut client, &mut server, now());
 
     // Now upgrade the server to the preferred configuration.
-    let mut client = new_client(prefer_v2.clone());
-    let mut server = new_server(prefer_v2);
+    let mut client = new_client(prefer_v2);
+    let mut server = new_server(server_default_params().versions(
+        Version::Version1,
+        vec![Version::Version2, Version::Version1],
+    ));
     client.enable_resumption(now(), token).unwrap();
 
     // Create a packet with 0-RTT from the client.
@@ -539,14 +541,22 @@ fn compatible_upgrade_0rtt_rejected() {
 /// packet receipt correctly.
 #[test]
 fn server_initial_versions() {
-    let prefer_v2 = ConnectionParameters::default()
-        .versions(
-            Version::Version1,
-            vec![Version::Version2, Version::Version1],
-        )
-        .randomize_ci_pn(true);
-    let mut client = new_client(prefer_v2.clone());
-    let mut server = new_server(prefer_v2);
+    let mut client = new_client(
+        client_default_params()
+            .versions(
+                Version::Version1,
+                vec![Version::Version2, Version::Version1],
+            )
+            .randomize_ci_pn(true),
+    );
+    let mut server = new_server(
+        server_default_params()
+            .versions(
+                Version::Version1,
+                vec![Version::Version2, Version::Version1],
+            )
+            .randomize_ci_pn(true),
+    );
     let now = now();
 
     // Two handshake packets.
@@ -582,14 +592,22 @@ fn server_initial_versions() {
 
 #[test]
 fn client_initial_versions() {
-    let prefer_v2 = ConnectionParameters::default()
-        .versions(
-            Version::Version1,
-            vec![Version::Version2, Version::Version1],
-        )
-        .randomize_ci_pn(true);
-    let mut client = new_client(prefer_v2.clone());
-    let mut server = new_server(prefer_v2);
+    let mut client = new_client(
+        client_default_params()
+            .versions(
+                Version::Version1,
+                vec![Version::Version2, Version::Version1],
+            )
+            .randomize_ci_pn(true),
+    );
+    let mut server = new_server(
+        server_default_params()
+            .versions(
+                Version::Version1,
+                vec![Version::Version2, Version::Version1],
+            )
+            .randomize_ci_pn(true),
+    );
     let mut now = now();
 
     // Two handshake packets.

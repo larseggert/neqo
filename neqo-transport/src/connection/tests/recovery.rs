@@ -15,10 +15,10 @@ use test_fixture::{
 
 use super::{
     super::{Connection, ConnectionParameters, Output, State},
-    assert_full_cwnd, connect, connect_force_idle, connect_rtt_idle, connect_with_rtt, cwnd,
-    default_client, default_server, fill_cwnd, maybe_authenticate, new_client, send_and_receive,
-    send_something, AT_LEAST_PTO, DEFAULT_ADDR, DEFAULT_RTT, DEFAULT_STREAM_DATA,
-    POST_HANDSHAKE_CWND,
+    assert_full_cwnd, client_default_params, connect, connect_force_idle, connect_rtt_idle,
+    connect_with_rtt, cwnd, default_client, default_server, fill_cwnd, maybe_authenticate,
+    new_client, send_and_receive, send_something, AT_LEAST_PTO, DEFAULT_ADDR, DEFAULT_RTT,
+    DEFAULT_STREAM_DATA, POST_HANDSHAKE_CWND,
 };
 use crate::{
     connection::{test_internal::FrameWriter, tests::cwnd_min},
@@ -165,7 +165,7 @@ fn pto_initial() {
 
     // This test makes too many assumptions about single-packet PTOs for multi-packet MLKEM flights
     qdebug!("---- client: generate CH");
-    let mut client = new_client(ConnectionParameters::default().mlkem(false));
+    let mut client = new_client(client_default_params().mlkem(false));
     let pkt1 = client.process_output(now).dgram();
     assert!(pkt1.is_some());
     assert_eq!(pkt1.clone().unwrap().len(), client.plpmtu());
@@ -456,7 +456,7 @@ fn handshake_ack_pto() {
     let mut now = now();
     // This test makes too many assumptions about single-packet PTOs for multi-packet MLKEM flights
     // to work.
-    let mut client = new_client(ConnectionParameters::default().mlkem(false));
+    let mut client = new_client(client_default_params().mlkem(false));
     let mut server = default_server();
     // This is a greasing transport parameter, and large enough that the
     // server needs to send two Handshake packets.
@@ -642,7 +642,7 @@ fn loss_time_past_largest_acked() {
     const INCR: Duration = Duration::from_millis(1);
     // This test makes too many assumptions about single-packet PTOs for multi-packet MLKEM flights
     // to work.
-    let mut client = new_client(ConnectionParameters::default().mlkem(false));
+    let mut client = new_client(client_default_params().mlkem(false));
     let mut server = default_server();
 
     let mut now = now();
@@ -822,7 +822,7 @@ fn fast_pto() {
     // This test makes too many assumptions about single-packet PTOs for multi-packet MLKEM flights
     // to work.
     let mut client = new_client(
-        ConnectionParameters::default()
+        client_default_params()
             .fast_pto(FAST_PTO_SCALE / 2)
             .mlkem(false),
     );
@@ -865,7 +865,7 @@ fn fast_pto_persistent_congestion() {
     // This test makes too many assumptions about single-packet PTOs for multi-packet MLKEM flights
     // to work.
     let mut client = new_client(
-        ConnectionParameters::default()
+        client_default_params()
             .fast_pto(FAST_PTO_SCALE * 2)
             .mlkem(false),
     );

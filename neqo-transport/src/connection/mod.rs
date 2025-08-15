@@ -1533,7 +1533,11 @@ impl Connection {
                 // Record the client's selected CID so that it can be accepted until
                 // the client starts using a real connection ID.
                 let dcid = ConnectionId::from(packet.dcid());
-                self.crypto.states_mut().init_server(version, &dcid)?;
+                self.crypto.states_mut().init_server(
+                    version,
+                    &dcid,
+                    self.conn_params.randomize_ci_pn_enabled(),
+                )?;
                 self.original_destination_cid = Some(dcid);
                 self.set_state(State::WaitInitial, now);
 
@@ -3092,7 +3096,8 @@ impl Connection {
                 .original_destination_cid
                 .as_ref()
                 .ok_or(Error::ProtocolViolation)?;
-            self.crypto.states_mut().init_server(version, dcid)?;
+            // No need to randomize the starting packet number; that's already taken care of.
+            self.crypto.states_mut().init_server(version, dcid, false)?;
             version
         };
         self.confirm_version(version)?;

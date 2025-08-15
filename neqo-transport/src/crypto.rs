@@ -990,8 +990,14 @@ impl CryptoStates {
         };
 
         let min_pn = if randomize_ci_pn {
-            let r = random::<2>();
-            packet::Number::from(r[0] & r[1]) + 256
+            let r = random::<4>();
+            let pn = packet::Number::from;
+            // A 16 bit starting packet number with the low 5 bits uniformly random.
+            // Then maybe add up to 256 to occasionally nudge into a second byte
+            // for both varint and packet number encodings.
+            // And a small offset to ensure that the value is always non-zero.
+            // TODO: change the 300 offset to be 1.
+            (pn(r[0]) & 0x1f) + (pn(r[1]) + pn(r[2]) + pn(r[3])).saturating_sub(512) + 300
         } else {
             0
         };
@@ -1025,12 +1031,9 @@ impl CryptoStates {
     /// This is maybe slightly inefficient in the first case, because we might
     /// not need the send keys if the packet is subsequently discarded, but
     /// the overall effort is small enough to write off.
-    pub fn init_server(&mut self, version: Version, dcid: &[u8]) -> Res<()> {
+    pub fn init_server(&mut self, version: Version, dcid: &[u8], randomize_ci_pn: bool) -> Res<()> {
         if self.initials[version].is_none() {
-            // We are not randomizing the server initial packet number, since we don't ship the
-            // server as a product, and doing so means more changes to the current tests to handle
-            // that (or disable it there).
-            self.init(&[version], Role::Server, dcid, false)?;
+            self.init(&[version], Role::Server, dcid, randomize_ci_pn)?;
         }
         Ok(())
     }

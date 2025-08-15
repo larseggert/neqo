@@ -9,7 +9,7 @@ use std::{hint::black_box, time::Duration};
 use criterion::{criterion_group, criterion_main, BatchSize::SmallInput, Criterion};
 use neqo_transport::{ConnectionParameters, State};
 use test_fixture::{
-    boxed,
+    boxed, client_default_params, server_default_params,
     sim::{
         connection::{Node, ReachState, ReceiveData, SendData},
         network::{RandomDelay, TailDrop},
@@ -36,7 +36,7 @@ fn benchmark_transfer(c: &mut Criterion, label: &str, seed: Option<impl AsRef<st
                 || {
                     let nodes = boxed![
                         Node::new_client(
-                            ConnectionParameters::default()
+                            client_default_params()
                                 .pmtud(true)
                                 .pacing(pacing)
                                 .mlkem(false),
@@ -46,7 +46,7 @@ fn benchmark_transfer(c: &mut Criterion, label: &str, seed: Option<impl AsRef<st
                         TailDrop::dsl_uplink(),
                         RandomDelay::new(ZERO..JITTER),
                         Node::new_server(
-                            ConnectionParameters::default()
+                            server_default_params()
                                 .pmtud(true)
                                 .pacing(pacing)
                                 .mlkem(false),

@@ -100,6 +100,10 @@ impl ConnectionIdGenerator for CountingConnectionIdGenerator {
 // test_fixture because they produce different - and incompatible - types.
 //
 // These are a direct copy of those functions.
+pub fn client_default_params() -> ConnectionParameters {
+    ConnectionParameters::default()
+}
+
 pub fn new_client(params: ConnectionParameters) -> Connection {
     fixture_init();
     let (log, _contents) = new_neqo_qlog();
@@ -118,7 +122,7 @@ pub fn new_client(params: ConnectionParameters) -> Connection {
 }
 
 pub fn default_client() -> Connection {
-    new_client(ConnectionParameters::default())
+    new_client(client_default_params())
 }
 
 fn zero_len_cid_client(local_addr: SocketAddr, remote_addr: SocketAddr) -> Connection {
@@ -128,10 +132,14 @@ fn zero_len_cid_client(local_addr: SocketAddr, remote_addr: SocketAddr) -> Conne
         Rc::new(RefCell::new(EmptyConnectionIdGenerator::default())),
         local_addr,
         remote_addr,
-        ConnectionParameters::default(),
+        client_default_params(),
         now(),
     )
     .unwrap()
+}
+
+pub fn server_default_params() -> ConnectionParameters {
+    ConnectionParameters::default().randomize_ci_pn(false)
 }
 
 pub fn new_server(params: ConnectionParameters) -> Connection {
@@ -150,10 +158,10 @@ pub fn new_server(params: ConnectionParameters) -> Connection {
     c
 }
 pub fn default_server() -> Connection {
-    new_server(ConnectionParameters::default())
+    new_server(server_default_params())
 }
 pub fn resumed_server(client: &Connection) -> Connection {
-    new_server(ConnectionParameters::default().versions(client.version(), Version::all()))
+    new_server(server_default_params().versions(client.version(), Version::all()))
 }
 
 /// If state is `AuthenticationNeeded` call `authenticated()`. This function will
@@ -727,7 +735,7 @@ fn create_server() {
 #[test]
 fn tp_grease() {
     for enable in [true, false] {
-        let client = new_client(ConnectionParameters::default().grease(enable));
+        let client = new_client(client_default_params().grease(enable));
         let grease = client.tps.borrow_mut().local().get_empty(GreaseQuicBit);
         assert_eq!(enable, grease);
     }
@@ -736,7 +744,7 @@ fn tp_grease() {
 #[test]
 fn tp_disable_migration() {
     for disable in [true, false] {
-        let client = new_client(ConnectionParameters::default().disable_migration(disable));
+        let client = new_client(client_default_params().disable_migration(disable));
         let disable_migration = client.tps.borrow_mut().local().get_empty(DisableMigration);
         assert_eq!(disable, disable_migration);
     }

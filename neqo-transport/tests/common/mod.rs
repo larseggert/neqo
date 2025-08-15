@@ -14,7 +14,10 @@ use neqo_transport::{
     server::{ConnectionRef, Server, ValidateAddress},
     Connection, ConnectionEvent, ConnectionParameters, State, Stats,
 };
-use test_fixture::{default_client, now, CountingConnectionIdGenerator};
+use test_fixture::{
+    default_client, now, server_default_params,
+    CountingConnectionIdGenerator,
+};
 
 /// # Panics
 ///
@@ -40,7 +43,7 @@ pub fn new_server(params: ConnectionParameters) -> Server {
 
 /// Create a server.  This is different than the one in the fixture, which is a single connection.
 pub fn default_server() -> Server {
-    new_server(ConnectionParameters::default())
+    new_server(server_default_params())
 }
 
 // Check that there is at least one connection.  Returns a ref to the first confirmed connection.

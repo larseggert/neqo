@@ -164,6 +164,18 @@ impl ConnectionIdGenerator for CountingConnectionIdGenerator {
     }
 }
 
+/// Get the defaults that we use for most test cases for clients.
+#[must_use]
+pub fn client_default_params() -> ConnectionParameters {
+    ConnectionParameters::default().ack_ratio(255)
+}
+
+/// Create a transport client with default configuration.
+#[must_use]
+pub fn default_client() -> Connection {
+    new_client(client_default_params())
+}
+
 /// Create a new client.
 ///
 /// # Panics
@@ -178,7 +190,7 @@ pub fn new_client(params: ConnectionParameters) -> Connection {
         Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
         DEFAULT_ADDR,
         DEFAULT_ADDR,
-        params.ack_ratio(255), // Tests work better with this set this way.
+        params,
         now(),
     )
     .expect("create a client");
@@ -202,25 +214,30 @@ pub fn new_client(params: ConnectionParameters) -> Connection {
     client
 }
 
-/// Create a transport client with default configuration.
+/// Get the defaults that we use for most test cases for servers.
 #[must_use]
-pub fn default_client() -> Connection {
-    new_client(ConnectionParameters::default())
+pub fn server_default_params() -> ConnectionParameters {
+    ConnectionParameters::default()
+        .ack_ratio(255)
+        .randomize_ci_pn(false)
 }
 
 /// Create a transport server with default configuration.
 #[must_use]
 pub fn default_server() -> Connection {
-    new_server(DEFAULT_ALPN, ConnectionParameters::default())
+    new_server(DEFAULT_ALPN, server_default_params())
+}
+
+/// Get the defaults that we use for most test cases for HTTP/3 servers.
+#[must_use]
+pub fn server_default_params_h3() -> ConnectionParameters {
+    server_default_params().pacing(false)
 }
 
 /// Create a transport server with default configuration.
 #[must_use]
 pub fn default_server_h3() -> Connection {
-    new_server(
-        DEFAULT_ALPN_H3,
-        ConnectionParameters::default().pacing(false),
-    )
+    new_server(DEFAULT_ALPN_H3, server_default_params_h3())
 }
 
 /// Create a transport server with a configuration.
@@ -235,7 +252,7 @@ pub fn new_server<A: AsRef<str>>(alpn: &[A], params: ConnectionParameters) -> Co
         DEFAULT_KEYS,
         alpn,
         Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-        params.ack_ratio(255),
+        params,
     )
     .expect("create a server");
     if let Ok(dir) = std::env::var("QLOGDIR") {

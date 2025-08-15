@@ -24,9 +24,10 @@ use test_fixture::{
 
 use super::{
     super::{Connection, Output, State},
-    assert_error, connect, connect_force_idle, connect_with_rtt, default_client, default_server,
-    get_tokens, handshake, maybe_authenticate, resumed_server, send_something, zero_len_cid_client,
-    CountingConnectionIdGenerator, AT_LEAST_PTO, DEFAULT_RTT, DEFAULT_STREAM_DATA,
+    assert_error, client_default_params, connect, connect_force_idle, connect_with_rtt,
+    default_client, default_server, get_tokens, handshake, maybe_authenticate, resumed_server,
+    send_something, server_default_params, zero_len_cid_client, CountingConnectionIdGenerator,
+    AT_LEAST_PTO, DEFAULT_RTT, DEFAULT_STREAM_DATA,
 };
 use crate::{
     connection::{
@@ -46,7 +47,7 @@ const ECH_PUBLIC_NAME: &str = "public.example";
 
 fn full_handshake(pmtud: bool) {
     qdebug!("---- client: generate CH");
-    let mut client = new_client(ConnectionParameters::default().pmtud(pmtud));
+    let mut client = new_client(client_default_params().pmtud(pmtud));
     let out = client.process_output(now());
     let out2 = client.process_output(now());
     assert!(out.as_dgram_ref().is_some() && out2.as_dgram_ref().is_some());
@@ -54,7 +55,7 @@ fn full_handshake(pmtud: bool) {
     assert_eq!(out2.as_dgram_ref().unwrap().len(), client.plpmtu());
 
     qdebug!("---- server: CH -> SH, EE, CERT, CV, FIN");
-    let mut server = new_server(ConnectionParameters::default().pmtud(pmtud));
+    let mut server = new_server(server_default_params().pmtud(pmtud));
     server.process_input(out.dgram().unwrap(), now());
     let out = server.process(out2.dgram(), now());
     assert!(out.as_dgram_ref().is_some());
@@ -154,7 +155,7 @@ fn no_alpn() {
         Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
         DEFAULT_ADDR,
         DEFAULT_ADDR,
-        ConnectionParameters::default(),
+        client_default_params(),
         now(),
     )
     .unwrap();
@@ -230,13 +231,13 @@ fn dup_server_flight1() {
 #[test]
 fn crypto_frame_split() {
     // This test has its own logic for generating large CRYPTO frames, so turn off MLKEM.
-    let mut client = new_client(ConnectionParameters::default().mlkem(false));
+    let mut client = new_client(client_default_params().mlkem(false));
 
     let mut server = Connection::new_server(
         test_fixture::LONG_CERT_KEYS,
         test_fixture::DEFAULT_ALPN,
         Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-        ConnectionParameters::default(),
+        server_default_params(),
     )
     .expect("create a server");
 
@@ -335,7 +336,7 @@ fn send_05rtt() {
 #[test]
 fn reorder_05rtt() {
     // This test makes too many assumptions about single-packet PTOs for multi-packet MLKEM flights
-    let mut client = new_client(ConnectionParameters::default().mlkem(false));
+    let mut client = new_client(client_default_params().mlkem(false));
     let mut server = default_server();
 
     let c1 = client.process_output(now()).dgram();
@@ -398,7 +399,7 @@ fn reorder_05rtt_with_0rtt() {
     let token = get_tokens(&mut client).pop().unwrap();
     // This test makes too many assumptions about what's in the packets to work with multi-packet
     // MLKEM flights.
-    let mut client = new_client(ConnectionParameters::default().mlkem(false));
+    let mut client = new_client(client_default_params().mlkem(false));
     client.enable_resumption(now, token).unwrap();
     let mut server = resumed_server(&client);
 
@@ -525,7 +526,7 @@ fn coalesce_05rtt() {
 #[test]
 fn reorder_handshake() {
     const RTT: Duration = Duration::from_millis(100);
-    let mut client = new_client(ConnectionParameters::default());
+    let mut client = new_client(client_default_params());
     let mut server = default_server();
     let mut now = now();
 
@@ -590,7 +591,7 @@ fn reorder_handshake() {
 /// which would be recoverable, but wasteful.
 #[test]
 fn interleave_versions_server() {
-    let mut client = new_client(ConnectionParameters::default().versions(
+    let mut client = new_client(client_default_params().versions(
         Version::Version1,
         vec![Version::Version2, Version::Version1],
     ));
@@ -646,7 +647,7 @@ fn interleave_versions_server() {
 /// Initial packets from both versions.
 #[test]
 fn interleave_versions_client() {
-    let mut client = new_client(ConnectionParameters::default().versions(
+    let mut client = new_client(client_default_params().versions(
         Version::Version1,
         vec![Version::Version2, Version::Version1],
     ));
@@ -914,7 +915,7 @@ fn connect_one_version() {
             Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
             DEFAULT_ADDR,
             DEFAULT_ADDR,
-            ConnectionParameters::default().versions(version, vec![version]),
+            client_default_params().versions(version, vec![version]),
             now(),
         )
         .unwrap();
@@ -922,7 +923,7 @@ fn connect_one_version() {
             test_fixture::DEFAULT_KEYS,
             test_fixture::DEFAULT_ALPN,
             Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-            ConnectionParameters::default().versions(version, vec![version]),
+            server_default_params().versions(version, vec![version]),
         )
         .unwrap();
         connect_force_idle(&mut client, &mut server);
@@ -939,7 +940,7 @@ fn connect_one_version() {
 #[test]
 fn anti_amplification() {
     // This test has its own logic for generating large CRYPTO frames, so turn off MLKEM.
-    let mut client = new_client(ConnectionParameters::default().mlkem(false));
+    let mut client = new_client(client_default_params().mlkem(false));
     let mut server = default_server();
     let mut now = now();
 
@@ -1364,7 +1365,7 @@ fn emit_authentication_needed_once() {
         test_fixture::DEFAULT_ALPN,
         Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
         // TODO: Why is this needed to avoind the 5ms pacing delay?
-        ConnectionParameters::default().pacing(false),
+        server_default_params().pacing(false),
     )
     .expect("create a server");
 
@@ -1416,7 +1417,7 @@ fn emit_authentication_needed_once() {
 fn client_initial_retransmits_identical() {
     let mut now = now();
     // TODO: With pacing on, why does the delay callback return by 5ms and then PTO after 295ms?
-    let mut client = new_client(ConnectionParameters::default().pacing(false));
+    let mut client = new_client(client_default_params().pacing(false));
 
     // Force the client to retransmit its Initial flight a number of times and make sure the
     // retranmissions are identical to the original. Also, verify the PTO durations.
@@ -1441,15 +1442,14 @@ fn client_initial_retransmits_identical() {
 #[test]
 fn server_initial_retransmits_identical() {
     let mut now = now();
-    // We need to calculate largest_acked below, which is difficult is packet number randomization
-    // in enabled.
-    let mut client = new_client(ConnectionParameters::default().randomize_ci_pn(false));
+    // We calculate largest_acked, which is difficult with packet number randomization.
+    let mut client = new_client(client_default_params().randomize_ci_pn(false));
     let mut ci = client.process_output(now).dgram();
     let mut ci2 = client.process_output(now).dgram();
 
     // Force the server to retransmit its Initial flight a number of times and make sure the
     // retranmissions are identical to the original. Also, verify the PTO durations.
-    let mut server = new_server(ConnectionParameters::default().pacing(false));
+    let mut server = new_server(server_default_params().pacing(false));
     let mut total_ptos = Duration::from_secs(0);
     for i in 1..=3 {
         println!("==== iteration {i} ====");
@@ -1493,8 +1493,8 @@ fn grease_quic_bit_transport_parameter() {
 
     for client_grease in [true, false] {
         for server_grease in [true, false] {
-            let mut client = new_client(ConnectionParameters::default().grease(client_grease));
-            let mut server = new_server(ConnectionParameters::default().grease(server_grease));
+            let mut client = new_client(client_default_params().grease(client_grease));
+            let mut server = new_server(server_default_params().grease(server_grease));
 
             connect(&mut client, &mut server);
 

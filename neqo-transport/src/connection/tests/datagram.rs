@@ -8,11 +8,10 @@ use std::{cell::RefCell, rc::Rc};
 
 use neqo_common::event::Provider as _;
 use static_assertions::const_assert;
-use test_fixture::now;
 
 use super::{
-    assert_error, connect_force_idle, default_client, default_server, new_client, new_server,
-    AT_LEAST_PTO,
+    assert_error, client_default_params, connect_force_idle, default_client, default_server,
+    new_client, new_server, now, server_default_params, AT_LEAST_PTO,
 };
 use crate::{
     connection::tests::DEFAULT_ADDR,
@@ -21,8 +20,7 @@ use crate::{
     packet,
     quic_datagrams::MAX_QUIC_DATAGRAM,
     send_stream::{RetransmissionPriority, TransmissionPriority},
-    CloseReason, Connection, ConnectionParameters, Error, Pmtud, StreamType,
-    MIN_INITIAL_PACKET_SIZE,
+    CloseReason, Connection, Error, Pmtud, StreamType, MIN_INITIAL_PACKET_SIZE,
 };
 
 // FIXME: The 27 here is a magic constant that the original code also (implicitly) had.
@@ -72,7 +70,7 @@ fn datagram_disabled_both() {
 #[test]
 fn datagram_enabled_on_client() {
     let mut client =
-        new_client(ConnectionParameters::default().datagram_size(DATAGRAM_LEN_SMALLER_THAN_MTU));
+        new_client(client_default_params().datagram_size(DATAGRAM_LEN_SMALLER_THAN_MTU));
     let mut server = default_server();
     connect_force_idle(&mut client, &mut server);
 
@@ -104,7 +102,7 @@ fn datagram_enabled_on_client() {
 fn datagram_enabled_on_server() {
     let mut client = default_client();
     let mut server =
-        new_server(ConnectionParameters::default().datagram_size(DATAGRAM_LEN_SMALLER_THAN_MTU));
+        new_server(server_default_params().datagram_size(DATAGRAM_LEN_SMALLER_THAN_MTU));
     connect_force_idle(&mut client, &mut server);
 
     assert_eq!(
@@ -133,11 +131,11 @@ fn datagram_enabled_on_server() {
 
 fn connect_datagram() -> (Connection, Connection) {
     let mut client = new_client(
-        ConnectionParameters::default()
+        client_default_params()
             .datagram_size(MAX_QUIC_DATAGRAM)
             .outgoing_datagram_queue(OUTGOING_QUEUE),
     );
-    let mut server = new_server(ConnectionParameters::default().datagram_size(MAX_QUIC_DATAGRAM));
+    let mut server = new_server(server_default_params().datagram_size(MAX_QUIC_DATAGRAM));
     connect_force_idle(&mut client, &mut server);
     (client, server)
 }
@@ -412,7 +410,7 @@ fn dgram_no_allowed() {
 #[test]
 fn dgram_too_big() {
     let mut client =
-        new_client(ConnectionParameters::default().datagram_size(DATAGRAM_LEN_SMALLER_THAN_MTU));
+        new_client(client_default_params().datagram_size(DATAGRAM_LEN_SMALLER_THAN_MTU));
     let mut server = default_server();
     connect_force_idle(&mut client, &mut server);
 
@@ -493,7 +491,7 @@ fn multiple_datagram_events() {
     const FOURTH_DATAGRAM: &[u8] = &[3; DATA_SIZE];
 
     let mut client = new_client(
-        ConnectionParameters::default()
+        client_default_params()
             .datagram_size(u64::try_from(DATA_SIZE).unwrap())
             .incoming_datagram_queue(MAX_QUEUE),
     );
@@ -539,7 +537,7 @@ fn too_many_datagram_events() {
     const FOURTH_DATAGRAM: &[u8] = &[3; DATA_SIZE];
 
     let mut client = new_client(
-        ConnectionParameters::default()
+        client_default_params()
             .datagram_size(u64::try_from(DATA_SIZE).unwrap())
             .incoming_datagram_queue(MAX_QUEUE),
     );

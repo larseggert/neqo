@@ -15,10 +15,10 @@ use neqo_http3::{
     Http3ServerEvent, Http3State, WebTransportEvent, WebTransportRequest, WebTransportServerEvent,
     WebTransportSessionAcceptAction,
 };
-use neqo_transport::{ConnectionParameters, StreamId, StreamType};
+use neqo_transport::{StreamId, StreamType};
 use test_fixture::{
-    anti_replay, fixture_init, now, CountingConnectionIdGenerator, DEFAULT_ADDR, DEFAULT_ALPN_H3,
-    DEFAULT_KEYS, DEFAULT_SERVER_NAME,
+    anti_replay, client_default_params, fixture_init, now, CountingConnectionIdGenerator,
+    DEFAULT_ADDR, DEFAULT_ALPN_H3, DEFAULT_KEYS, DEFAULT_SERVER_NAME,
 };
 
 fn connect() -> (Http3Client, Http3Server) {
@@ -236,7 +236,7 @@ fn receive_data_server(
 fn wt_keepalive() {
     let (mut client, mut server) = connect();
     let _wt_session = create_wt_session(&mut client, &mut server);
-    let idle_timeout = ConnectionParameters::default().get_idle_timeout();
+    let idle_timeout = client_default_params().get_idle_timeout();
     // Expect client and server to send PING after half of the idle timeout in order to keep
     // connection alive.
     assert_eq!(client.process_output(now()).callback(), idle_timeout / 2);
