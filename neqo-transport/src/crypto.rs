@@ -925,10 +925,33 @@ impl CryptoStates {
     }
 
     pub fn rx_hp(&mut self, version: Version, epoch: Epoch) -> Option<&mut CryptoDxState> {
-        if epoch == Epoch::ApplicationData {
-            self.app_read.as_mut().map(|ar| &mut ar.dx)
-        } else {
-            self.rx(version, epoch, false)
+        match epoch {
+            Epoch::ApplicationData => self.app_read.as_mut().map(|ar| &mut ar.dx),
+            Epoch::Initial => {
+                // When removing header protection, there might be multiple Initial
+                // keys in use.  The `used_pn` range tracks what has been received.
+                // But if the version changes, the version we select might have
+                // a value of 0, rather than the actual value.
+                // That can cause packet number recovery to fail.
+                // To avoid that, tweak the end of the value we return.
+                if self.initials[version]
+                    .as_ref()
+                    .is_some_and(|dx| dx.rx.next_pn() == 0)
+                {
+                    if let Some(other) = self.initials.iter().find_map(|(k, v)| {
+                        v.as_ref().is_some_and(|z| z.rx.next_pn() > 0).then_some(k)
+                    }) {
+                        if let Some(mut next) = self.initials[version].take() {
+                            if let Some(prev) = self.initials[other].as_ref().map(|dx| &dx.rx) {
+                                _ = next.rx.continuation(prev);
+                            }
+                            self.initials[version] = Some(next);
+                        }
+                    }
+                }
+                self.rx(version, epoch, false)
+            }
+            _ => self.rx(version, epoch, false),
         }
     }
 
