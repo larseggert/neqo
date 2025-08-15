@@ -3224,15 +3224,15 @@ impl Connection {
                     .streams_mut()
                     .inbound_frame(space, offset, data)?;
 
-                /*  if self.role == Role::Client
+                if self.role == Role::Client
                     && space == PacketNumberSpace::Initial
                     && packet_version != self.version
                 {
                     // If the server has switched versions, switch to that version.
                     // This is an assumption, but very often a good one.
                     // This function checks the state and does nothing if we have a version.
-                    self.compatible_upgrade(packet_version, now)?;
-                } */
+                    self.compatible_upgrade(packet_version)?;
+                }
 
                 if self.crypto.streams().data_ready(space) {
                     let mut buf = Vec::new();
