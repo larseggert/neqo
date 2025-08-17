@@ -20,7 +20,7 @@ use super::{
 };
 use crate::{
     addr_valid::{AddressValidation, ValidateAddress},
-    connection::tests::client_default_params,
+    connection::tests::{client_default_params, new_server, server_default_params},
     frame::FrameType,
     rtt::INITIAL_RTT,
     Error, State, Version, MIN_INITIAL_PACKET_SIZE,
@@ -95,7 +95,7 @@ fn ticket_rtt(rtt: Duration) -> Duration {
             .mlkem(false)
             .randomize_first_pn(false),
     );
-    let mut server = default_server();
+    let mut server = new_server(server_default_params().randomize_first_pn(false));
     let mut now = now();
 
     let client_initial = client.process_output(now);
