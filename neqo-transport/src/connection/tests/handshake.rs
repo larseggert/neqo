@@ -1269,22 +1269,25 @@ fn only_server_initial() {
     let _server_handshake2 = server.process_output(now + AT_LEAST_PTO).dgram().unwrap();
 
     // The client sends an Initial ACK.
+    let (s_init_1, s_hs_1) = split_datagram(&server_initial1);
     assert_eq!(client.stats().frame_tx.ack, 0);
-    let probe = client.process(Some(server_initial1), now).dgram();
+    let probe = client.process(Some(s_init_1), now).dgram();
     assert_initial(&probe.unwrap(), false);
-    assert_eq!(client.stats().dropped_rx, 1);
+    assert_eq!(client.stats().dropped_rx, 0);
     assert_eq!(client.stats().frame_tx.ack, 1);
 
     // The same happens after a PTO.
     now += AT_LEAST_PTO;
-    assert_eq!(client.stats().frame_tx.ack, 1);
-    let discarded = client.stats().dropped_rx;
-    let probe = client.process(Some(server_initial2), now).dgram();
+    let (s_init_2, _s_hs_2) = split_datagram(&server_initial2);
+    let probe = client.process(Some(s_init_2), now).dgram();
     assert_initial(&probe.unwrap(), false);
     assert_eq!(client.stats().frame_tx.ack, 2);
-    assert_eq!(client.stats().dropped_rx, discarded);
+    assert_eq!(client.stats().dropped_rx, 0);
 
-    // Pass the Handshake packet and complete the handshake.
+    // Pass the Handshake packet(s) and complete the handshake.
+    if let Some(s_hs_1) = s_hs_1 {
+        client.process_input(s_hs_1, now);
+    }
     client.process_input(server_handshake1, now);
     maybe_authenticate(&mut client);
     let dgram = client.process_output(now).dgram();

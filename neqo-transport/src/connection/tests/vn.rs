@@ -8,7 +8,6 @@ use std::time::Duration;
 
 use neqo_common::{event::Provider as _, Datagram, Decoder, Dscp, Encoder};
 use test_fixture::{
-    assertions,
     assertions::{self, assert_initial, assert_version},
     datagram, now, split_datagram,
 };
