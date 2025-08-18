@@ -428,12 +428,9 @@ fn new_token_different_port() {
 #[test]
 fn bad_client_initial() {
     const PN_LEN: usize = 2;
-    // This test needs to decrypt the CI; turn off MLKEM and random client initial packet numbers.
-    let mut client = new_client(
-        ConnectionParameters::default()
-            .mlkem(false)
-            .randomize_first_pn(false),
-    );
+    let mut client = new_client(ConnectionParameters::default().mlkem(false));
+    // There's some precise size counting we do in this test, so disable randomization
+    // of packet numbers.
     let mut server = new_server(ConnectionParameters::default().randomize_first_pn(false));
 
     let dgram = client.process_output(now()).dgram().expect("a datagram");
