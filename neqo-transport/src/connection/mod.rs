@@ -75,8 +75,6 @@ pub mod test_internal;
 use idle::IdleTimeout;
 pub use params::ConnectionParameters;
 use params::PreferredAddressConfig;
-#[cfg(test)]
-pub use params::ACK_RATIO_SCALE;
 use state::StateSignaling;
 pub use state::{ClosingFrame, State};
 
