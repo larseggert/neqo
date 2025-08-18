@@ -85,7 +85,8 @@ fn reorder_server_initial() {
     // A simple ACK frame for a single packet with packet number 0.
     const ACK_FRAME: &[u8] = &[0x02, 0x00, 0x00, 0x00, 0x00];
 
-    // This test needs to decrypt the CI, so turn off MLKEM and packet number randomization.
+    // This test predicts the precise format of an ACK frame, so turn off MLKEM
+    // and packet number randomization.
     let mut client = new_client(
         ConnectionParameters::default()
             .versions(Version::Version1, vec![Version::Version1])

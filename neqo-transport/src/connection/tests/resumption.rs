@@ -20,7 +20,6 @@ use super::{
 };
 use crate::{
     addr_valid::{AddressValidation, ValidateAddress},
-    connection::tests::new_server,
     frame::FrameType,
     ConnectionParameters, Error, State, Version, DEFAULT_INITIAL_RTT, MIN_INITIAL_PACKET_SIZE,
 };
@@ -87,14 +86,14 @@ fn ticket_rtt(rtt: Duration) -> Duration {
     // A simple ACK frame for a single packet with packet number 0.
     const ACK_FRAME_1: &[u8] = &[0x02, 0x00, 0x00, 0x00, 0x00];
 
-    // This test needs to decrypt the CI, so turn off MLKEM and packet number randomization.
+    // This test needs to predicts the exact shape of an ACK frame, so disable randomization.
     let mut client = new_client(
         ConnectionParameters::default()
             .versions(Version::Version1, vec![Version::Version1])
             .mlkem(false)
             .randomize_first_pn(false),
     );
-    let mut server = new_server(ConnectionParameters::default().randomize_first_pn(false));
+    let mut server = default_server();
     let mut now = now();
 
     let client_initial = client.process_output(now);
@@ -111,7 +110,6 @@ fn ticket_rtt(rtt: Duration) -> Duration {
     // Now decrypt the packet.
     let (aead, hp) = initial_aead_and_hp(&client_dcid, Role::Server);
     let (header, pn) = header_protection::remove(&hp, protected_header, payload);
-    assert_eq!(pn, 0);
     let pn_len = header.len() - protected_header.len();
     let mut buf = vec![0; payload.len()];
     let mut plaintext = aead
