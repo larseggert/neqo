@@ -168,13 +168,13 @@ impl ConnectionIdGenerator for CountingConnectionIdGenerator {
 /// Get the defaults that we use for most test cases for clients.
 #[must_use]
 pub fn client_default_params() -> ConnectionParameters {
-    ConnectionParameters::default().ack_ratio(255)
+    ConnectionParameters::default() //.ack_ratio(255)
 }
 
 /// Create a transport client with default configuration.
 #[must_use]
 pub fn default_client() -> Connection {
-    new_client(client_default_params())
+    new_client(ConnectionParameters::default())
 }
 
 /// Create a new client.

@@ -19,7 +19,7 @@ use neqo_transport::{
 };
 
 use crate::{
-    boxed, client_default_params, server_default_params,
+    boxed, server_default_params,
     sim::{self, Rng},
 };
 
@@ -88,7 +88,7 @@ impl Node {
     pub fn default_client<I: IntoIterator<Item = Box<dyn Goal>>>(goals: I) -> Self {
         Self::new_client(
             // Simulator logic does not work with multi-packet MLKEM crypto flights.
-            client_default_params().pmtud(true).mlkem(false),
+            ConnectionParameters::default().pmtud(true).mlkem(false),
             boxed![ReachState::new(State::Confirmed)],
             goals,
         )

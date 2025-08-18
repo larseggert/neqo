@@ -4,7 +4,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use test_fixture::{client_default_params, default_client, default_server, new_client, now};
+use neqo_transport::ConnectionParameters;
+use test_fixture::{default_client, default_server, new_client, now};
 
 #[test]
 fn sni_no_slicing_at_nonzero_offset() {
@@ -29,7 +30,7 @@ fn sni_no_slicing_at_nonzero_offset() {
 
 #[test]
 fn sni_no_slicing_at_nonzero_offset_no_mlkem() {
-    let mut client = new_client(client_default_params().mlkem(false));
+    let mut client = new_client(ConnectionParameters::default().mlkem(false));
     let mut now = now();
 
     // This packet will have two CRPYTO frames [x..end] and [0..x].

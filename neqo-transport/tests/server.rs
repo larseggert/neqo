@@ -19,7 +19,7 @@ use neqo_transport::{
     Version, MIN_INITIAL_PACKET_SIZE,
 };
 use test_fixture::{
-    assertions, client_default_params, datagram, default_client,
+    assertions, datagram, default_client,
     header_protection::{self, decode_initial_header, initial_aead_and_hp},
     new_client, now, server_default_params, split_datagram, CountingConnectionIdGenerator,
 };
@@ -64,7 +64,8 @@ fn single_client() {
 fn connect_single_version_both() {
     fn connect_one_version(version: Version) {
         let mut server = new_server(server_default_params().versions(version, vec![version]));
-        let mut client = new_client(client_default_params().versions(version, vec![version]));
+        let mut client =
+            new_client(ConnectionParameters::default().versions(version, vec![version]));
         let server_conn = connect(&mut client, &mut server);
         assert_eq!(client.version(), version);
         assert_eq!(server_conn.borrow().version(), version);
@@ -81,7 +82,8 @@ fn connect_single_version_client() {
     fn connect_one_version(version: Version) {
         let mut server = default_server();
 
-        let mut client = new_client(client_default_params().versions(version, vec![version]));
+        let mut client =
+            new_client(ConnectionParameters::default().versions(version, vec![version]));
         let server_conn = connect(&mut client, &mut server);
         assert_eq!(client.version(), version);
         assert_eq!(server_conn.borrow().version(), version);
@@ -426,7 +428,7 @@ fn bad_client_initial() {
     const PN_LEN: usize = 2;
     // This test needs to decrypt the CI; turn off MLKEM and random client initial packet numbers.
     let mut client = new_client(
-        client_default_params()
+        ConnectionParameters::default()
             .mlkem(false)
             .randomize_first_pn(false),
     );
@@ -524,7 +526,7 @@ fn bad_client_initial() {
 fn bad_client_initial_connection_close() {
     // This test needs to decrypt the CI; turn off MLKEM and random client initial packet numbers.
     let mut client = new_client(
-        client_default_params()
+        ConnectionParameters::default()
             .mlkem(false)
             .randomize_first_pn(false),
     );
@@ -661,7 +663,7 @@ fn version_negotiation_and_compatible() {
     // Note that the order of versions at the client only determines what it tries first.
     // The server will pick between VN_VERSION and COMPAT_VERSION.
     let mut client = new_client(
-        client_default_params()
+        ConnectionParameters::default()
             .versions(ORIG_VERSION, vec![ORIG_VERSION, VN_VERSION, COMPAT_VERSION]),
     );
 
@@ -711,7 +713,7 @@ fn compatible_upgrade_resumption_and_vn() {
     const COMPAT_VERSION: Version = Version::Version2;
     const RESUMPTION_VERSION: Version = Version::Draft29;
 
-    let client_params = client_default_params().versions(
+    let client_params = ConnectionParameters::default().versions(
         ORIG_VERSION,
         vec![COMPAT_VERSION, ORIG_VERSION, RESUMPTION_VERSION],
     );
