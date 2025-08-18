@@ -165,12 +165,6 @@ impl ConnectionIdGenerator for CountingConnectionIdGenerator {
     }
 }
 
-/// Get the defaults that we use for most test cases for clients.
-#[must_use]
-pub fn client_default_params() -> ConnectionParameters {
-    ConnectionParameters::default() //.ack_ratio(255)
-}
-
 /// Create a transport client with default configuration.
 #[must_use]
 pub fn default_client() -> Connection {
@@ -215,28 +209,19 @@ pub fn new_client(params: ConnectionParameters) -> Connection {
     client
 }
 
-/// Get the defaults that we use for most test cases for servers.
-#[must_use]
-pub fn server_default_params() -> ConnectionParameters {
-    ConnectionParameters::default().ack_ratio(255)
-}
-
 /// Create a transport server with default configuration.
 #[must_use]
 pub fn default_server() -> Connection {
-    new_server(DEFAULT_ALPN, server_default_params())
-}
-
-/// Get the defaults that we use for most test cases for HTTP/3 servers.
-#[must_use]
-pub fn server_default_params_h3() -> ConnectionParameters {
-    server_default_params().pacing(false)
+    new_server(DEFAULT_ALPN, ConnectionParameters::default())
 }
 
 /// Create a transport server with default configuration.
 #[must_use]
 pub fn default_server_h3() -> Connection {
-    new_server(DEFAULT_ALPN_H3, server_default_params_h3())
+    new_server(
+        DEFAULT_ALPN_H3,
+        ConnectionParameters::default().pacing(false),
+    )
 }
 
 /// Create a transport server with a configuration.
@@ -454,6 +439,7 @@ pub fn split_datagram(d: &Datagram) -> (Datagram, Option<Datagram>) {
 #[must_use]
 pub fn strip_padding(dgram: Datagram) -> Datagram {
     fn is_padding(dgram: &Datagram) -> bool {
+        qtrace!("is_padding: {dgram:?}");
         // This is a pretty rough heuristic, but it works for now.
         // Below the minimum packets size of 19 (1 type, 1 packet len, 1 content, 16 tag)
         // OR all values the same (except the last, in anticipation of SCONE indications).
@@ -461,6 +447,7 @@ pub fn strip_padding(dgram: Datagram) -> Datagram {
     }
     let (first, second) = split_datagram(&dgram);
     if second.as_ref().is_some_and(is_padding) {
+        qtrace!("dropping padding");
         first
     } else {
         dgram

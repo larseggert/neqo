@@ -16,7 +16,7 @@ use std::time::Duration;
 
 use neqo_transport::{ConnectionParameters, State};
 use test_fixture::{
-    boxed, client_default_params, server_default_params,
+    boxed,
     sim::{
         connection::{Node, ReachState, ReceiveData, SendData},
         network::{Delay, Mtu, TailDrop},
@@ -48,7 +48,7 @@ pub fn main() {
         "gbit-bandwidth",
         boxed![
             Node::new_client(
-                client_default_params(),
+                ConnectionParameters::default(),
                 boxed![ReachState::new(State::Confirmed)],
                 boxed![ReceiveData::new(TRANSFER_AMOUNT)]
             ),
@@ -56,7 +56,7 @@ pub fn main() {
             gbit_link(),
             Delay::new(Duration::from_millis(LINK_RTT_MS as u64 / 2)),
             Node::new_server(
-                server_default_params(),
+                ConnectionParameters::default(),
                 boxed![ReachState::new(State::Confirmed)],
                 boxed![SendData::new(TRANSFER_AMOUNT)]
             ),

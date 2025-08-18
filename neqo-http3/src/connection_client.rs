@@ -1314,8 +1314,8 @@ mod tests {
         Version, INITIAL_RECV_WINDOW_SIZE, MIN_INITIAL_PACKET_SIZE,
     };
     use test_fixture::{
-        anti_replay, client_default_params, default_server_h3, fixture_init, new_server, now,
-        server_default_params_h3, CountingConnectionIdGenerator, DEFAULT_ADDR, DEFAULT_ALPN_H3,
+        anti_replay,  default_server_h3, fixture_init, new_server, now,
+        CountingConnectionIdGenerator, DEFAULT_ADDR, DEFAULT_ALPN_H3,
         DEFAULT_KEYS, DEFAULT_SERVER_NAME,
     };
 
@@ -1354,7 +1354,7 @@ mod tests {
             Http3Parameters::default()
                 .connection_parameters(
                     // Disable compatible upgrade, which complicates tests.
-                    client_default_params().versions(Version::default(), vec![Version::default()]),
+                    ConnectionParameters::default().versions(Version::default(), vec![Version::default()]),
                 )
                 .max_table_size_encoder(max_table_size)
                 .max_table_size_decoder(max_table_size)
@@ -4298,7 +4298,7 @@ mod tests {
             DEFAULT_KEYS,
             DEFAULT_ALPN_H3,
             Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-            server_default_params_h3(),
+            ConnectionParameters::default(),
         )
         .unwrap();
         // Using a freshly initialized anti-replay context
@@ -7058,7 +7058,7 @@ mod tests {
         let mut client = default_http3_client();
         let mut server = TestServer::new_with_conn(new_server(
             DEFAULT_ALPN_H3,
-            server_default_params_h3().max_streams(StreamType::UniDi, 0),
+            ConnectionParameters::default().max_streams(StreamType::UniDi, 0),
         ));
         handshake_client_error(&mut client, &mut server, &Error::StreamLimit);
     }
@@ -7069,7 +7069,7 @@ mod tests {
         let mut client = default_http3_client();
         let mut server = TestServer::new_with_conn(new_server(
             DEFAULT_ALPN_H3,
-            server_default_params_h3().max_streams(StreamType::UniDi, 2),
+            ConnectionParameters::default().max_streams(StreamType::UniDi, 2),
         ));
         handshake_client_error(&mut client, &mut server, &Error::StreamLimit);
     }
@@ -7342,7 +7342,7 @@ mod tests {
     fn priority_update_during_full_buffer() {
         // set a lower MAX_DATA on the server side to restrict the data the client can send
         let (mut client, mut server) = connect_with_connection_parameters(
-            server_default_params_h3().max_data(MIN_INITIAL_PACKET_SIZE.try_into().unwrap()),
+            ConnectionParameters::default().max_data(MIN_INITIAL_PACKET_SIZE.try_into().unwrap()),
         );
 
         let request_stream_id = make_request_and_exchange_pkts(&mut client, &mut server, false);

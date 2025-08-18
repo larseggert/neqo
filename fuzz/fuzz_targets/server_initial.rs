@@ -9,14 +9,13 @@ fuzz_target!(|data: &[u8]| {
     use neqo_crypto::Aead;
     use neqo_transport::{packet::MIN_INITIAL_PACKET_SIZE, ConnectionParameters, Version};
     use test_fixture::{
-        client_default_params,
         header_protection::{self, decode_initial_header, initial_aead_and_hp},
-        new_client, new_server, now, server_default_params, DEFAULT_ALPN,
+        new_client, new_server, now, DEFAULT_ALPN,
     };
 
-    let mut client = new_client(client_default_params().mlkem(false));
+    let mut client = new_client(ConnectionParameters::default().mlkem(false));
     let ci = client.process_output(now()).dgram().expect("a datagram");
-    let mut server = new_server(DEFAULT_ALPN, server_default_params().mlkem(false));
+    let mut server = new_server(DEFAULT_ALPN, ConnectionParameters::default().mlkem(false));
     let si = server.process(Some(ci), now()).dgram().expect("a datagram");
 
     let Some((header, d_cid, s_cid, payload)) = decode_initial_header(&si, Role::Server) else {

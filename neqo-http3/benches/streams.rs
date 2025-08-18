@@ -13,8 +13,7 @@ use neqo_crypto::AuthenticationStatus;
 use neqo_http3::{Http3Client, Http3Parameters, Http3Server, Priority};
 use neqo_transport::{ConnectionParameters, StreamType};
 use test_fixture::{
-    client_default_params, fixture_init, http3_client_with_params, http3_server_with_params, now,
-    DEFAULT_SERVER_NAME,
+    fixture_init, http3_client_with_params, http3_server_with_params, now, DEFAULT_SERVER_NAME,
 };
 
 const STREAM_TYPE: StreamType = StreamType::BiDi;
@@ -46,7 +45,7 @@ fn use_streams(client: &mut Http3Client, server: &mut Http3Server, streams: usiz
 }
 
 fn connect() -> (Http3Client, Http3Server) {
-    let cp = client_default_params()
+    let cp = ConnectionParameters::default()
         .max_streams(STREAM_TYPE, STREAMS_MAX)
         .pmtud(false)
         .pacing(false)

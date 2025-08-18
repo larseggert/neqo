@@ -12,10 +12,10 @@ use std::{cell::RefCell, rc::Rc, time::Duration};
 
 use neqo_common::{event::Provider as _, header::HeadersExt as _};
 use neqo_crypto::AuthenticationStatus;
-use neqo_transport::{recv_stream, send_stream, Pmtud, StreamId, StreamType};
+use neqo_transport::{recv_stream, send_stream, ConnectionParameters, Pmtud, StreamId, StreamType};
 use test_fixture::{
-    anti_replay, fixture_init, now, server_default_params_h3, CountingConnectionIdGenerator,
-    DEFAULT_ADDR, DEFAULT_ALPN_H3, DEFAULT_KEYS, DEFAULT_SERVER_NAME,
+    anti_replay, fixture_init, now, CountingConnectionIdGenerator, DEFAULT_ADDR, DEFAULT_ALPN_H3,
+    DEFAULT_KEYS, DEFAULT_SERVER_NAME,
 };
 
 use crate::{
@@ -31,7 +31,7 @@ const DATAGRAM_SIZE: u64 = Pmtud::default_plpmtu(DEFAULT_ADDR.ip()) as u64 - 40;
 pub fn wt_default_parameters() -> Http3Parameters {
     Http3Parameters::default()
         .webtransport(true)
-        .connection_parameters(server_default_params_h3().datagram_size(DATAGRAM_SIZE))
+        .connection_parameters(ConnectionParameters::default().datagram_size(DATAGRAM_SIZE))
 }
 
 pub fn default_http3_client(client_params: Http3Parameters) -> Http3Client {

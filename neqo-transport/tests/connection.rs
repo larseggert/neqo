@@ -14,7 +14,7 @@ use neqo_transport::{
 use test_fixture::{
     default_client, default_server,
     header_protection::{self, decode_initial_header, initial_aead_and_hp},
-    new_client, new_server, now, server_default_params, split_datagram, DEFAULT_ALPN,
+    new_client, new_server, now, split_datagram, DEFAULT_ALPN,
 };
 
 #[test]
@@ -48,7 +48,7 @@ fn truncate_long_packet() {
 
     // This test needs to alter the server handshake, so turn off MLKEM.
     let mut client = new_client(ConnectionParameters::default().mlkem(false));
-    let mut server = new_server(DEFAULT_ALPN, server_default_params().mlkem(false));
+    let mut server = new_server(DEFAULT_ALPN, ConnectionParameters::default().mlkem(false));
 
     let out = client.process_output(now).dgram().unwrap();
     let out = server.process(Some(out), now);
@@ -364,7 +364,7 @@ fn server_initial_packet_number() {
         );
         let mut server = new_server(
             DEFAULT_ALPN,
-            server_default_params()
+            ConnectionParameters::default()
                 .versions(Version::Version1, vec![Version::Version1])
                 .randomize_first_pn(randomize),
         );
