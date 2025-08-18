@@ -62,8 +62,7 @@ pub use self::{
         EmptyConnectionIdGenerator, RandomConnectionIdGenerator,
     },
     connection::{
-        params::{ConnectionParameters, ACK_RATIO_SCALE},
-        Connection, Output, OutputBatch, State, ZeroRttState,
+        params::ConnectionParameters, Connection, Output, OutputBatch, State, ZeroRttState,
     },
     events::{ConnectionEvent, ConnectionEvents},
     frame::CloseError,
@@ -71,6 +70,7 @@ pub use self::{
     pmtud::Pmtud,
     quic_datagrams::DatagramTracking,
     recv_stream::INITIAL_RECV_WINDOW_SIZE,
+    rtt::DEFAULT_INITIAL_RTT,
     sni::find_sni,
     stats::Stats,
     stream_id::{StreamId, StreamType},

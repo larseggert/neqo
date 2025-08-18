@@ -175,7 +175,7 @@ const fn alpn_from_quic_version(version: Version) -> &'static str {
 ///
 ///     while let Some(event) = client.next_event() {
 ///         match event {
-///             Http3ClientEvent::WebTransport(WebTransportEvent::Session{
+///             Http3ClientEvent::WebTransport(WebTransportEvent::NewSession{
 ///                 stream_id,
 ///                 status,
 ///                 ..
@@ -1314,9 +1314,9 @@ mod tests {
         Version, INITIAL_RECV_WINDOW_SIZE, MIN_INITIAL_PACKET_SIZE,
     };
     use test_fixture::{
-        anti_replay, default_server_h3, fixture_init, new_server, now,
-        CountingConnectionIdGenerator, DEFAULT_ADDR, DEFAULT_ALPN_H3, DEFAULT_KEYS,
-        DEFAULT_SERVER_NAME,
+        anti_replay,  default_server_h3, fixture_init, new_server, now,
+        CountingConnectionIdGenerator, DEFAULT_ADDR, DEFAULT_ALPN_H3,
+        DEFAULT_KEYS, DEFAULT_SERVER_NAME,
     };
 
     use super::{
@@ -1354,8 +1354,7 @@ mod tests {
             Http3Parameters::default()
                 .connection_parameters(
                     // Disable compatible upgrade, which complicates tests.
-                    ConnectionParameters::default()
-                        .versions(Version::default(), vec![Version::default()]),
+                    ConnectionParameters::default().versions(Version::default(), vec![Version::default()]),
                 )
                 .max_table_size_encoder(max_table_size)
                 .max_table_size_decoder(max_table_size)
@@ -1390,6 +1389,8 @@ mod tests {
     const CLIENT_SIDE_CONTROL_STREAM_ID: StreamId = StreamId::new(2);
     const CLIENT_SIDE_ENCODER_STREAM_ID: StreamId = StreamId::new(6);
     const CLIENT_SIDE_DECODER_STREAM_ID: StreamId = StreamId::new(10);
+
+    const DEFAULT_IDLE_TIMEOUT: Duration = ConnectionParameters::DEFAULT_IDLE_TIMEOUT;
 
     struct TestServer {
         settings: HFrame,
@@ -2638,8 +2639,10 @@ mod tests {
         let (mut client, mut server, _request_stream_id) = connect_and_send_request(true);
         force_idle(&mut client, &mut server);
 
-        let idle_timeout = ConnectionParameters::default().get_idle_timeout();
-        assert_eq!(client.process_output(now()).callback(), idle_timeout / 2);
+        assert_eq!(
+            client.process_output(now()).callback(),
+            DEFAULT_IDLE_TIMEOUT / 2
+        );
     }
 
     // Helper function: read response when a server sends HTTP_RESPONSE_2.
@@ -5114,7 +5117,6 @@ mod tests {
     #[test]
     fn push_keep_alive() {
         let (mut client, mut server, request_stream_id) = connect_and_send_request(true);
-        let idle_timeout = ConnectionParameters::default().get_idle_timeout();
 
         // Promise a push and deliver, but don't close the stream.
         send_push_promise(&mut server.conn, request_stream_id, PushId::new(0));
@@ -5137,7 +5139,10 @@ mod tests {
 
         // The client will become idle here.
         force_idle(&mut client, &mut server);
-        assert_eq!(client.process_output(now()).callback(), idle_timeout);
+        assert_eq!(
+            client.process_output(now()).callback(),
+            DEFAULT_IDLE_TIMEOUT
+        );
 
         // Reading push data will stop the client from being idle.
         _ = send_push_data(&mut server.conn, PushId::new(0), false);
@@ -5152,7 +5157,10 @@ mod tests {
         assert!(!fin);
 
         force_idle(&mut client, &mut server);
-        assert_eq!(client.process_output(now()).callback(), idle_timeout / 2);
+        assert_eq!(
+            client.process_output(now()).callback(),
+            DEFAULT_IDLE_TIMEOUT / 2
+        );
     }
 
     #[test]

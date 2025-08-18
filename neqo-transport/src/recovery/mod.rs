@@ -71,7 +71,7 @@ impl SendProfile {
         Self {
             limit: max(ACK_ONLY_SIZE_LIMIT - 1, limit),
             pto: None,
-            probe: PacketNumberSpaceSet::default(),
+            probe: PacketNumberSpaceSet::empty(),
             paced: false,
         }
     }
@@ -82,7 +82,7 @@ impl SendProfile {
         Self {
             limit: ACK_ONLY_SIZE_LIMIT - 1,
             pto: None,
-            probe: PacketNumberSpaceSet::default(),
+            probe: PacketNumberSpaceSet::empty(),
             paced: true,
         }
     }
@@ -90,7 +90,6 @@ impl SendProfile {
     #[must_use]
     pub fn new_pto(pn_space: PacketNumberSpace, mtu: usize, probe: PacketNumberSpaceSet) -> Self {
         debug_assert!(mtu > ACK_ONLY_SIZE_LIMIT);
-        debug_assert!(probe.contains(pn_space));
         Self {
             limit: mtu,
             pto: Some(pn_space),
@@ -425,35 +424,22 @@ struct PtoState {
 }
 
 impl PtoState {
-    /// The number of packets we send on a PTO.
-    fn pto_packet_count(space: PacketNumberSpace) -> usize {
-        if space == PacketNumberSpace::ApplicationData {
-            MAX_PTO_PACKET_COUNT
-        } else {
-            // For the Initial and Handshake spaces, we only send one packet on PTO. This avoids
-            // sending useless PING-only packets when only a single packet was lost, which is the
-            // common case. These PINGs use cwnd and amplification window space, and sending them
-            // hence makes the handshake more brittle.
-            1
-        }
-    }
-
     pub fn new(space: PacketNumberSpace, probe: PacketNumberSpaceSet) -> Self {
         debug_assert!(probe.contains(space));
         Self {
             space,
             count: 1,
-            packets: Self::pto_packet_count(space),
+            packets: MAX_PTO_PACKET_COUNT,
             probe,
         }
     }
 
     pub fn pto(&mut self, space: PacketNumberSpace, probe: PacketNumberSpaceSet) {
         debug_assert!(probe.contains(space));
-        self.space = space;
+        self.space = min(space, self.space);
         self.count += 1;
-        self.packets = Self::pto_packet_count(space);
-        self.probe = probe;
+        self.packets = MAX_PTO_PACKET_COUNT;
+        self.probe |= probe;
     }
 
     pub const fn count(&self) -> usize {
@@ -468,10 +454,20 @@ impl PtoState {
     /// This takes a packet from the supply if one remains, or returns `None`.
     pub fn send_profile(&mut self, mtu: usize) -> Option<SendProfile> {
         (self.packets > 0).then(|| {
-            // This is a PTO, so ignore the limit.
             self.packets -= 1;
+            // This is a PTO, so ignore the limit.
             SendProfile::new_pto(self.space, mtu, self.probe)
         })
+    }
+
+    pub fn pto_sent(&mut self, space: PacketNumberSpace) {
+        // For Initial and Handshake packets, don't force probes after the first packet.
+        // Probing forces the inclusion of frames, even when there is nothing to send.
+        // We do want to send subsequent packets if there is something there,
+        // but, if we force a probe, we end up sending useless packets with just PING.
+        if self.packets < MAX_PTO_PACKET_COUNT && space != PacketNumberSpace::ApplicationData {
+            self.probe -= space;
+        }
     }
 }
 
@@ -530,6 +526,9 @@ impl Loss {
     pub fn on_packet_sent(&mut self, path: &PathRef, mut sent_packet: sent::Packet, now: Instant) {
         let pn_space = PacketNumberSpace::from(sent_packet.packet_type());
         qtrace!("[{self}] packet {pn_space}-{} sent", sent_packet.pn());
+        if let Some(pto) = self.pto_state.as_mut() {
+            pto.pto_sent(pn_space);
+        }
         if let Some(space) = self.spaces.get_mut(pn_space) {
             path.borrow_mut().packet_sent(&mut sent_packet, now);
             space.on_packet_sent(sent_packet);
