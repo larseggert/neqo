@@ -46,7 +46,7 @@ use crate::{
     quic_datagrams::{DatagramTracking, QuicDatagrams},
     recovery::{self, sent, SendProfile},
     recv_stream,
-    rtt::{RttEstimate, GRANULARITY, INITIAL_RTT},
+    rtt::{RttEstimate, GRANULARITY},
     saved::SavedDatagrams,
     send_stream::{self, SendStream},
     stats::{Stats, StatsCell},
@@ -683,7 +683,7 @@ impl Connection {
                     // When we have no actual RTT sample, do not encode a guestimated RTT larger
                     // than the default initial RTT. (The guess can be very large under lossy
                     // conditions.)
-                    if rtt < INITIAL_RTT {
+                    if rtt < self.conn_params.get_initial_rtt() {
                         rtt
                     } else {
                         Duration::from_millis(0)
@@ -717,7 +717,7 @@ impl Connection {
     /// only use it where a more precise value is not important.
     fn pto(&self) -> Duration {
         self.paths.primary().map_or_else(
-            || RttEstimate::default().pto(self.confirmed()),
+            || RttEstimate::new(self.conn_params.get_initial_rtt()).pto(self.confirmed()),
             |p| p.borrow().rtt().pto(self.confirmed()),
         )
     }
@@ -1628,6 +1628,15 @@ impl Connection {
             State::Closing { .. } => {
                 // Don't bother processing the packet. Instead ask to get a
                 // new close frame.
+                //
+                // > In the closing state, an endpoint retains only enough
+                // > information to generate a packet containing a
+                // > CONNECTION_CLOSE frame and to identify packets as belonging
+                // > to the connection. An endpoint in the closing state sends a
+                // > packet containing a CONNECTION_CLOSE frame in response to any
+                // > incoming packet that it attributes to the connection.
+                //
+                // <https://www.rfc-editor.org/rfc/rfc9000.html#section-10.2.1-2>
                 self.state_signaling.send_close();
                 PreprocessResult::Next
             }
@@ -2287,7 +2296,7 @@ impl Connection {
         now: Instant,
     ) {
         let rtt = self.paths.primary().map_or_else(
-            || RttEstimate::default().estimate(),
+            || RttEstimate::new(self.conn_params.get_initial_rtt()).estimate(),
             |p| p.borrow().rtt().estimate(),
         );
 
