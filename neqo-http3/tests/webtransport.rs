@@ -15,11 +15,10 @@ use neqo_http3::{
     Http3ServerEvent, Http3State, WebTransportEvent, WebTransportRequest, WebTransportServerEvent,
     WebTransportSessionAcceptAction,
 };
-use neqo_transport::{StreamId, StreamType};
+use neqo_transport::{ConnectionParameters, StreamId, StreamType};
 use test_fixture::{
-    anti_replay, client_default_params, exchange_packets, fixture_init, now,
-    CountingConnectionIdGenerator, DEFAULT_ADDR, DEFAULT_ALPN_H3, DEFAULT_KEYS,
-    DEFAULT_SERVER_NAME,
+    anti_replay, exchange_packets, fixture_init, now, CountingConnectionIdGenerator, DEFAULT_ADDR,
+    DEFAULT_ALPN_H3, DEFAULT_KEYS, DEFAULT_SERVER_NAME,
 };
 
 fn connect() -> (Http3Client, Http3Server) {

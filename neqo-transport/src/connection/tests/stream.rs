@@ -15,7 +15,6 @@ use super::{
     DEFAULT_STREAM_DATA,
 };
 use crate::{
-    connection::tests::{client_default_params, server_default_params},
     events::ConnectionEvent,
     frame::FrameType,
     packet,
@@ -23,7 +22,7 @@ use crate::{
     send_stream::{self, OrderGroup},
     streams::{SendOrder, StreamOrder},
     tparams::{TransportParameter, TransportParameterId::*},
-    CloseReason, Connection, Error, StreamId, StreamType,
+    CloseReason, Connection, ConnectionParameters, Error, StreamId, StreamType,
 };
 
 #[test]
@@ -347,8 +346,9 @@ fn sending_max_data() {
     const SMALL_MAX_DATA: usize = 2048;
 
     let mut client = default_client();
-    let mut server =
-        new_server(server_default_params().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()));
+    let mut server = new_server(
+        ConnectionParameters::default().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()),
+    );
 
     connect(&mut client, &mut server);
 
@@ -454,8 +454,9 @@ fn exceed_max_data() {
     const SMALL_MAX_DATA: usize = 1024;
 
     let mut client = default_client();
-    let mut server =
-        new_server(server_default_params().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()));
+    let mut server = new_server(
+        ConnectionParameters::default().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()),
+    );
 
     connect(&mut client, &mut server);
 
@@ -1002,7 +1003,7 @@ fn change_flow_control(stream_type: StreamType, new_fc: u64) {
     const RECV_BUFFER_START: u64 = 300;
 
     let mut client = new_client(
-        client_default_params()
+        ConnectionParameters::default()
             .max_stream_data(StreamType::BiDi, true, RECV_BUFFER_START)
             .max_stream_data(StreamType::UniDi, true, RECV_BUFFER_START),
     );
@@ -1069,8 +1070,9 @@ fn session_flow_control_stop_sending_state_recv() {
     const SMALL_MAX_DATA: usize = 1024;
 
     let mut client = default_client();
-    let mut server =
-        new_server(server_default_params().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()));
+    let mut server = new_server(
+        ConnectionParameters::default().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()),
+    );
 
     connect(&mut client, &mut server);
 
@@ -1117,8 +1119,9 @@ fn session_flow_control_stop_sending_state_size_known() {
     const SMALL_MAX_DATA: usize = 1024;
 
     let mut client = default_client();
-    let mut server =
-        new_server(server_default_params().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()));
+    let mut server = new_server(
+        ConnectionParameters::default().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()),
+    );
 
     connect(&mut client, &mut server);
 
@@ -1167,8 +1170,9 @@ fn session_flow_control_stop_sending_state_data_recvd() {
     const SMALL_MAX_DATA: usize = 1024;
 
     let mut client = default_client();
-    let mut server =
-        new_server(server_default_params().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()));
+    let mut server = new_server(
+        ConnectionParameters::default().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()),
+    );
 
     connect(&mut client, &mut server);
 
@@ -1211,8 +1215,9 @@ fn session_flow_control_affects_all_streams() {
     const SMALL_MAX_DATA: usize = 1024;
 
     let mut client = default_client();
-    let mut server =
-        new_server(server_default_params().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()));
+    let mut server = new_server(
+        ConnectionParameters::default().max_data(u64::try_from(SMALL_MAX_DATA).unwrap()),
+    );
 
     connect(&mut client, &mut server);
 
@@ -1268,7 +1273,7 @@ fn connect_w_different_limit(bidi_limit: u64, unidi_limit: u64) {
     let out = client.process_output(now());
     let out2 = client.process_output(now());
     let mut server = new_server(
-        server_default_params()
+        ConnectionParameters::default()
             .max_streams(StreamType::BiDi, bidi_limit)
             .max_streams(StreamType::UniDi, unidi_limit),
     );

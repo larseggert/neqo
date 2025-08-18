@@ -94,16 +94,6 @@ impl ConnectionIdGenerator for CountingConnectionIdGenerator {
     }
 }
 
-// This is fabulous: because test_fixture uses the public API for Connection,
-// it gets a different type to the ones that are referenced via super::super::*.
-// Thus, this code can't use default_client() and default_server() from
-// test_fixture because they produce different - and incompatible - types.
-//
-// These are a direct copy of those functions.
-pub fn client_default_params() -> ConnectionParameters {
-    ConnectionParameters::default()
-}
-
 pub fn new_client(params: ConnectionParameters) -> Connection {
     fixture_init();
     let (log, _contents) = new_neqo_qlog();
@@ -122,7 +112,7 @@ pub fn new_client(params: ConnectionParameters) -> Connection {
 }
 
 pub fn default_client() -> Connection {
-    new_client(client_default_params())
+    new_client(ConnectionParameters::default())
 }
 
 fn zero_len_cid_client(local_addr: SocketAddr, remote_addr: SocketAddr) -> Connection {
@@ -132,14 +122,10 @@ fn zero_len_cid_client(local_addr: SocketAddr, remote_addr: SocketAddr) -> Conne
         Rc::new(RefCell::new(EmptyConnectionIdGenerator::default())),
         local_addr,
         remote_addr,
-        client_default_params(),
+        ConnectionParameters::default(),
         now(),
     )
     .unwrap()
-}
-
-pub fn server_default_params() -> ConnectionParameters {
-    ConnectionParameters::default() //.randomize_first_pn(false)
 }
 
 pub fn new_server(params: ConnectionParameters) -> Connection {
@@ -158,10 +144,10 @@ pub fn new_server(params: ConnectionParameters) -> Connection {
     c
 }
 pub fn default_server() -> Connection {
-    new_server(server_default_params())
+    new_server(ConnectionParameters::default())
 }
 pub fn resumed_server(client: &Connection) -> Connection {
-    new_server(server_default_params().versions(client.version(), Version::all()))
+    new_server(ConnectionParameters::default().versions(client.version(), Version::all()))
 }
 
 /// If state is `AuthenticationNeeded` call `authenticated()`. This function will
@@ -755,7 +741,7 @@ fn create_server() {
 #[test]
 fn tp_grease() {
     for enable in [true, false] {
-        let client = new_client(client_default_params().grease(enable));
+        let client = new_client(ConnectionParameters::default().grease(enable));
         let grease = client.tps.borrow_mut().local().get_empty(GreaseQuicBit);
         assert_eq!(enable, grease);
     }
@@ -764,7 +750,7 @@ fn tp_grease() {
 #[test]
 fn tp_disable_migration() {
     for disable in [true, false] {
-        let client = new_client(client_default_params().disable_migration(disable));
+        let client = new_client(ConnectionParameters::default().disable_migration(disable));
         let disable_migration = client.tps.borrow_mut().local().get_empty(DisableMigration);
         assert_eq!(disable, disable_migration);
     }

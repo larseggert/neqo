@@ -15,7 +15,7 @@ use super::{
     resumed_server, CountingConnectionIdGenerator, Output,
 };
 use crate::{
-    connection::tests::server_default_params, events::ConnectionEvent, Error, StreamType, Version,
+    events::ConnectionEvent, ConnectionParameters, Error, StreamType, Version,
     MIN_INITIAL_PACKET_SIZE,
 };
 
@@ -149,7 +149,7 @@ fn zero_rtt_send_reject() {
         test_fixture::DEFAULT_KEYS,
         test_fixture::DEFAULT_ALPN,
         Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-        server_default_params().versions(client.version(), Version::all()),
+        ConnectionParameters::default().versions(client.version(), Version::all()),
     )
     .unwrap();
     // Using a freshly initialized anti-replay context
@@ -220,7 +220,7 @@ fn zero_rtt_update_flow_control() {
 
     let mut client = default_client();
     let mut server = new_server(
-        server_default_params()
+        ConnectionParameters::default()
             .max_stream_data(StreamType::UniDi, true, LOW)
             .max_stream_data(StreamType::BiDi, true, LOW),
     );
@@ -232,7 +232,7 @@ fn zero_rtt_update_flow_control() {
         .enable_resumption(now(), token)
         .expect("should set token");
     let mut server = new_server(
-        server_default_params()
+        ConnectionParameters::default()
             .max_stream_data(StreamType::UniDi, true, HIGH)
             .max_stream_data(StreamType::BiDi, true, HIGH)
             .versions(client.version, Version::all()),

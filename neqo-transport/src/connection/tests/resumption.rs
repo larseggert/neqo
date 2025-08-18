@@ -20,9 +20,9 @@ use super::{
 };
 use crate::{
     addr_valid::{AddressValidation, ValidateAddress},
-    connection::tests::{client_default_params, new_server, server_default_params},
+    connection::tests::new_server,
     frame::FrameType,
-    Error, State, Version, DEFAULT_INITIAL_RTT, MIN_INITIAL_PACKET_SIZE,
+    ConnectionParameters, Error, State, Version, DEFAULT_INITIAL_RTT, MIN_INITIAL_PACKET_SIZE,
 };
 
 #[test]
@@ -89,12 +89,12 @@ fn ticket_rtt(rtt: Duration) -> Duration {
 
     // This test needs to decrypt the CI, so turn off MLKEM and packet number randomization.
     let mut client = new_client(
-        client_default_params()
+        ConnectionParameters::default()
             .versions(Version::Version1, vec![Version::Version1])
             .mlkem(false)
             .randomize_first_pn(false),
     );
-    let mut server = new_server(server_default_params().randomize_first_pn(false));
+    let mut server = new_server(ConnectionParameters::default().randomize_first_pn(false));
     let mut now = now();
 
     let client_initial = client.process_output(now);
@@ -319,14 +319,16 @@ fn take_token() {
 /// If a version is selected and subsequently disabled, resumption fails.
 #[test]
 fn resume_disabled_version() {
-    let mut client =
-        new_client(client_default_params().versions(Version::Version1, vec![Version::Version1]));
+    let mut client = new_client(
+        ConnectionParameters::default().versions(Version::Version1, vec![Version::Version1]),
+    );
     let mut server = default_server();
     connect(&mut client, &mut server);
     let token = exchange_ticket(&mut client, &mut server, now());
 
-    let mut client =
-        new_client(client_default_params().versions(Version::Version2, vec![Version::Version2]));
+    let mut client = new_client(
+        ConnectionParameters::default().versions(Version::Version2, vec![Version::Version2]),
+    );
     assert_eq!(
         client.enable_resumption(now(), token).unwrap_err(),
         Error::DisabledVersion

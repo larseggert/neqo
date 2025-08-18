@@ -9,9 +9,8 @@ use std::time::Duration;
 use neqo_common::{qdebug, qinfo, Datagram, Ecn};
 
 use super::{
-    super::Output, ack_bytes, assert_full_cwnd, client_default_params, connect_rtt_idle, cwnd,
-    cwnd_avail, cwnd_packets, default_client, default_server, fill_cwnd,
-    induce_persistent_congestion, send_something, server_default_params,
+    super::Output, ack_bytes, assert_full_cwnd, connect_rtt_idle, cwnd, cwnd_avail, cwnd_packets,
+    default_client, default_server, fill_cwnd, induce_persistent_congestion, send_something,
     CLIENT_HANDSHAKE_1RTT_PACKETS, DEFAULT_RTT, POST_HANDSHAKE_CWND,
 };
 use crate::{
@@ -20,7 +19,7 @@ use crate::{
     recovery::{ACK_ONLY_SIZE_LIMIT, PACKET_THRESHOLD},
     sender::PACING_BURST_SIZE,
     stream_id::StreamType,
-    CongestionControlAlgorithm,
+    CongestionControlAlgorithm, ConnectionParameters,
 };
 
 #[test]
@@ -39,8 +38,8 @@ fn cc_slow_start() {
 
 #[test]
 fn cc_slow_start_pmtud() {
-    let mut client = new_client(client_default_params().pmtud(true));
-    let mut server = new_server(server_default_params().pmtud(true));
+    let mut client = new_client(ConnectionParameters::default().pmtud(true));
+    let mut server = new_server(ConnectionParameters::default().pmtud(true));
     let now = connect_with_rtt(&mut client, &mut server, now(), DEFAULT_RTT);
 
     // Try to send a lot of data
@@ -61,7 +60,7 @@ enum CongestionSignal {
 fn cc_slow_start_to_cong_avoidance_recovery_period(congestion_signal: CongestionSignal) {
     // This test needs to calculate largest_acked, which is difficult if packet number
     // randomization is enabled.
-    let mut client = new_client(client_default_params().randomize_first_pn(false));
+    let mut client = new_client(ConnectionParameters::default().randomize_first_pn(false));
     let mut server = default_server();
     let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
 
@@ -216,8 +215,8 @@ fn single_packet_on_recovery() {
 /// Verify that CC moves out of recovery period when packet sent after start
 /// of recovery period is acked.
 fn cc_cong_avoidance_recovery_period_to_cong_avoidance(cc_algorithm: CongestionControlAlgorithm) {
-    let mut client = new_client(client_default_params().cc_algorithm(cc_algorithm));
-    let mut server = new_server(server_default_params().cc_algorithm(cc_algorithm));
+    let mut client = new_client(ConnectionParameters::default().cc_algorithm(cc_algorithm));
+    let mut server = new_server(ConnectionParameters::default().cc_algorithm(cc_algorithm));
     let now = connect_rtt_idle(&mut client, &mut server, DEFAULT_RTT);
 
     // Create stream 0

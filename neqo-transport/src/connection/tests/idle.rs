@@ -11,9 +11,9 @@ use test_fixture::now;
 
 use super::{
     super::{Connection, ConnectionParameters, IdleTimeout, Output, State},
-    client_default_params, connect, connect_force_idle, connect_rtt_idle, connect_with_rtt,
-    default_client, default_server, maybe_authenticate, new_client, new_server, send_and_receive,
-    send_something, server_default_params, AT_LEAST_PTO, DEFAULT_STREAM_DATA,
+    connect, connect_force_idle, connect_rtt_idle, connect_with_rtt, default_client,
+    default_server, maybe_authenticate, new_client, new_server, send_and_receive, send_something,
+    AT_LEAST_PTO, DEFAULT_STREAM_DATA,
 };
 use crate::{
     packet::{self, PACKET_LIMIT},
@@ -61,7 +61,7 @@ fn idle_timeout() {
 #[test]
 fn idle_timeout_custom_client() {
     const IDLE_TIMEOUT: Duration = Duration::from_secs(5);
-    let mut client = new_client(client_default_params().idle_timeout(IDLE_TIMEOUT));
+    let mut client = new_client(ConnectionParameters::default().idle_timeout(IDLE_TIMEOUT));
     let mut server = default_server();
     test_idle_timeout(&mut client, &mut server, IDLE_TIMEOUT);
 }
@@ -70,7 +70,7 @@ fn idle_timeout_custom_client() {
 fn idle_timeout_custom_server() {
     const IDLE_TIMEOUT: Duration = Duration::from_secs(5);
     let mut client = default_client();
-    let mut server = new_server(server_default_params().idle_timeout(IDLE_TIMEOUT));
+    let mut server = new_server(ConnectionParameters::default().idle_timeout(IDLE_TIMEOUT));
     test_idle_timeout(&mut client, &mut server, IDLE_TIMEOUT);
 }
 
@@ -78,8 +78,8 @@ fn idle_timeout_custom_server() {
 fn idle_timeout_custom_both() {
     const LOWER_TIMEOUT: Duration = Duration::from_secs(5);
     const HIGHER_TIMEOUT: Duration = Duration::from_secs(10);
-    let mut client = new_client(client_default_params().idle_timeout(HIGHER_TIMEOUT));
-    let mut server = new_server(server_default_params().idle_timeout(LOWER_TIMEOUT));
+    let mut client = new_client(ConnectionParameters::default().idle_timeout(HIGHER_TIMEOUT));
+    let mut server = new_server(ConnectionParameters::default().idle_timeout(LOWER_TIMEOUT));
     test_idle_timeout(&mut client, &mut server, LOWER_TIMEOUT);
 }
 
@@ -682,7 +682,7 @@ fn keep_alive_with_ack_eliciting_packet_lost() {
     // This test makes too many assumptions about single-packet flights and PTOs for multi-packet
     // MLKEM flights to work.
     let mut client = new_client(
-        client_default_params()
+        ConnectionParameters::default()
             .idle_timeout(IDLE_TIMEOUT)
             .mlkem(false),
     );

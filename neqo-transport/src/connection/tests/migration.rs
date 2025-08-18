@@ -19,9 +19,9 @@ use test_fixture::{
 
 use super::{
     super::{Connection, Output, State, StreamType},
-    client_default_params, connect_fail, connect_force_idle, connect_rtt_idle, default_client,
-    default_server, maybe_authenticate, new_client, new_server, send_something,
-    server_default_params, zero_len_cid_client, CountingConnectionIdGenerator,
+    connect_fail, connect_force_idle, connect_rtt_idle, default_client, default_server,
+    maybe_authenticate, new_client, new_server, send_something, zero_len_cid_client,
+    CountingConnectionIdGenerator,
 };
 use crate::{
     cid::LOCAL_ACTIVE_CID_LIMIT,
@@ -755,7 +755,7 @@ fn preferred_address(hs_client: SocketAddr, hs_server: SocketAddr, preferred: So
         SocketAddr::V6(v6) => PreferredAddress::new(None, Some(v6)),
         SocketAddr::V4(v4) => PreferredAddress::new(Some(v4), None),
     };
-    let mut server = new_server(server_default_params().preferred_address(spa));
+    let mut server = new_server(ConnectionParameters::default().preferred_address(spa));
 
     let dgram = fast_handshake(&mut client, &mut server);
 
@@ -846,7 +846,7 @@ fn expect_no_migration(client: &mut Connection, server: &mut Connection) {
 
 fn preferred_address_ignored(spa: PreferredAddress) {
     let mut client = default_client();
-    let mut server = new_server(server_default_params().preferred_address(spa));
+    let mut server = new_server(ConnectionParameters::default().preferred_address(spa));
 
     expect_no_migration(&mut client, &mut server);
 }
@@ -867,11 +867,11 @@ fn preferred_address_ignore_different_family() {
 /// good preferred address.
 #[test]
 fn preferred_address_disabled_client() {
-    let mut client = new_client(client_default_params().disable_preferred_address());
+    let mut client = new_client(ConnectionParameters::default().disable_preferred_address());
     let mut preferred = DEFAULT_ADDR;
     preferred.set_ip(IpAddr::V6(Ipv6Addr::new(0xfe80, 0, 0, 0, 0, 0, 0, 2)));
     let spa = PreferredAddress::new_any(None, Some(preferred));
-    let mut server = new_server(server_default_params().preferred_address(spa));
+    let mut server = new_server(ConnectionParameters::default().preferred_address(spa));
 
     expect_no_migration(&mut client, &mut server);
 }
@@ -885,7 +885,7 @@ fn preferred_address_empty_cid() {
         test_fixture::DEFAULT_KEYS,
         test_fixture::DEFAULT_ALPN,
         Rc::new(RefCell::new(EmptyConnectionIdGenerator::default())),
-        server_default_params().preferred_address(spa),
+        ConnectionParameters::default().preferred_address(spa),
     );
     assert_eq!(res.unwrap_err(), Error::ConnectionIdsExhausted);
 }
@@ -898,7 +898,7 @@ fn preferred_address_server_empty_cid() {
         test_fixture::DEFAULT_KEYS,
         test_fixture::DEFAULT_ALPN,
         Rc::new(RefCell::new(EmptyConnectionIdGenerator::default())),
-        server_default_params(),
+        ConnectionParameters::default(),
     )
     .unwrap();
 
@@ -976,7 +976,7 @@ fn migration_invalid_state() {
 #[test]
 fn migration_disabled() {
     let mut client = default_client();
-    let mut server = new_server(server_default_params().disable_migration(true));
+    let mut server = new_server(ConnectionParameters::default().disable_migration(true));
     connect(&mut client, &mut server);
     assert_eq!(
         client
@@ -1068,7 +1068,7 @@ fn retire_all() {
         test_fixture::DEFAULT_KEYS,
         test_fixture::DEFAULT_ALPN,
         Rc::clone(&cid_gen),
-        server_default_params(),
+        ConnectionParameters::default(),
     )
     .unwrap();
     connect_force_idle(&mut client, &mut server);
@@ -1104,7 +1104,7 @@ fn retire_prior_to_migration_failure() {
         test_fixture::DEFAULT_KEYS,
         test_fixture::DEFAULT_ALPN,
         Rc::clone(&cid_gen),
-        server_default_params(),
+        ConnectionParameters::default(),
     )
     .unwrap();
     connect_force_idle(&mut client, &mut server);
@@ -1159,7 +1159,7 @@ fn retire_prior_to_migration_success() {
         test_fixture::DEFAULT_KEYS,
         test_fixture::DEFAULT_ALPN,
         Rc::clone(&cid_gen),
-        server_default_params(),
+        ConnectionParameters::default(),
     )
     .unwrap();
     connect_force_idle(&mut client, &mut server);
