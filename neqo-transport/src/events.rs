@@ -173,15 +173,11 @@ impl ConnectionEvents {
             .count()
             == max_queued_datagrams
         {
-            if let Some(d) = q
+            if let Some(idx) = q
                 .iter()
-                .rev()
-                .enumerate()
-                .filter(|(_, evt)| matches!(evt, ConnectionEvent::Datagram(_)))
-                .take(1)
-                .next()
+                .position(|evt| matches!(evt, ConnectionEvent::Datagram(_)))
             {
-                remove = Some(d.0);
+                remove = Some(idx);
             }
         }
         if let Some(r) = remove {
