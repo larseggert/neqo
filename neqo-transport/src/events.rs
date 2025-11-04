@@ -252,7 +252,7 @@ impl EventProvider for ConnectionEvents {
 mod tests {
     use neqo_common::event::Provider as _;
 
-    use crate::{CloseReason, ConnectionEvent, ConnectionEvents, Error, State, StreamId};
+    use crate::{CloseReason, ConnectionEvent, ConnectionEvents, Error, State, Stats, StreamId};
 
     #[test]
     fn event_culling() {
@@ -312,5 +312,32 @@ mod tests {
         evts.send_stream_stop_sending(10.into(), 55);
         evts.connection_state_change(State::Closed(CloseReason::Transport(Error::StreamState)));
         assert_eq!(evts.events().count(), 1);
+    }
+
+    #[test]
+    fn datagram_queue_drops_oldest() {
+        const MAX_QUEUED: usize = 2;
+
+        // Fill the queue to capacity, verify that and that there are no drops yet.
+        let e = ConnectionEvents::default();
+        let mut stats = Stats::default();
+        e.add_datagram(MAX_QUEUED, &[1], &mut stats);
+        e.add_datagram(MAX_QUEUED, &[2], &mut stats);
+        assert_eq!(stats.incoming_datagram_dropped, 0);
+        assert_eq!(e.events.borrow().len(), MAX_QUEUED);
+
+        // Add one more datagram - this should drop the oldest ("1").
+        e.add_datagram(MAX_QUEUED, &[3], &mut stats);
+        assert_eq!(stats.incoming_datagram_dropped, 1);
+
+        // Should have `MAX_QUEUED` datagrams + 1 `IncomingDatagramDropped` event.
+        assert_eq!(
+            e.events.borrow().iter().collect::<Vec<_>>(),
+            [
+                &ConnectionEvent::Datagram(vec![2]),
+                &ConnectionEvent::IncomingDatagramDropped, // FIXME: Why is this not at the end?
+                &ConnectionEvent::Datagram(vec![3]),
+            ]
+        );
     }
 }
