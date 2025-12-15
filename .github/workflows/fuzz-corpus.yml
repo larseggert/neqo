@@ -39,11 +39,15 @@ jobs:
         with:
           minimum-version: ${{ steps.nss-version.outputs.minimum }}
 
-      - env:
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: ./test/make-fuzz-corpus.sh
+
+      - name: Create PR for new corpus samples
+        # Use a PAT to create the PR so that workflows trigger on it.
+        # PRs created with GITHUB_TOKEN don't trigger workflows by design.
+        env:
+          GH_TOKEN: ${{ secrets.NEQO_CI }}
           SHA: ${{ github.sha }}
         run: |
-          ./test/make-fuzz-corpus.sh
           # If there are no new corpus samples, exit.
           if [ -z "$(git status --porcelain fuzz/corpus)" ]; then
             echo "No new fuzzing corpus samples generated."
@@ -53,7 +57,7 @@ jobs:
           # Otherwise, create a PR to add them.
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          echo "$TOKEN" | gh auth login --with-token
+          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
           SHA_SHORT=$(echo "$SHA" | cut -c1-7)
           BRANCH="chore-corpus-samples-$SHA_SHORT"
           MESSAGE="chore: Add new fuzzing corpus samples
