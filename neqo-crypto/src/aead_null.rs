@@ -7,7 +7,7 @@
 use crate::{
     aead::Aead,
     constants::{Cipher, Version},
-    err::{sec::SEC_ERROR_BAD_DATA, Error, Res},
+    err::{Error, Res, sec::SEC_ERROR_BAD_DATA},
     p11::SymKey,
 };
 

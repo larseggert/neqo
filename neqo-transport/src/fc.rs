@@ -16,16 +16,16 @@ use std::{
 };
 
 use enum_map::EnumMap;
-use neqo_common::{qdebug, qtrace, Buffer, Role, MAX_VARINT};
+use neqo_common::{Buffer, MAX_VARINT, Role, qdebug, qtrace};
 
 use crate::{
+    Error, Res,
     connection::params::{MAX_LOCAL_MAX_DATA, MAX_LOCAL_MAX_STREAM_DATA},
     frame::FrameType,
     packet,
     recovery::{self, StreamRecoveryToken},
     stats::FrameStats,
     stream_id::{StreamId, StreamType},
-    Error, Res,
 };
 
 /// Fraction of a flow control window after which a receiver sends a window
@@ -734,17 +734,17 @@ mod test {
         time::{Duration, Instant},
     };
 
-    use neqo_common::{qdebug, Encoder, Role};
+    use neqo_common::{Encoder, Role, qdebug};
     use neqo_crypto::random;
 
     use super::{LocalStreamLimits, ReceiverFlowControl, RemoteStreamLimits, SenderFlowControl};
     use crate::{
+        ConnectionParameters, Error, INITIAL_LOCAL_MAX_DATA, INITIAL_LOCAL_MAX_STREAM_DATA, Res,
         connection::params::{MAX_LOCAL_MAX_DATA, MAX_LOCAL_MAX_STREAM_DATA},
         fc::WINDOW_UPDATE_FRACTION,
         packet, recovery,
         stats::FrameStats,
         stream_id::{StreamId, StreamType},
-        ConnectionParameters, Error, Res, INITIAL_LOCAL_MAX_DATA, INITIAL_LOCAL_MAX_STREAM_DATA,
     };
 
     #[test]
@@ -950,15 +950,21 @@ mod test {
 
     fn remote_stream_limits(role: Role, bidi: u64, unidi: u64) {
         let mut fc = RemoteStreamLimits::new(2, 1, role);
-        assert!(fc[StreamType::BiDi]
-            .is_new_stream(StreamId::from(bidi))
-            .unwrap());
-        assert!(fc[StreamType::BiDi]
-            .is_new_stream(StreamId::from(bidi + 4))
-            .unwrap());
-        assert!(fc[StreamType::UniDi]
-            .is_new_stream(StreamId::from(unidi))
-            .unwrap());
+        assert!(
+            fc[StreamType::BiDi]
+                .is_new_stream(StreamId::from(bidi))
+                .unwrap()
+        );
+        assert!(
+            fc[StreamType::BiDi]
+                .is_new_stream(StreamId::from(bidi + 4))
+                .unwrap()
+        );
+        assert!(
+            fc[StreamType::UniDi]
+                .is_new_stream(StreamId::from(unidi))
+                .unwrap()
+        );
 
         // Exceed limits
         assert_eq!(
@@ -990,9 +996,11 @@ mod test {
         assert_eq!(tokens.len(), 1);
 
         // Now 9 can be a new StreamId.
-        assert!(fc[StreamType::BiDi]
-            .is_new_stream(StreamId::from(bidi + 8))
-            .unwrap());
+        assert!(
+            fc[StreamType::BiDi]
+                .is_new_stream(StreamId::from(bidi + 8))
+                .unwrap()
+        );
         assert_eq!(
             fc[StreamType::BiDi].take_stream_id(),
             StreamId::from(bidi + 8)
@@ -1010,9 +1018,11 @@ mod test {
         assert_eq!(tokens.len(), 2);
 
         // Now 7 can be a new StreamId.
-        assert!(fc[StreamType::UniDi]
-            .is_new_stream(StreamId::from(unidi + 4))
-            .unwrap());
+        assert!(
+            fc[StreamType::UniDi]
+                .is_new_stream(StreamId::from(unidi + 4))
+                .unwrap()
+        );
         assert_eq!(
             fc[StreamType::UniDi].take_stream_id(),
             StreamId::from(unidi + 4)

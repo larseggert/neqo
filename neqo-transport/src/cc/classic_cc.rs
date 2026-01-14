@@ -12,14 +12,14 @@ use std::{
     time::{Duration, Instant},
 };
 
-use ::qlog::events::{quic::CongestionStateUpdated, EventData};
+use ::qlog::events::{EventData, quic::CongestionStateUpdated};
 use neqo_common::{const_max, const_min, qdebug, qinfo, qlog::Qlog, qtrace};
 use rustc_hash::FxHashMap as HashMap;
 
 use super::CongestionControl;
 use crate::{
-    cc::CongestionEvent, packet, qlog, recovery::sent, rtt::RttEstimate, sender::PACING_BURST_SIZE,
-    stats::CongestionControlStats, Pmtud,
+    Pmtud, cc::CongestionEvent, packet, qlog, recovery::sent, rtt::RttEstimate,
+    sender::PACING_BURST_SIZE, stats::CongestionControlStats,
 };
 
 pub const CWND_INITIAL_PKTS: usize = 10;
@@ -237,7 +237,12 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
 
         if is_app_limited {
             self.cc_algorithm.on_app_limited();
-            qdebug!("on_packets_acked this={self:p}, limited=1, bytes_in_flight={}, cwnd={}, state={:?}, new_acked={new_acked}", self.bytes_in_flight, self.congestion_window, self.state);
+            qdebug!(
+                "on_packets_acked this={self:p}, limited=1, bytes_in_flight={}, cwnd={}, state={:?}, new_acked={new_acked}",
+                self.bytes_in_flight,
+                self.congestion_window,
+                self.state
+            );
             return;
         }
 
@@ -290,7 +295,12 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
             ],
             now,
         );
-        qdebug!("[{self}] on_packets_acked this={self:p}, limited=0, bytes_in_flight={}, cwnd={}, state={:?}, new_acked={new_acked}", self.bytes_in_flight, self.congestion_window, self.state);
+        qdebug!(
+            "[{self}] on_packets_acked this={self:p}, limited=0, bytes_in_flight={}, cwnd={}, state={:?}, new_acked={new_acked}",
+            self.bytes_in_flight,
+            self.congestion_window,
+            self.state
+        );
     }
 
     /// Update congestion controller state based on lost packets.
@@ -688,20 +698,20 @@ mod tests {
     use neqo_common::qinfo;
     use test_fixture::now;
 
-    use super::{ClassicCongestionControl, WindowAdjustment, PERSISTENT_CONG_THRESH};
+    use super::{ClassicCongestionControl, PERSISTENT_CONG_THRESH, WindowAdjustment};
     use crate::{
+        Pmtud,
         cc::{
+            CWND_INITIAL_PKTS, CongestionControl, CongestionControlAlgorithm, CongestionEvent,
             classic_cc::State,
             cubic::Cubic,
             new_reno::NewReno,
             tests::{IP_ADDR, MTU, RTT},
-            CongestionControl, CongestionControlAlgorithm, CongestionEvent, CWND_INITIAL_PKTS,
         },
         packet,
         recovery::{self, sent},
         rtt::RttEstimate,
         stats::CongestionControlStats,
-        Pmtud,
     };
 
     const PTO: Duration = RTT;

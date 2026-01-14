@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use neqo_common::{qdebug, Buffer, Decoder, Encoder};
+use neqo_common::{Buffer, Decoder, Encoder, qdebug};
 use neqo_crypto::{ZeroRttCheckResult, ZeroRttChecker};
 
 use crate::{Error, Http3Parameters, Res};

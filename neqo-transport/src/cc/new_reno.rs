@@ -10,7 +10,7 @@ use std::time::{Duration, Instant};
 
 use derive_more::Display;
 
-use crate::cc::{classic_cc::WindowAdjustment, CongestionEvent};
+use crate::cc::{CongestionEvent, classic_cc::WindowAdjustment};
 
 #[derive(Debug, Default, Display)]
 #[display("NewReno")]

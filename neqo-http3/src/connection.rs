@@ -7,27 +7,29 @@
 use std::{cell::RefCell, fmt::Debug, mem, rc::Rc, time::Instant};
 
 use neqo_common::{
-    qdebug, qerror, qinfo, qtrace, qwarn, Bytes, Decoder, Header, MessageType, Role,
+    Bytes, Decoder, Header, MessageType, Role, qdebug, qerror, qinfo, qtrace, qwarn,
 };
 use neqo_qpack as qpack;
 use neqo_transport::{
-    streams::SendOrder, AppError, CloseReason, Connection, DatagramTracking, State, StreamId,
-    StreamType, ZeroRttState,
+    AppError, CloseReason, Connection, DatagramTracking, State, StreamId, StreamType, ZeroRttState,
+    streams::SendOrder,
 };
 use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
 use strum::Display;
 
 use crate::{
+    CloseType, Error, Http3Parameters, Http3StreamType, HttpRecvStreamEvents, NewStreamType,
+    Priority, PriorityHandler, ReceiveOutput, RecvStream, RecvStreamEvents, Res, SendStream,
+    SendStreamEvents,
     client_events::Http3ClientEvents,
     control_stream_local::ControlStreamLocal,
     control_stream_remote::ControlStreamRemote,
     features::{
-        extended_connect::{
-            self,
-            webtransport_streams::{WebTransportRecvStream, WebTransportSendStream},
-            ExtendedConnectEvents, ExtendedConnectFeature, ExtendedConnectType,
-        },
         ConnectType,
+        extended_connect::{
+            self, ExtendedConnectEvents, ExtendedConnectFeature, ExtendedConnectType,
+            webtransport_streams::{WebTransportRecvStream, WebTransportSendStream},
+        },
     },
     frames::HFrame,
     push_controller::PushController,
@@ -38,9 +40,6 @@ use crate::{
     send_message::SendMessage,
     settings::{HSettingType, HSettings, HttpZeroRttChecker},
     stream_type_reader::NewStreamHeadReader,
-    CloseType, Error, Http3Parameters, Http3StreamType, HttpRecvStreamEvents, NewStreamType,
-    Priority, PriorityHandler, ReceiveOutput, RecvStream, RecvStreamEvents, Res, SendStream,
-    SendStreamEvents,
 };
 
 pub struct RequestDescription<'b, T: RequestTarget> {
@@ -905,7 +904,7 @@ impl Http3Connection {
         // Closing and Closed.
         match self.state() {
             Http3State::GoingAway(..) | Http3State::Closing(..) | Http3State::Closed(..) => {
-                return Err(Error::AlreadyClosed)
+                return Err(Error::AlreadyClosed);
             }
             Http3State::Initializing => return Err(Error::Unavailable),
             _ => {}
@@ -1860,9 +1859,9 @@ mod tests {
     use url::Url;
 
     use crate::{
+        Error, Priority,
         connection::{Http3Connection, RequestDescription},
         features::ConnectType,
-        Error, Priority,
     };
 
     #[test]

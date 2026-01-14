@@ -4,17 +4,17 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use neqo_common::{qdebug, Encoder, Header};
+use neqo_common::{Encoder, Header, qdebug};
 use neqo_transport::{Connection, StreamId};
 
 use crate::{
+    Error, Res, Settings,
     decoder_instructions::DecoderInstruction,
     encoder_instructions::{DecodedEncoderInstruction, EncoderInstructionReader},
     header_block::{HeaderDecoder, HeaderDecoderResult},
     reader::{ReadByte, Reader, ReceiverConnWrapper},
     stats::Stats,
     table::HeaderTable,
-    Error, Res, Settings,
 };
 
 pub const QPACK_UNI_STREAM_TYPE_DECODER: u64 = 0x3;

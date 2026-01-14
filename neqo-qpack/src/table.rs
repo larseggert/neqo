@@ -9,8 +9,8 @@ use std::collections::VecDeque;
 use neqo_common::qtrace;
 
 use crate::{
-    static_table::{StaticTableEntry, HEADER_STATIC_TABLE},
     Error, Res,
+    static_table::{HEADER_STATIC_TABLE, StaticTableEntry},
 };
 
 pub const ADDITIONAL_TABLE_ENTRY_SIZE: usize = 32;

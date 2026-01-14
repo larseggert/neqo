@@ -9,7 +9,7 @@ use std::{
 };
 
 use crate::{
-    err::{secstatus_to_res, Error, Res},
+    err::{Error, Res, secstatus_to_res},
     null_safe_slice,
 };
 
@@ -240,12 +240,16 @@ impl Default for SymKey {
 }
 
 unsafe fn destroy_pk11_context(ctxt: *mut PK11Context) {
-    PK11_DestroyContext(ctxt, PRBool::from(true));
+    unsafe {
+        PK11_DestroyContext(ctxt, PRBool::from(true));
+    }
 }
 scoped_ptr!(Context, PK11Context, destroy_pk11_context);
 
 unsafe fn destroy_secitem(item: *mut SECItem) {
-    SECITEM_FreeItem(item, PRBool::from(true));
+    unsafe {
+        SECITEM_FreeItem(item, PRBool::from(true));
+    }
 }
 scoped_ptr!(Item, SECItem, destroy_secitem);
 
@@ -292,7 +296,9 @@ impl Item {
 }
 
 unsafe fn destroy_secitem_array(array: *mut SECItemArray) {
-    SECITEM_FreeArray(array, PRBool::from(true));
+    unsafe {
+        SECITEM_FreeArray(array, PRBool::from(true));
+    }
 }
 scoped_ptr!(ItemArray, SECItemArray, destroy_secitem_array);
 
@@ -414,7 +420,7 @@ mod test {
     use test_fixture::fixture_init;
 
     use super::RandomCache;
-    use crate::{random, PrivateKey, PublicKey};
+    use crate::{PrivateKey, PublicKey, random};
 
     #[cfg(not(feature = "disable-random"))]
     #[test]
