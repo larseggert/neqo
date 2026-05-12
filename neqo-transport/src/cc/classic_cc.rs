@@ -280,6 +280,7 @@ where
         &mut self.pmtud
     }
 
+    #[inline(never)] // avoid LTO-induced bloat in `CongestionControlImplementation` dispatch
     #[expect(
         clippy::too_many_lines,
         reason = "The main congestion control function contains a lot of logic."
@@ -440,6 +441,7 @@ where
     }
 
     /// Update congestion controller state based on lost packets.
+    #[inline(never)] // avoid LTO-induced bloat in `CongestionControlImplementation` dispatch
     fn on_packets_lost(
         &mut self,
         first_rtt_sample_time: Option<Instant>,
@@ -522,6 +524,7 @@ where
     /// congestion event.
     ///
     /// See <https://datatracker.ietf.org/doc/html/rfc9002#section-b.7>.
+    #[inline(never)] // avoid LTO-induced bloat in `CongestionControlImplementation` dispatch
     fn on_ecn_ce_received(
         &mut self,
         largest_acked_pkt: &sent::Packet,
@@ -553,6 +556,7 @@ where
         );
     }
 
+    #[inline(never)] // avoid LTO-induced bloat in `CongestionControlImplementation` dispatch
     fn on_packet_sent(&mut self, pkt: &sent::Packet, now: Instant) {
         // Record the recovery time and exit any transient phase.
         if self.current.phase.transient() {
