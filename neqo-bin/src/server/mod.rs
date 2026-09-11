@@ -346,17 +346,13 @@ pub struct Runner<S> {
     now: Box<dyn Fn() -> Instant>,
     server: S,
     timeout: Option<Pin<Box<Sleep>>>,
-    sockets: Vec<(SocketAddr, crate::udp::Socket)>,
+    sockets: Vec<crate::udp::Socket>,
     recv_buf: RecvBuf,
 }
 
 impl<S: HttpServer + Unpin> Runner<S> {
     #[must_use]
-    pub fn new(
-        server: S,
-        now: Box<dyn Fn() -> Instant>,
-        sockets: Vec<(SocketAddr, crate::udp::Socket)>,
-    ) -> Self {
+    pub fn new(server: S, now: Box<dyn Fn() -> Instant>, sockets: Vec<crate::udp::Socket>) -> Self {
         Self {
             now,
             server,
@@ -370,18 +366,17 @@ impl<S: HttpServer + Unpin> Runner<S> {
     pub fn local_addresses(&self) -> Vec<SocketAddr> {
         self.sockets
             .iter()
-            .map(|(_, s)| s.local_addr().unwrap())
+            .map(|s| s.local_addr().unwrap())
             .collect()
     }
 
     /// Tries to find a socket, but then just falls back to sending from the first.
     fn find_socket(
-        sockets: &mut [(SocketAddr, crate::udp::Socket)],
+        sockets: &mut [crate::udp::Socket],
         addr: SocketAddr,
     ) -> &mut crate::udp::Socket {
-        let ((_host, first_socket), rest) = sockets.split_first_mut().unwrap();
+        let (first_socket, rest) = sockets.split_first_mut().unwrap();
         rest.iter_mut()
-            .map(|(_host, socket)| socket)
             .find(|socket| socket.local_addr().is_ok_and(|a| a == addr))
             .unwrap_or(first_socket)
     }
@@ -392,7 +387,7 @@ impl<S: HttpServer + Unpin> Runner<S> {
     async fn process_inner(
         server: &mut S,
         timeout: &mut Option<Pin<Box<Sleep>>>,
-        sockets: &mut [(SocketAddr, crate::udp::Socket)],
+        sockets: &mut [crate::udp::Socket],
         now: &dyn Fn() -> Instant,
         mut input_dgrams: Option<DatagramIter<'_>>,
     ) -> Result<(), io::Error> {
@@ -406,7 +401,7 @@ impl<S: HttpServer + Unpin> Runner<S> {
         // used with a single socket only.
         let smallest_max_gso_segments = sockets
             .iter()
-            .map(|(_, socket)| socket.max_gso_segments())
+            .map(crate::udp::Socket::max_gso_segments)
             .min()
             .expect("At least one socket must be present")
             .try_into()
@@ -468,8 +463,8 @@ impl<S: HttpServer + Unpin> Runner<S> {
 
     async fn read_and_process(&mut self, sockets_index: usize) -> Result<(), io::Error> {
         loop {
-            let (host, socket) = &mut self.sockets[sockets_index];
-            let input_dgrams = match socket.recv(*host, &mut self.recv_buf) {
+            let socket = &mut self.sockets[sockets_index];
+            let input_dgrams = match socket.recv(&mut self.recv_buf) {
                 Ok(Some(input_dgrams)) => input_dgrams,
                 Ok(None) => break,
                 Err(e) if e.kind() == io::ErrorKind::ConnectionReset => {
@@ -513,7 +508,7 @@ impl<S: HttpServer + Unpin> Runner<S> {
         let sockets_ready = select_all(
             self.sockets
                 .iter()
-                .map(|(_host, socket)| Box::pin(socket.readable())),
+                .map(|socket| Box::pin(socket.readable())),
         )
         .map(|(res, inx, _)| match res {
             Ok(()) => Ok(Ready::Socket(inx)),
@@ -591,7 +586,7 @@ pub fn run(
         qerror!("No valid hosts defined");
         return Err(io::Error::new(io::ErrorKind::InvalidInput, "No hosts").into());
     }
-    let sockets: Vec<(SocketAddr, crate::udp::Socket)> = hosts
+    let sockets: Vec<crate::udp::Socket> = hosts
         .into_iter()
         .map(|host| {
             let socket = crate::udp::Socket::bind(host)?;
@@ -600,7 +595,7 @@ pub fn run(
                 socket.local_addr()
             );
 
-            Ok((host, socket))
+            Ok(socket)
         })
         .collect::<Result<_, io::Error>>()?;
 
@@ -722,11 +717,7 @@ mod tests {
         let closed_addr = closed.local_addr()?;
         drop(closed);
 
-        let mut runner = Runner::new(
-            MockServer::default(),
-            Box::new(now),
-            vec![(local_addr, socket)],
-        );
+        let mut runner = Runner::new(MockServer::default(), Box::new(now), vec![socket]);
 
         // Draw an ICMP "port unreachable" from the closed port.
         for _ in 0..10 {

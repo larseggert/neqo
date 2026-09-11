@@ -96,12 +96,12 @@ impl Socket {
     }
 
     /// Receive a batch of [`neqo_common::Datagram`]s on the given [`Socket`], each set with
-    /// the provided local address.
+    /// this socket's local address.
     pub fn recv<'a>(
         &self,
-        local_address: SocketAddr,
         recv_buf: &'a mut RecvBuf,
     ) -> Result<Option<DatagramIter<'a>>, io::Error> {
+        let local_address = self.local_addr()?;
         self.inner
             .try_io(tokio::io::Interest::READABLE, || {
                 neqo_udp::recv_inner(local_address, &self.state, &self.inner, recv_buf)
