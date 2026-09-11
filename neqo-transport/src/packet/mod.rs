@@ -536,6 +536,12 @@ impl<B: Buffer> Builder<B> {
         self.encoder.len() == self.header.end
     }
 
+    /// Whether this packet is coalesced behind another one in the same datagram.
+    #[must_use]
+    pub const fn is_coalesced(&self) -> bool {
+        self.header.start != 0
+    }
+
     pub fn len(&self) -> usize {
         self.encoder.len()
     }
