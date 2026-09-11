@@ -142,9 +142,10 @@ fn exchange_packets_through_proxy(
     client_inner: &mut Http3Client,
     proxy: &mut Http3Server,
     server: &mut Http3Server,
-    connect_udp_session_id: neqo_http3::StreamId,
     proxy_session: &ServerSession,
 ) {
+    let connect_udp_session_id = proxy_session.stream_id();
+
     qinfo!("Processing client_inner");
     while let Some(dgram) = client_inner.process_output(now()).dgram() {
         client_outer
@@ -333,8 +334,7 @@ fn connect_via_proxy() {
     let mut client_inner = default_http3_client();
     let mut server = default_http3_server();
 
-    let (mut client_outer, mut proxy, connect_udp_session_id, proxy_session) =
-        establish_new_session();
+    let (mut client_outer, mut proxy, _, proxy_session) = establish_new_session();
 
     let mut needs_auth = false;
     // Establish inner connection on top of connect-udp session.
@@ -359,7 +359,6 @@ fn connect_via_proxy() {
             &mut client_inner,
             &mut proxy,
             &mut server,
-            connect_udp_session_id,
             &proxy_session,
         );
     }
@@ -382,7 +381,6 @@ fn connect_via_proxy() {
             &mut client_inner,
             &mut proxy,
             &mut server,
-            connect_udp_session_id,
             &proxy_session,
         );
     }

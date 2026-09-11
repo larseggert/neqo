@@ -535,6 +535,17 @@ impl Http3StreamInfo {
         }
     }
 
+    /// Returns the session ID of a WebTransport stream.
+    ///
+    /// # Panics
+    ///
+    /// If this is not a WebTransport stream.
+    #[must_use]
+    pub const fn webtransport_session_id(&self) -> StreamId {
+        self.session_id()
+            .expect("WebTransport stream always has a session id")
+    }
+
     #[must_use]
     pub fn is_http(&self) -> bool {
         self.stream_type == Http3StreamType::Http
