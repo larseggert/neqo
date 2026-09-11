@@ -243,8 +243,9 @@ impl SendData {
         }
     }
 
-    fn send(&mut self, c: &mut Connection, stream_id: StreamId) -> GoalStatus {
+    fn send(&mut self, c: &mut Connection) -> GoalStatus {
         const DATA: &[u8] = &[0; 4096];
+        let stream_id = self.stream_id.expect("stream created");
         let mut status = GoalStatus::Waiting;
         loop {
             let end = min(self.remaining, DATA.len());
@@ -269,8 +270,7 @@ impl Goal for SendData {
     }
 
     fn process(&mut self, c: &mut Connection, _now: Instant) -> GoalStatus {
-        self.stream_id
-            .map_or(GoalStatus::Waiting, |stream_id| self.send(c, stream_id))
+        self.stream_id.map_or(GoalStatus::Waiting, |_| self.send(c))
     }
 
     fn handle_event(
@@ -290,7 +290,7 @@ impl Goal for SendData {
             ConnectionEvent::SendStreamWritable { stream_id }
                 if Some(*stream_id) == self.stream_id =>
             {
-                self.send(c, *stream_id)
+                self.send(c)
             }
 
             // If we sent data in 0-RTT, then we didn't track how much we should
