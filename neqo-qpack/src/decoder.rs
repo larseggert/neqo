@@ -33,6 +33,7 @@ pub struct Decoder {
     max_blocked_streams: usize,
     blocked_streams: Vec<(StreamId, u64)>, // stream_id and requested inserts count.
     stats: Stats,
+    recv_stream_id: Option<StreamId>,
 }
 
 impl Decoder {
@@ -56,6 +57,7 @@ impl Decoder {
             max_blocked_streams,
             blocked_streams: Vec::with_capacity(max_blocked_streams),
             stats: Stats::default(),
+            recv_stream_id: None,
         }
     }
 
@@ -70,10 +72,9 @@ impl Decoder {
     ///
     /// May return: `ClosedCriticalStream` if stream has been closed or `EncoderStream`
     /// in case of any other transport error.
-    pub fn receive(&mut self, conn: &mut Connection, stream_id: StreamId) -> Res<Vec<StreamId>> {
+    pub fn receive(&mut self, conn: &mut Connection) -> Res<Vec<StreamId>> {
         let base_old = self.table.base();
-        self.read_instructions(conn, stream_id)
-            .map_err(|e| map_error(&e))?;
+        self.read_instructions(conn).map_err(|e| map_error(&e))?;
         let base_new = self.table.base();
         if base_old == base_new {
             return Ok(Vec::new());
@@ -86,7 +87,8 @@ impl Decoder {
             .collect())
     }
 
-    fn read_instructions(&mut self, conn: &mut Connection, stream_id: StreamId) -> Res<()> {
+    fn read_instructions(&mut self, conn: &mut Connection) -> Res<()> {
+        let stream_id = self.recv_stream_id.ok_or(Error::Internal)?;
         let mut recv = ReceiverConnWrapper::new(conn, stream_id);
         self.process_instructions(&mut recv)
     }
@@ -256,6 +258,17 @@ impl Decoder {
         self.local_stream_id
     }
 
+    /// # Panics
+    ///
+    /// When a stream has already been added.
+    pub fn add_recv_stream(&mut self, stream_id: StreamId) {
+        assert!(
+            self.recv_stream_id.is_none(),
+            "Adding multiple recv streams"
+        );
+        self.recv_stream_id = Some(stream_id);
+    }
+
     #[must_use]
     pub fn stats(&self) -> Stats {
         self.stats.clone()
@@ -311,6 +324,7 @@ mod tests {
             max_tracked_streams: 4096,
         });
         decoder.add_send_stream(send_stream_id);
+        decoder.add_recv_stream(recv_stream_id);
 
         TestDecoder {
             decoder,
@@ -328,12 +342,7 @@ mod tests {
             .unwrap();
         let out = decoder.peer_conn.process_output(now());
         drop(decoder.conn.process(out.dgram(), now()));
-        assert_eq!(
-            decoder
-                .decoder
-                .read_instructions(&mut decoder.conn, decoder.recv_stream_id),
-            *res
-        );
+        assert_eq!(decoder.decoder.read_instructions(&mut decoder.conn), *res);
     }
 
     fn send_instructions_and_check(decoder: &mut TestDecoder, decoder_instruction: &[u8]) {

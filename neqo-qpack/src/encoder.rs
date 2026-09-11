@@ -48,7 +48,6 @@ impl LocalStreamState {
 pub struct Encoder {
     table: HeaderTable,
     max_table_size: u64,
-    max_entries: u64,
     instruction_reader: DecoderInstructionReader,
     local_stream: LocalStreamState,
     max_blocked_streams: u16,
@@ -64,6 +63,7 @@ pub struct Encoder {
     use_huffman: bool,
     next_capacity: Option<u64>,
     stats: Stats,
+    recv_stream_id: Option<StreamId>,
 }
 
 impl Encoder {
@@ -72,7 +72,6 @@ impl Encoder {
         Self {
             table: HeaderTable::new(true),
             max_table_size: qpack_settings.max_table_size_encoder,
-            max_entries: 0,
             instruction_reader: DecoderInstructionReader::default(),
             local_stream: LocalStreamState::NoStream,
             max_blocked_streams: 0,
@@ -82,7 +81,21 @@ impl Encoder {
             use_huffman,
             next_capacity: None,
             stats: Stats::default(),
+            recv_stream_id: None,
         }
+    }
+
+    /// Decoder stream has been created. Add the stream id.
+    ///
+    /// # Panics
+    ///
+    /// If a stream has already been added.
+    pub fn add_recv_stream(&mut self, stream_id: StreamId) {
+        assert!(
+            self.recv_stream_id.is_none(),
+            "Adding multiple recv streams"
+        );
+        self.recv_stream_id = Some(stream_id);
     }
 
     /// This function is use for setting encoders table max capacity. The value is received as
@@ -130,18 +143,13 @@ impl Encoder {
     ///
     /// May return: `ClosedCriticalStream` if stream has been closed or `DecoderStream`
     /// in case of any other transport error.
-    pub fn receive(&mut self, conn: &mut Connection, stream_id: StreamId, now: Instant) -> Res<()> {
-        self.read_instructions(conn, stream_id, now)
-            .map_err(|e| map_error(&e))
+    pub fn receive(&mut self, conn: &mut Connection, now: Instant) -> Res<()> {
+        self.read_instructions(conn, now).map_err(|e| map_error(&e))
     }
 
-    fn read_instructions(
-        &mut self,
-        conn: &mut Connection,
-        stream_id: StreamId,
-        now: Instant,
-    ) -> Res<()> {
+    fn read_instructions(&mut self, conn: &mut Connection, now: Instant) -> Res<()> {
         qdebug!("[{self}] read a new instruction");
+        let stream_id = self.recv_stream_id.ok_or(Error::Internal)?;
         loop {
             let mut recv = ReceiverConnWrapper::new(conn, stream_id);
             match self.instruction_reader.read_instructions(&mut recv) {
@@ -324,11 +332,7 @@ impl Encoder {
         self.next_capacity = Some(value);
     }
 
-    fn maybe_send_change_capacity(
-        &mut self,
-        conn: &mut Connection,
-        stream_id: StreamId,
-    ) -> Res<()> {
+    fn maybe_send_change_capacity(&mut self, conn: &mut Connection) -> Res<()> {
         if let Some(cap) = self.next_capacity {
             // Check if it is possible to reduce the capacity, e.g. if enough space can be made free
             // for the reduction.
@@ -337,6 +341,7 @@ impl Encoder {
             }
             let mut buf = neqo_common::Encoder::default();
             EncoderInstruction::Capacity { value: cap }.marshal(&mut buf, self.use_huffman);
+            let stream_id = self.local_stream.stream_id().ok_or(Error::Internal)?;
             if !conn.stream_send_atomic(stream_id, buf.as_ref())? {
                 return Err(Error::EncoderStreamBlocked);
             }
@@ -347,7 +352,6 @@ impl Encoder {
                 );
                 return Err(Error::Internal);
             }
-            self.max_entries = cap / 32;
             self.next_capacity = None;
         }
         Ok(())
@@ -371,11 +375,9 @@ impl Encoder {
                     return Err(Error::EncoderStreamBlocked);
                 }
                 self.local_stream = LocalStreamState::Initialized(stream_id);
-                self.maybe_send_change_capacity(conn, stream_id)
+                self.maybe_send_change_capacity(conn)
             }
-            LocalStreamState::Initialized(stream_id) => {
-                self.maybe_send_change_capacity(conn, stream_id)
-            }
+            LocalStreamState::Initialized(_) => self.maybe_send_change_capacity(conn),
         }
     }
 
@@ -421,8 +423,11 @@ impl Encoder {
         // by the main loop.
         let mut encoder_blocked = self.send_encoder_updates(conn).is_err();
 
-        let mut encoded_h =
-            HeaderEncoder::new(self.table.base(), self.use_huffman, self.max_entries);
+        let mut encoded_h = HeaderEncoder::new(
+            self.table.base(),
+            self.use_huffman,
+            self.table.capacity() / 32,
+        );
 
         // Avoid the dynamic table unless we have space to track.
         let stream_was_blocking = self.is_stream_blocker(stream_id);
@@ -670,6 +675,7 @@ mod tests {
             huffman,
         );
         encoder.add_send_stream(send_stream_id);
+        encoder.add_recv_stream(recv_stream_id);
 
         TestEncoder {
             encoder,
@@ -698,7 +704,7 @@ mod tests {
         assert!(
             encoder
                 .encoder
-                .read_instructions(&mut encoder.conn, encoder.recv_stream_id, now)
+                .read_instructions(&mut encoder.conn, now)
                 .is_ok()
         );
     }
@@ -1051,9 +1057,7 @@ mod tests {
         let out = encoder.peer_conn.process_output(now());
         encoder.conn.process_input(out.dgram().unwrap(), now());
         assert_eq!(
-            encoder
-                .encoder
-                .read_instructions(&mut encoder.conn, encoder.recv_stream_id, now()),
+            encoder.encoder.read_instructions(&mut encoder.conn, now()),
             Err(Error::DecoderStream)
         );
     }
@@ -1073,9 +1077,7 @@ mod tests {
         let out = encoder.peer_conn.process_output(now());
         encoder.conn.process_input(out.dgram().unwrap(), now());
         assert_eq!(
-            encoder
-                .encoder
-                .read_instructions(&mut encoder.conn, encoder.recv_stream_id, now()),
+            encoder.encoder.read_instructions(&mut encoder.conn, now()),
             Err(Error::DecoderStream)
         );
     }
