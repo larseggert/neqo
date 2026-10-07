@@ -41,7 +41,6 @@ test-fixture = { path = "../test-fixture" }
 [features]
 bench = ["test-fixture/bench", "log/release_max_level_warn"]
 build-fuzzing-corpus = ["hex/alloc", "sha1"]
-ci = []
 test-fixture = []
 
 [package.metadata.cargo-machete]

@@ -123,7 +123,7 @@ jobs:
           fi
           # Run tests across all meaningful feature combinations.
           # shellcheck disable=SC2086
-          cargo hack test $BUILD_TYPE --locked --feature-powerset --tests --exclude-features gecko,ci,build-fuzzing-corpus --mutually-exclusive-features bench,blapi,default,disable-encryption
+          cargo hack test $BUILD_TYPE --locked --feature-powerset --tests --exclude-features gecko,build-fuzzing-corpus --mutually-exclusive-features bench,blapi,default,disable-encryption
 
       - name: Run client/server transfer
         run: |

@@ -46,7 +46,7 @@ Run these commands in order before submitting a PR. All must pass:
 
 2. **Clippy** (uses cargo-hack to check per-crate features):
    ```bash
-   cargo hack clippy --locked --feature-powerset --all-targets --exclude-features gecko,ci --mutually-exclusive-features bench,blapi,build-fuzzing-corpus,default,disable-encryption -- -D warnings
+   cargo hack clippy --locked --feature-powerset --all-targets --exclude-features gecko --mutually-exclusive-features bench,blapi,build-fuzzing-corpus,default,disable-encryption -- -D warnings
    ```
 
 3. **Documentation build**:
@@ -62,7 +62,7 @@ Run these commands in order before submitting a PR. All must pass:
    cargo llvm-cov test --locked --include-ffi --lcov --output-path lcov.info
 
    # Or run tests without coverage:
-   cargo hack test --locked --feature-powerset --tests --exclude-features gecko,ci,build-fuzzing-corpus --mutually-exclusive-features bench,blapi,default,disable-encryption
+   cargo hack test --locked --feature-powerset --tests --exclude-features gecko,build-fuzzing-corpus --mutually-exclusive-features bench,blapi,default,disable-encryption
    ```
 
 5. **Cargo deny** (license/advisory checks):
@@ -135,7 +135,7 @@ cargo check --locked --all-targets --workspace
 cargo llvm-cov test --locked --include-ffi --codecov --output-path codecov.json
 
 # Test command used in CI (all toolchains)
-cargo hack test --locked --feature-powerset --tests --exclude-features gecko,ci,build-fuzzing-corpus --mutually-exclusive-features bench,blapi,default,disable-encryption
+cargo hack test --locked --feature-powerset --tests --exclude-features gecko,build-fuzzing-corpus --mutually-exclusive-features bench,blapi,default,disable-encryption
 ```
 
 ## Development Tips
@@ -144,7 +144,7 @@ cargo hack test --locked --feature-powerset --tests --exclude-features gecko,ci,
 
 2. **Workspace lints are strict**: The workspace defines extensive Rust and Clippy lints (see `Cargo.toml` `[workspace.lints]`). All warnings are errors in CI. Use `#[expect(clippy::lint_name)]` sparingly and only with `reason = "explanation"`.
 
-3. **Feature flags**: The `ci` feature is only enabled by the sanitizer CI job. The `gecko` feature is for Firefox integration (excluded from some checks). The `bench` feature enables benchmarks.
+3. **Feature flags**: The `gecko` feature is for Firefox integration (excluded from some checks). The `bench` feature enables benchmarks.
 
 4. **Test utilities**: Use `test-fixture` crate for common test setup (connection creation, assertions). NSS initialization is handled automatically via `fixture_init()`.
 
